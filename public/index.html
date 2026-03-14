@@ -2500,22 +2500,7 @@ function buildQuoteObject(){
   };
 }
 
-async function createQuoteLink(){
-  if(!window.quoteId){
-    alert("Please generate a quote preview first.");
-    return;
-  }
-  const quote = buildQuoteObject();
-  try {
-    const res = await fetch("/api/quotes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(quote)
-    });
-    const data = await res.json();
-    prompt("Share this quote link with the merchant:", data.url);
-  } catch(e) {
-    alert("Unable to create quote link. The sharing service is not yet available.");
+
   }
 }
 
