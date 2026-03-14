@@ -2665,6 +2665,31 @@ document.addEventListener("DOMContentLoaded", loadQuoteFromUrl);
 }
 
 // DO NOT REMOVE THIS
+  function createQuoteLink() {
+
+  // ensure quoteId exists
+  if (!window.quoteId) {
+    const year = new Date().getFullYear();
+    const random = Math.floor(1000 + Math.random() * 9000);
+    window.quoteId = "MP-" + year + "-" + random;
+  }
+
+  // build merchant link
+  const shareUrl =
+    window.location.origin +
+    "/quote.html?quote=" +
+    window.quoteId;
+
+  // copy link
+  navigator.clipboard.writeText(shareUrl)
+    .then(() => {
+      alert("Quote link copied:\n\n" + shareUrl);
+    })
+    .catch(() => {
+      prompt("Copy this quote link:", shareUrl);
+    });
+
+}
 </script>
 </script>
 </body>
