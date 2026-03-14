@@ -2626,6 +2626,19 @@ function enablePublicQuoteMode(){
 }
 
 document.addEventListener("DOMContentLoaded", loadQuoteFromUrl);
+  function createQuoteLink() {
+
+  if (!window.quoteId) {
+    window.quoteId = generateQuoteId();
+  }
+
+  const shareUrl = window.location.origin + "/Quote.html?quote=" + window.quoteId;
+
+  navigator.clipboard.writeText(shareUrl);
+
+  alert("Quote link copied:\n\n" + shareUrl);
+
+}
 </script>
 </body>
 </html>
