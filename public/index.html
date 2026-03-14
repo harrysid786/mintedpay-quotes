@@ -2740,7 +2740,59 @@ document.addEventListener("DOMContentLoaded", function(){
 
   document.body.appendChild(btn);
 
-});
+});/* ===========================
+   FORCE CREATE QUOTE LINK
+=========================== */
+
+window.createQuoteLink = function(){
+
+  try{
+
+    const merchantInput =
+      document.querySelector('#mName');
+
+    const rateInput =
+      document.querySelector('#simInp');
+
+    const feeInput =
+      document.querySelector('#gateFee');
+
+    const merchant =
+      merchantInput ? merchantInput.value : "";
+
+    const rate =
+      rateInput ? rateInput.value : "";
+
+    const fee =
+      feeInput ? feeInput.value : "";
+
+    if(!merchant){
+      alert("Enter merchant name first");
+      return;
+    }
+
+    const link =
+      window.location.origin +
+      "/quote.html?merchant=" +
+      encodeURIComponent(merchant) +
+      "&rate=" +
+      rate +
+      "&fee=" +
+      fee;
+
+    navigator.clipboard.writeText(link);
+
+    alert("Quote link copied:\n\n" + link);
+
+  }catch(e){
+
+    alert("Error creating quote link");
+
+    console.error(e);
+
+  }
+
+};
 </script>
 </body>
 </html>
