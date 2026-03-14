@@ -832,6 +832,26 @@ function acceptQuote() {
 
   alert("Quote " + quoteId + " accepted.");
 
+}function generateQuoteId() {
+  const year = new Date().getFullYear();
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return "MP-" + year + "-" + rand;
+}
+
+function createQuoteLink() {
+
+  if (!window.quoteId) {
+    window.quoteId = generateQuoteId();
+  }
+
+  const link =
+    window.location.origin +
+    "/quote.html?quote=" +
+    window.quoteId;
+
+  navigator.clipboard.writeText(link);
+
+  alert("Quote link copied:\n\n" + link);
 }
 </script>
 </body>
