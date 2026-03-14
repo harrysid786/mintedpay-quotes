@@ -2626,6 +2626,71 @@ function enablePublicQuoteMode(){
 }
 
 document.addEventListener("DOMContentLoaded", loadQuoteFromUrl);
+  /* =========================================
+   QUOTE SYSTEM
+========================================= */
+
+function generateQuoteId() {
+  const year = new Date().getFullYear();
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return "MP-" + year + "-" + rand;
+}
+
+function getQuoteData() {
+
+  const data = {
+    merchantName: document.getElementById("mName")?.value || "",
+    merchantEmail: document.getElementById("merchantEmail")?.value || "",
+    preparedBy: document.getElementById("prepBy")?.value || "",
+    rate: document.getElementById("simInp")?.value || "",
+    fixedFee: document.getElementById("gateFee")?.value || "",
+    brand: document.querySelector(".brand-switcher-btn.on")?.dataset?.brand || "mintedpay",
+    created: new Date().toISOString()
+  };
+
+  return data;
+}
+
+function createQuoteLink() {
+
+  if (!window.quoteId) {
+    window.quoteId = generateQuoteId();
+  }
+
+  const quoteData = getQuoteData();
+
+  localStorage.setItem(
+    window.quoteId,
+    JSON.stringify(quoteData)
+  );
+
+  const link =
+    window.location.origin +
+    "/quote.html?quote=" +
+    window.quoteId;
+
+  navigator.clipboard.writeText(link);
+
+  alert("Quote link copied:\n\n" + link);
+}
+
+/* show button when preview exists */
+
+const originalRefresh = window.refreshPreview;
+
+window.refreshPreview = function () {
+
+  if (originalRefresh) {
+    originalRefresh();
+  }
+
+  const btn = document.getElementById("createLinkBtn");
+
+  if (btn) {
+    btn.style.display = "inline-block";
+  }
+
+};
 </script>
 </body>
 </html>
