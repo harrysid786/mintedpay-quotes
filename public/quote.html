@@ -1,858 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Your Payment Processing Quote</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+
+<title>Payment Processing Quote</title>
+
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --black:#0a0a0a;--g1:#1a1a1a;--g2:#2d2d2d;--g3:#6b6b6b;--g4:#a0a0a0;
-  --g5:#d4d4d4;--g6:#ebebeb;--g7:#f5f5f5;--white:#fff;
-  --brand:#4b2afd;--brand-lt:#f0edff;--brand-bd:#c4b5fd;--quote-accent:#444444;
-  --green:#00916e;--green-lt:#e6f7f2;--green-bd:#a7f3d0;
-  --red:#dc2626;--red-lt:#fff0f0;--red-bd:#fca5a5;
-  --amber:#b45309;--amber-lt:#fffbeb;--amber-bd:#fde68a;
-  --blue:#2563eb;--blue-lt:#eff6ff;
-  --r:6px;--sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
-  --sh-md:0 4px 14px rgba(0,0,0,.1),0 2px 4px rgba(0,0,0,.05);
+
+body{
+font-family: Arial, sans-serif;
+background:#f6f7fb;
+padding:40px;
 }
-body{font-family:'Inter',sans-serif;background:var(--g7);color:var(--black);font-size:13px;-webkit-font-smoothing:antialiased}
-::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--g7)}::-webkit-scrollbar-thumb{background:var(--g5);border-radius:10px}
 
-/* TOPBAR */
-.topbar{background:var(--white);border-bottom:2px solid var(--g5);height:54px;display:flex;align-items:center;padding:0 28px;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.tb-left{display:flex;align-items:center;gap:16px}
-.tb-logo{height:32px;width:auto;object-fit:contain;vertical-align:middle;margin-right:4px}
-.wordmark{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;letter-spacing:-.5px;color:var(--black)}
-.wordmark em{color:var(--brand);font-style:normal}
-.badge-int{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bd);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:2px 7px;border-radius:20px}
-.tb-sep{width:1px;height:20px;background:var(--g6)}
-.tb-tool{font-size:11px;color:var(--g3);font-weight:500}
-.tb-meta{font-size:11px;color:var(--g4);display:flex;align-items:center;gap:14px}
-.live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;margin-right:4px;animation:blink 2s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-
-/* LAYOUT */
-.layout{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 54px)}
-
-/* SIDEBAR */
-.sidebar{background:var(--white);border-right:1px solid var(--g6);padding:18px 16px;overflow-y:auto;max-height:calc(100vh - 54px);position:sticky;top:54px}
-.s-sec{margin-bottom:18px}
-.s-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--g3);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
-.s-tag{font-size:8px;font-weight:600;padding:1px 5px;background:var(--g7);border:1px solid var(--g6);border-radius:3px;color:var(--g4);letter-spacing:.8px}
-
-/* TABS */
-.tabs{display:flex;border:1px solid var(--g6);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
-.tab{flex:1;padding:7px;text-align:center;font-size:11px;font-weight:600;cursor:pointer;background:var(--white);color:var(--g3);border:none;font-family:'Inter',sans-serif;transition:all .15s}
-.tab.on{background:var(--brand);color:var(--white)}
-
-/* UPLOAD */
-.dz{border:1.5px dashed var(--g5);border-radius:var(--r);background:var(--g7);padding:18px 12px;text-align:center;cursor:pointer;transition:all .2s;position:relative;margin-bottom:8px}
-.dz:hover,.dz.over{border-color:var(--brand);background:var(--brand-lt)}
-.dz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.dz-icon{font-size:18px;display:block;margin-bottom:4px}
-.dz-title{font-size:11px;font-weight:600;color:var(--black);margin-bottom:2px}
-.dz-sub{font-size:10px;color:var(--g3)}
-.file-ok{display:flex;align-items:center;gap:8px;background:var(--green-lt);border:1px solid var(--green-bd);border-radius:var(--r);padding:7px 10px;margin-bottom:8px}
-.file-ok-name{font-size:11px;font-weight:600;color:var(--green)}
-.file-ok-rows{font-size:10px;color:var(--g3)}
-
-/* MAP */
-.map-items{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
-.map-item{display:flex;align-items:center;gap:6px;padding:5px 7px;background:var(--g7);border-radius:4px}
-.map-key{font-size:9px;font-weight:700;color:var(--g3);width:60px;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px}
-.map-key em{color:var(--red);font-style:normal}
-.map-item select{flex:1;font-size:10px;font-family:'Inter',sans-serif;background:var(--white);border:1px solid var(--g5);border-radius:4px;padding:3px 5px;color:var(--black);outline:none}
-
-/* FIELD */
-.field{margin-bottom:8px}
-.field>label{display:block;font-size:9px;font-weight:700;color:var(--g3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
-.field input,.field select{width:100%;background:var(--white);border:1px solid var(--g5);border-radius:var(--r);padding:7px 10px;font-size:12px;font-family:'Inter',sans-serif;color:var(--black);outline:none;transition:border-color .15s}
-.field input:focus,.field select:focus{border-color:var(--brand)}
-.field input::placeholder{color:var(--g4)}
-.f-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.pfx-wrap{display:flex;align-items:stretch;border:1px solid var(--g5);border-radius:var(--r);overflow:hidden;transition:border-color .15s}
-.pfx-wrap:focus-within{border-color:var(--brand)}
-.pfx-wrap .pfx{background:var(--g7);border-right:1px solid var(--g5);padding:0 8px;display:flex;align-items:center;font-size:11px;color:var(--g3);font-weight:600;flex-shrink:0}
-.pfx-wrap input{border:none;flex:1;padding:7px 8px;font-size:12px;font-family:'Inter',sans-serif;color:var(--black);outline:none;min-width:0}
-
-/* RANGE */
-.rng-group{display:flex;align-items:center;gap:8px}
-.rng-group input[type=range]{flex:1;accent-color:var(--brand);cursor:pointer}
-.rng-val{font-size:10px;font-weight:700;color:var(--brand);min-width:46px;text-align:right;white-space:nowrap}
-
-/* TIER BTNS */
-.tier-row{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
-.tbtn{padding:3px 7px;font-size:9px;font-weight:600;border:1px solid var(--g5);border-radius:4px;background:var(--white);color:var(--g3);cursor:pointer;line-height:1.5;font-family:'Inter',sans-serif;text-align:center;transition:all .12s}
-.tbtn small{display:block;font-size:7.5px;font-weight:400;color:var(--g4)}
-.tbtn.on{background:var(--brand);color:var(--white);border-color:var(--brand)}
-.tbtn.on small{color:rgba(255,255,255,.6)}
-
-.divider{border:none;border-top:1px solid var(--g6);margin:14px 0}
-.note{background:var(--blue-lt);border-left:2px solid var(--blue);border-radius:0 4px 4px 0;padding:6px 9px;font-size:10px;color:#1e40af;line-height:1.6;margin-top:6px}
-.run-btn{width:100%;padding:11px;background:var(--brand);color:var(--white);border:none;border-radius:var(--r);font-size:13px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s;margin-top:2px;letter-spacing:.2px}
-.run-btn:hover{background:#3b20e0}
-
-/* MAIN */
-.main{padding:22px;overflow-y:auto}
-.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:10px;text-align:center;color:var(--g4)}
-.empty-icon{font-size:32px;opacity:.4}
-.empty-h{font-size:15px;font-weight:600;color:var(--g3)}
-.empty-p{font-size:12px;max-width:260px;line-height:1.6}
-.results{display:none}
-.results.show{display:block;animation:fi .3s ease}
-@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-
-/* SECTION TITLE */
-.sec-t{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--g3);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--g6);display:flex;align-items:center;gap:8px}
-.sec-t-action{margin-left:auto;font-size:9px;font-weight:600;color:var(--brand);cursor:pointer;letter-spacing:.5px;text-transform:none}
-
-/* OVERVIEW STRIP */
-.overview{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--g6);border:1px solid var(--g6);border-radius:8px;overflow:hidden;margin-bottom:20px;box-shadow:var(--sh)}
-.ov{background:var(--white);padding:14px 12px}
-.ov-l{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--g4);margin-bottom:5px}
-.ov-v{font-size:19px;font-weight:700;color:var(--black);line-height:1;font-family:'Syne',sans-serif}
-.ov-s{font-size:10px;color:var(--g3);margin-top:3px}
-
-/* CARD MIX */
-.mix-panel{background:var(--white);border:1.5px solid var(--g6);border-radius:8px;padding:16px;margin-bottom:20px;box-shadow:var(--sh)}
-.analytics-panel{background:var(--white);border:1.5px solid var(--g6);border-radius:8px;overflow:hidden;margin-bottom:20px;box-shadow:var(--sh)}
-.an-tabs{display:flex;border-bottom:1px solid var(--g6);background:var(--g7);padding:10px 14px 0;gap:4px}
-.an-tab{padding:7px 14px;font-size:11px;font-weight:600;border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0;background:transparent;color:var(--g3);cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;margin-bottom:-1px}
-.an-tab.on{background:var(--white);color:var(--brand);border-color:var(--g6);border-bottom-color:var(--white)}
-#anTabContent{padding:16px}
-.an-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--g7)}
-.an-row:last-child{border-bottom:none}
-.an-row-label{font-size:12px;font-weight:600;color:var(--black);width:110px;flex-shrink:0}
-.an-row-bar-wrap{flex:1;height:5px;background:var(--g6);border-radius:3px;overflow:hidden;min-width:60px}
-.an-row-bar{height:100%;border-radius:3px;transition:width .5s}
-.an-row-val{font-size:12px;font-weight:700;color:var(--black);min-width:80px;text-align:right}
-.an-row-sub{font-size:10px;color:var(--g3);min-width:70px;text-align:right}
-.an-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.an-box{border:1px solid var(--g6);border-radius:6px;padding:14px}
-.an-box-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--g3);margin-bottom:4px}
-.an-big{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1;margin-bottom:2px}
-.an-sub{font-size:10px;color:var(--g3);margin-bottom:10px;line-height:1.5}
-.an-inner{background:var(--g7);border-radius:6px;padding:10px 12px;margin-top:6px}
-.an-inner-l{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--g4);margin-bottom:3px}
-.an-inner-v{font-size:16px;font-weight:700;font-family:'Syne',sans-serif}
-.an-inner-s{font-size:9px;color:var(--g3);margin-top:2px}
-.rate-bar-wrap{display:flex;align-items:center;gap:8px;margin-top:6px}
-.rate-bar-outer{flex:1;height:8px;background:var(--g6);border-radius:4px;overflow:hidden}
-.rate-bar-fill{height:100%;border-radius:4px}
-.mix-types{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
-.mix-type{border:1.5px solid var(--g6);border-radius:6px;padding:12px;cursor:pointer;transition:all .2s;text-align:center}
-.mix-type:hover{border-color:var(--brand);background:var(--brand-lt)}
-.mix-type.active{border-color:var(--brand);background:var(--brand-lt)}
-.mt-icon{font-size:18px;margin-bottom:4px}
-.mt-name{font-size:10px;font-weight:700;color:var(--black);text-transform:uppercase;letter-spacing:.5px}
-.mt-rate{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--brand);line-height:1.1}
-.mt-sub{font-size:9px;color:var(--g3);margin-top:2px}
-.mix-detail{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--g6);border:1px solid var(--g6);border-radius:6px;overflow:hidden}
-.md-cell{background:var(--white);padding:10px 10px}
-.md-l{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g4);margin-bottom:4px}
-.md-v{font-size:14px;font-weight:700;color:var(--black);font-family:'Syne',sans-serif}
-.md-s{font-size:9px;color:var(--g3);margin-top:2px}
-
-/* RATE CARDS */
-.rate-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;align-items:stretch}
-.rc{background:var(--white);border:1.5px solid var(--g6);border-radius:8px;padding:16px;box-shadow:var(--sh);position:relative;overflow:hidden;cursor:pointer;transition:all .2s;height:100%;display:flex;flex-direction:column}
-.rc:hover{box-shadow:var(--sh-md);transform:translateY(-1px)}
-.rc.sel{border-color:var(--brand);box-shadow:0 0 0 3px rgba(75,42,253,.08)}
-.rc-bar{height:3px;position:absolute;top:0;left:0;right:0}
-.rc.rc-min .rc-bar{background:var(--green)}.rc.rc-ideal .rc-bar{background:var(--amber)}.rc.rc-max .rc-bar{background:var(--red)}
-.rc-badge{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:5px}
-.rc.rc-min .rc-badge{color:var(--green)}.rc.rc-ideal .rc-badge{color:var(--amber)}.rc.rc-max .rc-badge{color:var(--red)}
-.rc-rec{background:var(--amber-lt);color:var(--amber);border:1px solid var(--amber-bd);font-size:7.5px;font-weight:700;letter-spacing:.8px;padding:2px 5px;border-radius:3px}
-.rc-rate{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;line-height:1;letter-spacing:-1px;margin-bottom:1px}
-.rc.rc-min .rc-rate{color:var(--green)}.rc.rc-ideal .rc-rate{color:var(--amber)}.rc.rc-max .rc-rate{color:var(--red)}
-.rc-rate-sub{font-size:10px;color:var(--g3);margin-bottom:10px}
-.rc-desc{font-size:10px;color:var(--g3);margin-bottom:10px;line-height:1.5;min-height:28px}
-.rc-hr{border:none;border-top:1px solid var(--g6);margin-bottom:8px}
-.rc-kv{display:flex;justify-content:space-between;align-items:center;padding:2.5px 0}
-.rc-kv-k{font-size:10px;color:var(--g3)}.rc-kv-v{font-size:11px;font-weight:600;color:var(--black)}
-.rc-kv-v.g{color:var(--green)}.rc-kv-v.r{color:var(--red)}.rc-kv-v.a{color:var(--amber)}
-.rc-chk{position:absolute;top:12px;right:12px;width:18px;height:18px;border-radius:50%;border:2px solid var(--g5);display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .15s}
-.rc.sel .rc-chk{background:var(--brand);border-color:var(--brand);color:var(--white)}
-.mg-row{display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--g6)}
-.mg-lbl{font-size:9px;color:var(--g3);width:56px;flex-shrink:0}
-.mg-track{flex:1;height:3px;background:var(--g6);border-radius:2px;overflow:hidden}
-.mg-fill{height:100%;border-radius:2px;transition:width .4s}
-.mg-val{font-size:9px;font-weight:700;min-width:34px;text-align:right}
-
-/* MANUAL PROFIT VIEW */
-.profit-view{background:var(--white);border:1.5px solid var(--g6);border-radius:8px;padding:16px;margin-bottom:20px;box-shadow:var(--sh)}
-.cost-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--g6);border:1px solid var(--g6);border-radius:6px;overflow:hidden;margin-bottom:14px}
-.cb-cell{background:var(--white);padding:12px}
-.cb-l{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g4);margin-bottom:4px}
-.cb-v{font-size:16px;font-weight:700;color:var(--black);font-family:'Syne',sans-serif}
-.cb-s{font-size:9px;color:var(--g3);margin-top:2px}
-
-/* SIMULATOR */
-.sim-card{background:var(--white);border:1.5px solid var(--g6);border-radius:8px;padding:16px;margin-bottom:20px;box-shadow:var(--sh)}
-.sim-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px;flex-wrap:nowrap}
-.sim-ttl{font-size:13px;font-weight:700;color:var(--black);white-space:nowrap}
-.sim-ttl span{color:var(--g3);font-weight:400;font-size:11px}
-.sim-inp-group{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.sim-spin-wrap{display:flex;flex-direction:column;align-items:center;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--brand-bd)}
-.sim-spin-brand{border-color:var(--brand-bd);background:var(--brand-lt)}
-.sim-spin-green{border-color:var(--green-bd);background:var(--green-lt)}
-.sim-spin-btn{width:100%;border:none;background:transparent;cursor:pointer;font-size:9px;line-height:1;padding:2px 6px;color:var(--g3);transition:background .1s}
-.sim-spin-btn:hover{background:rgba(0,0,0,.07)}
-.sim-rate-box{width:80px;text-align:center;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--brand);background:transparent;border:none;padding:2px 6px;outline:none;box-sizing:border-box;min-width:0}
-.sim-rate-box::-webkit-inner-spin-button,.sim-rate-box::-webkit-outer-spin-button{-webkit-appearance:none}
-.sim-rate-box:focus{border-color:var(--brand)}
-.sim-pct{font-size:14px;font-weight:700;color:var(--g3)}
-.sim-ftx-group{display:flex;align-items:center;gap:4px;flex-shrink:0}
-.sim-ftx-box{width:60px;text-align:center;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--green);background:transparent;border:none;padding:2px 6px;outline:none;box-sizing:border-box;min-width:0}
-.sim-ftx-box:focus{border-color:var(--green)}
-.sim-ftx-lbl{font-size:11px;font-weight:600;color:var(--g3)}
-.zone-outer{position:relative;padding:10px 2px 4px}
-.zone-bg{position:absolute;top:50%;transform:translateY(-50%);width:calc(100% - 4px);left:2px;height:6px;border-radius:3px;pointer-events:none}
-.zone-range{width:100%;position:relative;z-index:2;cursor:pointer;height:6px;background:transparent;outline:none;-webkit-appearance:none;display:block}
-.zone-range::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:transparent}
-.zone-range::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--brand);border:2.5px solid var(--white);box-shadow:0 2px 6px rgba(75,42,253,.35);cursor:pointer;margin-top:-6px}
-.zone-range::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--brand);border:2.5px solid var(--white);box-shadow:0 2px 6px rgba(75,42,253,.35);cursor:pointer}
-.zone-ticks{display:flex;justify-content:space-between;font-size:9px;font-weight:700;margin-top:2px;padding:0 1px}
-.zt-mn{color:var(--green)}.zt-id{color:var(--amber);text-align:center}.zt-mx{color:var(--red);text-align:right}
-.sim-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:transparent;border:1px solid var(--g6);border-radius:6px;overflow:hidden}
-.ss{background:var(--white);padding:10px 8px}
-.ss-l{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g4);margin-bottom:4px}
-.ss-v{font-size:15px;font-weight:700;color:var(--black);line-height:1;font-family:'Syne',sans-serif}
-.ss-s{font-size:9px;color:var(--g3);margin-top:2px}
-.ztag{display:inline-block;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:2px 5px;border-radius:3px;margin-top:3px}
-.ztag-l{background:var(--red-lt);color:var(--red)}.ztag-s{background:var(--green-lt);color:var(--green)}.ztag-o{background:var(--amber-lt);color:var(--amber)}
-
-/* QUOTE PANEL */
-.quote-card{background:var(--white);border:1.5px solid var(--g6);border-radius:8px;padding:16px;box-shadow:var(--sh)}
-.quote-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:12px;flex-wrap:wrap}
-.qactions{display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}
-.qbtn{padding:8px 14px;font-size:11px;font-weight:700;border-radius:var(--r);cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.2px;transition:all .15s;border:1.5px solid}
-.qbtn-p{background:var(--brand);color:var(--white);border-color:var(--brand)}.qbtn-p:hover{background:#3b20e0}
-.qbtn-o{background:var(--white);color:var(--black);border-color:var(--g5)}.qbtn-o:hover{border-color:var(--black)}
-.sel-badge{display:inline-flex;align-items:center;gap:6px;background:var(--brand);color:var(--white);border-radius:var(--r);padding:5px 12px;font-size:11px;font-weight:700;font-family:'Syne',sans-serif}
-.sel-badge span{font-size:10px;font-weight:400;color:rgba(255,255,255,.6)}
-.qprev{background:var(--g7);border:1px solid var(--g6);border-radius:6px;padding:18px;max-width:900px;margin-left:auto;margin-right:auto}
-.qp-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding:20px 22px;border-radius:8px;border-bottom:2px solid var(--brand-bd);background:#ffffff}
-.qp-logo-area{display:flex;align-items:center;gap:10px;min-width:140px}
-.qp-logo{height:40px;width:auto;object-fit:contain}
-.qp-brand{font-family:'Syne',sans-serif;font-size:23px;font-weight:800;color:var(--black)}
-.qp-brand em{color:var(--brand);font-style:normal}
-.qp-meta{font-size:10px;color:var(--g3);text-align:right;line-height:1.7}
-.qp-intro{font-size:11px;color:var(--g3);margin-bottom:18px;line-height:1.6}
-.qp-save-banner{background:linear-gradient(180deg,#e6f7f2 0%,#d7f4ec 100%);border:1px solid var(--green-bd);border-radius:6px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.qp-save-l{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--green)}
-.qp-save-v{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--green)}
-.qp-two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.qp-box{background:var(--white);border:1px solid var(--g6);border-radius:6px;padding:12px 14px}
-.qp-box-l{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--g4);margin-bottom:8px}
-.qp-kv{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--g7);font-size:12px}
-.qp-kv:last-child{border-bottom:none}
-.qp-kv-k{color:var(--g3)}.qp-kv-v{font-weight:600;color:var(--black)}.qp-kv-v.g{color:var(--green)}.qp-kv-v.b{color:var(--brand)}
-.qp-footer{border-top:1px solid var(--g6);padding-top:10px;font-size:9px;color:var(--g4);line-height:1.6;text-align:center;margin-top:12px}
-/* Section boxes — YOUR PRICING / ADDITIONAL FEES */
-.qp-section{width:100%;box-sizing:border-box;border:1px solid #e5e5e5;border-radius:8px;padding:22px 24px;margin-bottom:16px;background:#ffffff;border-left:none}
-.qp-section-title{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--quote-accent);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--g6)}
-.qp-section-body{font-size:14px;color:var(--g3);line-height:1.7}
-.qp-section-body strong{color:var(--brand);font-weight:600}
-.qp-bullets{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
-.qp-bullets li{font-size:14px;color:var(--g3);padding-left:14px;position:relative;line-height:1.5}
-.qp-bullets li::before{content:"·";position:absolute;left:0;color:var(--brand);font-weight:700}
-.pricing-breakdown{width:100%;border-collapse:collapse;margin-top:16px;font-size:14px}
-.pricing-breakdown thead tr{background:var(--brand-lt)}
-.pricing-breakdown th{text-align:left;font-weight:600;color:var(--quote-accent);padding:8px 10px;border-bottom:2px solid #cccccc;font-size:12px;letter-spacing:.5px;text-transform:uppercase}
-.pricing-breakdown td{padding:9px 10px;border-bottom:1px solid var(--g6);color:var(--black);vertical-align:top}
-.pricing-breakdown tr:last-child td{border-bottom:none}
-.pricing-breakdown tr:hover td{background:var(--g7)}
-.pricing-breakdown .pb-rate{font-weight:600;color:var(--brand);white-space:nowrap}
-.pricing-breakdown .pb-note{color:var(--g3);font-size:13px}
-.qp-next-steps li{font-size:14px;line-height:1.6}
-.qp-fee-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--g6)}
-.qp-fee-row:last-child{border-bottom:none}
-.qp-fee-left{display:flex;flex-direction:column;gap:2px}
-.qp-fee-name{font-size:15px;font-weight:600;color:var(--black)}
-.qp-fee-desc{font-size:13px;color:var(--g3)}
-.qp-fee-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
-.qp-fee-amount{font-size:12px;font-weight:700;color:var(--quote-accent)}
-.qp-fee-note{font-size:13px;color:var(--g3)}
-.qp-rate-compare{display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:stretch;margin-bottom:14px}
-.qp-rate-arrow{font-size:22px;color:var(--g4);padding:0 4px;display:flex;align-items:center;flex-shrink:0}
-.qp-rate-block{border-radius:8px;padding:22px 24px;min-width:0}
-.qp-rate-block.qp-rate-solo{grid-column:1 / -1}
-.qp-rate-current{background:#ffffff;border:1.5px solid #e5e5e5}
-.qp-rate-mp{background:var(--brand-lt);border:2px solid var(--brand);box-shadow:0 8px 24px rgba(75,42,253,0.15)}
-.qp-rate-block-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
-.qp-rate-current .qp-rate-block-lbl{color:var(--red)}
-.qp-rate-mp .qp-rate-block-lbl{color:var(--quote-accent)}
-.qp-rate-big{font-family:"Syne",sans-serif;font-size:56px;font-weight:800;line-height:1;letter-spacing:-2px;margin-bottom:6px}
-.qp-rate-pct{font-size:30px;letter-spacing:-1px}
-.qp-rate-big-red{color:var(--red)}
-.qp-rate-big-brand{color:var(--brand)}
-.qp-rate-block-sub{font-size:10px;color:var(--g3);line-height:1.5}
-.qp-snapshot{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--g6);border:1px solid var(--g6);border-radius:8px;overflow:hidden;margin-bottom:14px}
-.qp-snap-card{background:var(--white);padding:14px 12px}
-.qp-snap-l{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--g4);margin-bottom:5px}
-.qp-snap-v{font-size:19px;font-weight:700;color:var(--black);line-height:1;font-family:'Syne',sans-serif}
-
-.hidden{display:none!important}
-.brand-switcher{display:flex;gap:4px;background:var(--g7);border-radius:6px;padding:3px}
-.brand-switcher-btn{padding:3px 12px;border:none;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;background:transparent;color:var(--g3);font-family:'Inter',sans-serif}
-.brand-switcher-btn.on{background:var(--white);color:var(--black);box-shadow:0 1px 3px rgba(0,0,0,.1)}
-@page{size:A4;margin:20mm}
-@media print{
-* { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-body{width:100%;margin:0;padding:0}.container,.content,.wrapper{max-width:100%}
-.pricing-comparison { display: table; width: 100%; table-layout: fixed; }
-.pricing-card { display: table-cell; vertical-align: top; width: 50%; }
-.rc { box-shadow: none; }
-.rc.sel { box-shadow: none; }
-.qp-section::before, .qp-section::after, .section::before, .section::after { display: none !important; }
-.qp-section-title::after { display: none !important; }
-.qp-hdr { background: #ffffff !important; padding: 20px 22px !important; margin-bottom: 24px !important; border-bottom: 2px solid var(--brand-bd) !important; }
-.qp-logo { height: 40px !important; }
-.qp-section { background: #ffffff !important; border: 1px solid #e5e5e5 !important; box-shadow: none !important; }
-.qp-rate-mp { background: var(--brand-lt) !important; border: 2px solid var(--brand) !important; box-shadow: none !important; }
-.pricing-breakdown thead tr { background: var(--brand-lt) !important; }
+.container{
+max-width:700px;
+margin:auto;
+background:white;
+padding:40px;
+border-radius:10px;
+box-shadow:0 10px 30px rgba(0,0,0,0.1);
 }
+
+h1{
+margin-bottom:20px;
+}
+
+.row{
+margin-bottom:15px;
+font-size:18px;
+}
+
+.value{
+font-weight:bold;
+}
+
+button{
+margin-top:30px;
+padding:12px 20px;
+background:#16a34a;
+border:none;
+color:white;
+font-size:16px;
+border-radius:6px;
+cursor:pointer;
+}
+
+button:hover{
+background:#15803d;
+}
+
 </style>
+
 </head>
+
 <body>
 
-<!-- TOPBAR -->
-<div class="topbar">
-  <div class="tb-left">
-    <img class="tb-logo" id="tbLogo" src="" alt="Logo">
-    <div class="wordmark" id="wordmark">Minted<em>Pay</em></div>
-  </div>
-  <div class="tb-meta">
-    <span id="quoteIdDisplay" style="font-weight:600;color:var(--black)"></span>
-  </div>
+<div class="container">
+
+<h1>Payment Processing Quote</h1>
+
+<div class="row">
+Merchant:
+<span id="merchantName" class="value"></span>
 </div>
 
-<!-- MAIN -->
-<div style="max-width:960px;margin:0 auto;padding:22px">
-
-  <!-- Loading -->
-  <div id="loadingState" style="text-align:center;padding:80px 40px;color:var(--g4)">
-    <div style="font-size:28px;margin-bottom:12px">⏳</div>
-    <div style="font-size:14px">Loading your quote…</div>
-  </div>
-
-  <!-- Quote preview -->
-  <div id="qprev"></div>
-
-  <!-- Accept button -->
-  <div style="text-align:center;margin-top:16px;padding-bottom:40px">
-    <button id="acceptQuoteBtn" class="qbtn qbtn-p" onclick="openAcceptance()" style="display:none;background:#16a34a;border-color:#16a34a;padding:12px 32px;font-size:14px" onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">✓ Accept Quote</button>
-  </div>
+<div class="row">
+Rate:
+<span id="rate" class="value"></span>
 </div>
 
-<!-- ACCEPTANCE MODAL -->
-<div id="acceptModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:999;align-items:center;justify-content:center">
-  <div style="background:#fff;width:820px;max-width:95vw;max-height:85vh;overflow:auto;border-radius:8px;padding:28px">
-    <h2 style="font-family:'Syne',sans-serif;margin-bottom:10px" id="acceptModalTitle">Merchant Agreement</h2>
-    <div id="scheduleA"></div>
-    <div style="height:260px;overflow:auto;border:1px solid #e5e5e5;padding:18px;border-radius:6px;margin:20px 0">
-      <h3>Merchant Services Agreement</h3>
-      <p>This Merchant Services Agreement ("Agreement") is entered into between Nova Advisory Limited trading as Minted Pay ("Minted Pay") and the Merchant accepting this Agreement.</p>
-      <p>By clicking "Accept &amp; Confirm Agreement" the Merchant agrees to be legally bound by this Agreement.</p>
-      <h4>Electronic Acceptance</h4>
-      <p>This Agreement may be accepted electronically through the quote platform. Electronic acceptance has the same legal effect as a signed written contract.</p>
-      <h4>Pricing</h4>
-      <p>The pricing proposal accepted through the quote platform constitutes Schedule A of this Agreement.</p>
-      <h4>Merchant Responsibilities</h4>
-      <p>The Merchant agrees to comply with all applicable laws, card scheme rules, and acquiring partner requirements.</p>
-      <h4>Chargebacks</h4>
-      <p>The Merchant is responsible for all chargebacks, disputes, and refunds.</p>
-      <h4>Settlement</h4>
-      <p>Settlement occurs after cleared funds are received from acquiring partners.</p>
-      <h4>Governing Law</h4>
-      <p>This Agreement is governed by the laws of England and Wales.</p>
-    </div>
-    <label style="display:flex;gap:8px;align-items:flex-start;margin-bottom:18px;cursor:pointer">
-      <input type="checkbox" id="acceptCheck" style="margin-top:2px;flex-shrink:0">
-      <span>I confirm I have read and agree to the Merchant Services Agreement and Schedule A – Fees &amp; Pricing.</span>
-    </label>
-    <div style="display:flex;justify-content:flex-end;gap:10px">
-      <button onclick="closeAccept()" class="qbtn qbtn-o">Cancel</button>
-      <button onclick="confirmAcceptance()" class="qbtn qbtn-p" id="confirmBtn" disabled>Accept &amp; Confirm Agreement</button>
-    </div>
-  </div>
+<div class="row">
+Per Transaction Fee:
+<span id="fixedFee" class="value"></span>
 </div>
+
+<button onclick="acceptQuote()">
+Accept Quote
+</button>
+
+</div>
+
 
 <script>
-// ═══ GLOBAL STATE ═══
-let quoteData = null;
 
-// ═══ HELPERS ═══
-function getQuoteExpiry(){
-  const d = new Date();
-  d.setDate(d.getDate()+30);
-  return d.toLocaleDateString("en-GB",{day:"2-digit",month:"long",year:"numeric"});
-}
-function fmtK(n){
-  const a=Math.abs(n), sg=n<0?"-":"";
-  if(a>=1e6) return sg+"£"+(a/1e6).toFixed(2)+"m";
-  if(a>=1000) return sg+"£"+(a/1000).toFixed(1)+"k";
-  return sg+"£"+a.toFixed(2);
-}
-function f2(n){ return "£"+Math.abs(n).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function n0(n){ return Math.round(n).toLocaleString("en-GB"); }
-
-// ═══ RENDER QUOTE PREVIEW ═══
-function renderQuote(data){
-  const brand = data.brand || {name:"MintedPay",nameParts:["Minted","Pay"],tagline:"Payment Processing Proposal",legal:""};
-  const rate = parseFloat(data.rate) || 0;
-  const ftx = parseFloat(data.fixed_fee) || 0;
-  const vol = parseFloat(data.vol) || 0;
-  const cnt = parseFloat(data.cnt) || 0;
-  const avgTx = parseFloat(data.avgTx) || (cnt > 0 ? vol/cnt : 0);
-  const cur = parseFloat(data.cur) || 0;
-  const name = data.merchant_name || "[Merchant Name]";
-  const now = new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"long",year:"numeric"});
-  const expiryStr = getQuoteExpiry();
-  const curRate = (cur > 0 && vol > 0) ? (cur/vol*100) : null;
-  const isManual = vol === 0 && cnt === 0;
-
-  // Savings calc
-  const rev = vol*(rate/100) + (ftx/100)*cnt;
-  const mSave = cur > 0 ? cur - rev : 0;
-
-  const brandLabel = brand.nameParts && brand.nameParts[1]
-    ? brand.nameParts[0] + '<em>' + brand.nameParts[1] + '</em>'
-    : brand.name;
-
-  const logoStyle = brand.key === 'ummah'
-    ? 'height:36px;width:auto;max-width:180px'
-    : 'height:36px;width:auto';
-
-  document.getElementById("qprev").innerHTML = `
-    <div class="qprev">
-      <div class="qp-hdr">
-        <div class="qp-logo-area">
-          <img class="qp-logo" src="${brand.logoData||''}" alt="${brand.name}" style="${logoStyle}">
-          <div>
-            <div class="qp-brand" style="${brand.key==='ummah'?'display:none':''}">${brandLabel}</div>
-            <div style="font-size:10px;color:var(--g3);margin-top:1px">${brand.tagline||''}</div>
-          </div>
-        </div>
-        <div class="qp-meta">
-          <strong style="color:var(--black)">${name}</strong><br>${now}<br>
-          <span style="font-size:10px;color:var(--g3);margin-top:3px;display:block">Quote ID: <strong style="color:var(--black)">${data.quote_id}</strong></span>
-          <span style="font-size:10px;color:var(--g3)">Valid until: ${expiryStr}</span>
-        </div>
-      </div>
-
-      <div class="qp-intro">This payment processing proposal has been prepared for <strong>${name}</strong> based on the transaction data provided.</div>
-
-      ${!isManual ? `<div class="qp-snapshot">
-        <div class="qp-snap-card"><div class="qp-snap-l">Volume Analysed</div><div class="qp-snap-v">${fmtK(vol)}</div></div>
-        <div class="qp-snap-card"><div class="qp-snap-l">Transactions Analysed</div><div class="qp-snap-v">${n0(cnt)}</div></div>
-        <div class="qp-snap-card"><div class="qp-snap-l">Average Transaction</div><div class="qp-snap-v">${f2(avgTx)}</div></div>
-        <div class="qp-snap-card"><div class="qp-snap-l">Current Effective Rate</div><div class="qp-snap-v" style="color:${curRate!==null?(curRate<1?'var(--green)':curRate<2.2?'var(--amber)':'var(--red)'):'var(--g4)'}">${curRate!==null?curRate.toFixed(2)+'%':'—'}</div></div>
-      </div>` : ''}
-
-      <div class="qp-rate-compare">
-        ${curRate!==null ? `
-        <div class="qp-rate-block qp-rate-current">
-          <div class="qp-rate-block-lbl">Currently paying</div>
-          <div class="qp-rate-big qp-rate-big-red">${curRate.toFixed(2)}<span class="qp-rate-pct">%</span></div>
-          <div class="qp-rate-block-sub">effective rate based on<br>your submitted data</div>
-        </div>
-        <div class="qp-rate-arrow">→</div>` : ''}
-        <div class="qp-rate-block qp-rate-mp${curRate===null?' qp-rate-solo':''}">
-          <div class="qp-rate-block-lbl">${brand.name} rate</div>
-          <div class="qp-rate-big qp-rate-big-brand">${rate.toFixed(2)}<span class="qp-rate-pct">%</span></div>
-          <div class="qp-rate-block-sub">percentage per transaction<br><strong style="color:var(--brand)">+ ${ftx}p fixed fee per transaction</strong></div>
-        </div>
-      </div>
-
-      ${!isManual && cur > 0 && mSave > 0 ? `
-      <div class="qp-save-banner">
-        <div class="qp-save-l">Estimated Saving Based on Provided Data</div>
-        <div class="qp-save-v">+${fmtK(mSave)}</div>
-      </div>` : ''}
-
-      <div class="qp-section">
-        <div class="qp-section-title">Why ${brand.name}</div>
-        <div class="qp-section-body">
-          ${brand.name} is a UK-based payment processor built for modern businesses. We offer transparent pricing, fast onboarding, and dedicated support — with no hidden fees and no long-term contracts.
-          <ul class="qp-bullets" style="margin-top:8px">
-            <li><strong>Transparent pricing</strong> — one blended rate, no surprises on your statement</li>
-            <li><strong>Fast onboarding</strong> — go live in as little as 48 hours</li>
-            <li><strong>Dedicated account manager</strong> — a real person, not a ticket queue</li>
-            <li><strong>All major cards accepted</strong> — Visa, Mastercard, Amex, and international cards</li>
-            <li><strong>No lock-in</strong> — rolling monthly agreement, cancel any time</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="qp-section">
-        <div class="qp-section-title">Your Pricing</div>
-        <div class="qp-section-body">We believe in keeping things simple. Your rate is a single blended percentage plus a small fixed fee that already factors in interchange, scheme fees, and our margin — no hidden surprises, no complicated breakdowns on your statements.</div>
-        <ul class="qp-bullets">
-          <li>No monthly minimum volumes — you only pay when you process</li>
-          <li>No fixed monthly fees or platform charges</li>
-          <li>No gateway fees</li>
-          <li>No PCI compliance fees</li>
-          <li>Full integration and technical support</li>
-        </ul>
-        <table class="pricing-breakdown">
-          <thead><tr><th>Transaction Type</th><th>Rate</th><th>Notes</th></tr></thead>
-          <tbody>
-            <tr>
-              <td>All Card Types (Blended)</td>
-              <td class="pb-rate">${rate.toFixed(2)}% + ${ftx}p per transaction</td>
-              <td class="pb-note">Single blended rate covering Visa &amp; Mastercard debit and credit</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="qp-section">
-        <div class="qp-section-title">Next Steps</div>
-        <ol class="qp-next-steps" style="margin:0;padding-left:18px;color:var(--black)">
-          <li>Review this proposal and confirm the rate suits your business.</li>
-          <li>Complete the online merchant application — takes approximately 15 minutes.</li>
-          <li>Our team completes KYB/KYC verification within 48 hours.</li>
-          <li>Go-live with your existing checkout, POS, or payment link.</li>
-        </ol>
-      </div>
-
-      <div class="qp-footer">${brand.legal||''}</div>
-    </div>`;
+function getParam(name){
+const params = new URLSearchParams(window.location.search);
+return params.get(name);
 }
 
-// ═══ ACCEPTANCE FLOW ═══
-function openAcceptance(){
-  const d = quoteData;
-  if(!d) return;
-  const brand = d.brand || {name:"MintedPay"};
-  document.getElementById("acceptModalTitle").textContent = brand.name + " Merchant Agreement";
-  const expiryStr = getQuoteExpiry();
-  document.getElementById("scheduleA").innerHTML = `
-    <div style="border:1px solid #e5e5e5;border-radius:6px;padding:18px;margin-bottom:4px;background:#fafafa">
-      <h3 style="margin-top:0;font-family:'Syne',sans-serif">Schedule A — Fees &amp; Pricing</h3>
-      <p><strong>Merchant:</strong> ${d.merchant_name}</p>
-      <p><strong>Quote ID:</strong> ${d.quote_id}</p>
-      <p><strong>Valid Until:</strong> ${expiryStr}</p>
-      <table style="width:100%;border-collapse:collapse;margin-top:10px">
-        <tr style="background:#f3f4f6">
-          <td style="padding:8px 10px;border:1px solid #e5e5e5">Card Processing Rate</td>
-          <td style="padding:8px 10px;border:1px solid #e5e5e5"><strong>${d.rate}%</strong></td>
-        </tr>
-        <tr>
-          <td style="padding:8px 10px;border:1px solid #e5e5e5">Per Transaction Fee</td>
-          <td style="padding:8px 10px;border:1px solid #e5e5e5"><strong>${d.fixed_fee}p</strong></td>
-        </tr>
-      </table>
-    </div>`;
-  document.getElementById("acceptCheck").checked = false;
-  document.getElementById("confirmBtn").disabled = true;
-  document.getElementById("acceptModal").style.display = "flex";
+function loadQuote(){
+
+const merchant = getParam("merchant");
+const rate = getParam("rate");
+const fee = getParam("fee");
+
+if(!merchant){
+document.body.innerHTML = "Quote not found.";
+return;
 }
 
-function closeAccept(){ document.getElementById("acceptModal").style.display = "none"; }
-
-function confirmAcceptance(){
-  const d = quoteData;
-  const timestamp = new Date().toISOString();
-  const confirmBtn = document.getElementById("confirmBtn");
-  confirmBtn.disabled = true;
-  confirmBtn.textContent = "Processing…";
-
-  const brandName = (d.brand && d.brand.name) || "MintedPay";
-  const qprev = document.getElementById("qprev");
-
-  fetch("/api/quote_acceptance", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({
-      quote_id: d.quote_id,
-      merchant_name: d.merchant_name,
-      merchant_email: d.merchant_email,
-      timestamp: timestamp
-    })
-  })
-  .then(async res => {
-    const result = await res.json();
-    if(!res.ok){
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = "Accept & Confirm Agreement";
-      closeAccept();
-      let icon="⚠️", title="Unable to Accept Quote", msg=result.error||"Something went wrong.", extra="";
-      if(res.status===409){ icon="✓"; title="Already Accepted"; }
-      if(res.status===410){ icon="⏱"; title="Quote Expired"; }
-      qprev.innerHTML = `<div style="text-align:center;padding:60px 40px;max-width:480px;margin:0 auto">
-        <div style="width:64px;height:64px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px">${icon}</div>
-        <h2 style="font-family:'Syne',sans-serif;color:#111;margin-bottom:10px">${title}</h2>
-        <p style="color:#6b7280">${msg}</p>${extra}
-        <p style="color:#9ca3af;font-size:12px;margin-top:16px">Quote ID: ${d.quote_id}</p>
-      </div>`;
-      return;
-    }
-    closeAccept();
-    generateAgreementPDF(d, brandName, timestamp);
-    qprev.innerHTML = `<div style="text-align:center;padding:60px 40px;max-width:520px;margin:0 auto">
-      <div style="width:64px;height:64px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px">✓</div>
-      <h2 style="font-family:'Syne',sans-serif;color:#111;margin-bottom:10px">Agreement Accepted</h2>
-      <p style="color:#6b7280;margin-bottom:6px">Thank you, <strong>${d.merchant_name}</strong>.</p>
-      <p style="color:#6b7280;margin-bottom:6px">Your ${brandName} Merchant Services Agreement has been recorded.</p>
-      ${d.merchant_email ? `<p style="color:#6b7280;font-size:13px">A copy of the agreement has been emailed to <strong>${d.merchant_email}</strong>.</p>` : ""}
-      <p style="color:#9ca3af;font-size:12px;margin-top:16px">Quote ID: ${d.quote_id} · Accepted: ${new Date().toLocaleString("en-GB")}</p>
-    </div>`;
-    document.getElementById("acceptQuoteBtn").style.display = "none";
-  })
-  .catch(e => {
-    console.error("Acceptance failed:", e);
-    confirmBtn.disabled = false;
-    confirmBtn.textContent = "Accept & Confirm Agreement";
-    alert("A network error occurred. Please try again.");
-  });
-}
-
-// ═══ AGREEMENT PDF ═══
-function generateAgreementPDF(d, brandName, timestamp){
-  const {jsPDF} = window.jspdf;
-  const doc = new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
-  const W=210, ml=20, mr=20, cw=W-ml-mr;
-  const brand="#4F35F3", black="#111111", grey="#6b7280";
-  const expiryStr = getQuoteExpiry();
-
-  function hline(y,col){ doc.setDrawColor(col||"#e5e5e5"); doc.line(ml,y,W-mr,y); }
-
-  // PAGE 1 — Agreement
-  doc.setFillColor(brand); doc.rect(0,0,W,18,"F");
-  doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor("#ffffff");
-  doc.text(brandName.toUpperCase(),ml,11.5);
-  doc.setFont("helvetica","normal"); doc.setFontSize(8);
-  doc.text("MERCHANT SERVICES AGREEMENT",W-mr,11.5,{align:"right"});
-
-  doc.setFont("helvetica","bold"); doc.setFontSize(20); doc.setTextColor(black);
-  doc.text("Merchant Services",ml,38); doc.text("Agreement",ml,48);
-  doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(grey);
-  doc.text("Quote ID: "+(d.quote_id||"—"),ml,56);
-  doc.text("Valid until: "+expiryStr,ml,61);
-  hline(67);
-
-  const sections=[
-    ["Parties","This Merchant Services Agreement is entered into between Nova Advisory Limited trading as "+brandName+" and the Merchant named in Schedule A."],
-    ["Electronic Acceptance","This Agreement may be accepted electronically. Electronic acceptance has the same legal effect as a signed written contract."],
-    ["Pricing","The pricing proposal accepted through the quote platform constitutes Schedule A of this Agreement."],
-    ["Merchant Responsibilities","The Merchant agrees to comply with all applicable laws, card scheme rules, and acquiring partner requirements."],
-    ["Chargebacks","The Merchant is responsible for all chargebacks, disputes, and refunds."],
-    ["Settlement","Settlement occurs after "+brandName+" receives cleared funds from acquiring partners."],
-    ["Governing Law","This Agreement is governed by the laws of England and Wales."],
-  ];
-  let y=76;
-  sections.forEach(([title,body])=>{
-    if(y>265){doc.addPage();y=25;}
-    doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(black); doc.text(title,ml,y); y+=4;
-    doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor("#374151");
-    const lines=doc.splitTextToSize(body,cw); doc.text(lines,ml,y); y+=lines.length*4.5+5;
-  });
-  doc.setFontSize(7.5); doc.setTextColor(grey);
-  doc.text(brandName+" — Confidential",ml,290);
-  doc.text("Page 1 of 3",W-mr,290,{align:"right"});
-
-  // PAGE 2 — Schedule A
-  doc.addPage();
-  doc.setFillColor(brand); doc.rect(0,0,W,18,"F");
-  doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor("#ffffff");
-  doc.text(brandName.toUpperCase(),ml,11.5);
-  doc.setFont("helvetica","normal"); doc.setFontSize(8);
-  doc.text("SCHEDULE A — FEES & PRICING",W-mr,11.5,{align:"right"});
-  doc.setFont("helvetica","bold"); doc.setFontSize(16); doc.setTextColor(black);
-  doc.text("Schedule A",ml,34);
-  doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(grey);
-  doc.text("Fees & Pricing",ml,41); hline(47);
-
-  doc.autoTable({
-    startY:55, margin:{left:ml,right:mr},
-    head:[["Fee Type","Amount"]],
-    body:[
-      ["Card Processing Rate",(d.rate||"—")+"%"],
-      ["Per Transaction Fixed Fee",(d.fixed_fee||"—")+"p"],
-      ["Monthly Minimum","None"],["Monthly Platform Fee","None"],
-      ["PCI Compliance Fee","None"],["Gateway Fee","None"],
-    ],
-    headStyles:{fillColor:[79,53,243],textColor:255,fontStyle:"bold",fontSize:9},
-    bodyStyles:{fontSize:9},
-    alternateRowStyles:{fillColor:[249,250,251]},
-    columnStyles:{1:{fontStyle:"bold",halign:"right"}},
-  });
-  doc.setFontSize(7.5); doc.setTextColor(grey);
-  doc.text(brandName+" — Confidential",ml,290);
-  doc.text("Page 2 of 3",W-mr,290,{align:"right"});
-
-  // PAGE 3 — Acceptance Record
-  doc.addPage();
-  doc.setFillColor(brand); doc.rect(0,0,W,18,"F");
-  doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor("#ffffff");
-  doc.text(brandName.toUpperCase(),ml,11.5);
-  doc.setFont("helvetica","normal"); doc.setFontSize(8);
-  doc.text("ACCEPTANCE RECORD",W-mr,11.5,{align:"right"});
-  doc.setFont("helvetica","bold"); doc.setFontSize(16); doc.setTextColor(black);
-  doc.text("Acceptance Record",ml,34); hline(40);
-
-  doc.setFillColor("#dcfce7"); doc.setDrawColor("#16a34a");
-  doc.roundedRect(ml,46,60,10,2,2,"FD");
-  doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor("#16a34a");
-  doc.text("✓  AGREEMENT ACCEPTED",ml+5,53);
-
-  doc.autoTable({
-    startY:65, margin:{left:ml,right:mr},
-    head:[["Field","Value"]],
-    body:[
-      ["Quote ID",d.quote_id||"—"],
-      ["Merchant Name",d.merchant_name||"—"],
-      ["Merchant Email",d.merchant_email||"—"],
-      ["Card Processing Rate",(d.rate||"—")+"%"],
-      ["Per Transaction Fixed Fee",(d.fixed_fee||"—")+"p"],
-      ["Accepted At (UTC)",timestamp||"—"],
-      ["Quote Expiry",expiryStr],
-    ],
-    headStyles:{fillColor:[79,53,243],textColor:255,fontStyle:"bold",fontSize:9},
-    bodyStyles:{fontSize:9},
-    alternateRowStyles:{fillColor:[249,250,251]},
-  });
-  doc.setFontSize(7.5); doc.setTextColor(grey);
-  doc.text(brandName+" — Confidential",ml,290);
-  doc.text("Page 3 of 3",W-mr,290,{align:"right"});
-
-  doc.save("Merchant_Agreement_"+(d.quote_id||"draft")+".pdf");
-}
-
-// ═══ LOAD QUOTE FROM URL ═══
-async function loadQuote(){
-  const params = new URLSearchParams(window.location.search);
-  const quoteId = params.get("quote");
-
-  if(!quoteId){
-    document.getElementById("loadingState").innerHTML =
-      '<div style="font-size:28px;margin-bottom:12px">📋</div>' +
-      '<div style="font-size:14px;color:#6b7280">No quote ID provided.</div>' +
-      '<div style="font-size:12px;color:#9ca3af;margin-top:8px">Please use the link provided by your sales representative.</div>';
-    return;
-  }
-
-  document.getElementById("quoteIdDisplay").textContent = quoteId;
-
-  let data;
-  try {
-    const res = await fetch("/api/quotes/" + quoteId);
-    if(!res.ok){
-      document.getElementById("loadingState").innerHTML =
-        '<div style="font-size:28px;margin-bottom:12px">⚠️</div>' +
-        '<div style="font-size:14px;color:#6b7280">Quote not found or has expired.</div>' +
-        '<div style="font-size:12px;color:#9ca3af;margin-top:8px">Quote ID: '+quoteId+'</div>';
-      return;
-    }
-    data = await res.json();
-  } catch(e) {
-    console.error("Error loading quote:", e);
-    document.getElementById("loadingState").innerHTML =
-      '<div style="font-size:28px;margin-bottom:12px">⚠️</div>' +
-      '<div style="font-size:14px;color:#6b7280">Unable to load quote. Please check your connection.</div>';
-    return;
-  }
-
-  if(!data || typeof data !== "object") return;
-
-  // Store globally for acceptance flow
-  quoteData = data;
-
-  // Update topbar with brand
-  const brand = data.brand || {};
-  if(brand.logoData){
-    const logo = document.getElementById("tbLogo");
-    logo.src = brand.logoData;
-    if(brand.key === 'ummah'){ logo.style.height='28px'; logo.style.width='auto'; logo.style.maxWidth='160px'; }
-  }
-  const wm = document.getElementById("wordmark");
-  if(brand.key === 'ummah'){ wm.style.display = 'none'; }
-  else if(brand.nameParts && brand.nameParts[1]){
-    wm.innerHTML = brand.nameParts[0] + '<em>' + brand.nameParts[1] + '</em>';
-  }
-
-  // Hide loading, render quote
-  document.getElementById("loadingState").style.display = "none";
-  renderQuote(data);
-
-  // Show accept button
-  document.getElementById("acceptQuoteBtn").style.display = "inline-block";
-}
-
-// ═══ INIT ═══
-document.addEventListener("DOMContentLoaded", () => {
-  const cb = document.getElementById("acceptCheck");
-  const btn = document.getElementById("confirmBtn");
-  if(cb && btn){ cb.addEventListener("change", () => { btn.disabled = !cb.checked; }); }
-  loadQuote();
-});function getQuoteId() {
-
-  const params = new URLSearchParams(window.location.search);
-  return params.get("quote");
+document.getElementById("merchantName").innerText = merchant;
+document.getElementById("rate").innerText = rate + "%";
+document.getElementById("fixedFee").innerText = fee + "p";
 
 }
 
-function loadQuote() {
+function acceptQuote(){
 
-  const quoteId = getQuoteId();
+const merchant = getParam("merchant");
 
-  if (!quoteId) {
-    document.body.innerHTML = "Quote not found.";
-    return;
-  }
-
-  const data = localStorage.getItem(quoteId);
-
-  if (!data) {
-    document.body.innerHTML = "Quote expired or not found.";
-    return;
-  }
-
-  const quote = JSON.parse(data);
-
-  document.getElementById("merchantName").innerText = quote.merchantName;
-  document.getElementById("rate").innerText = quote.rate + "%";
-  document.getElementById("fixedFee").innerText = quote.fixedFee + "p";
+alert("Quote accepted by " + merchant);
 
 }
 
 window.onload = loadQuote;
 
-function acceptQuote() {
-
-  const quoteId = getQuoteId();
-
-  alert("Quote " + quoteId + " accepted.");
-
-}function generateQuoteId() {
-  const year = new Date().getFullYear();
-  const rand = Math.floor(1000 + Math.random() * 9000);
-  return "MP-" + year + "-" + rand;
-}
-
-function createQuoteLink() {
-
-  if (!window.quoteId) {
-    window.quoteId = generateQuoteId();
-  }
-
-  const link =
-    window.location.origin +
-    "/quote.html?quote=" +
-    window.quoteId;
-
-  navigator.clipboard.writeText(link);
-
-  alert("Quote link copied:\n\n" + link);
-}
 </script>
+
 </body>
 </html>
