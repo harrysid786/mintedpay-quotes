@@ -2,80 +2,100 @@ const express = require("express");
 const router  = express.Router();
 const db      = require("../db");
 
-// Safely add extra columns if they don't exist yet
-["vol","cnt","avg_tx","cur","debit_frac"].forEach(col => {
-  try { db.exec(`ALTER TABLE quotes ADD COLUMN ${col} REAL DEFAULT 0`); } catch(_){}
-});
-
-// ── POST /api/quotes ──────────────────────────────────────────
+// ── POST /api/quotes — save a quote and return shareable link ──
 router.post("/", (req, res) => {
   try {
-    const {
-      quote_id, merchant_name, merchant_email,
-      rate, fixed_fee, brand, created_at,
-      vol, cnt, avgTx, cur, debitFrac
-    } = req.body;
+    const q = req.body;
 
-    if (!quote_id) {
+    if (!q.quote_id) {
       return res.status(400).json({ error: "quote_id is required" });
     }
 
+    // Calculate expiry (30 days from now)
     const expiry = new Date();
     expiry.setDate(expiry.getDate() + 30);
     const expiry_date = expiry.toISOString();
 
-    db.prepare(`
+    // Store brand as JSON string
+    const brandJson = typeof q.brand === "object" ? JSON.stringify(q.brand) : (q.brand || "{}");
+
+    const stmt = db.prepare(`
       INSERT OR REPLACE INTO quotes
-        (quote_id, merchant_name, merchant_email, rate, fixed_fee, brand,
-         created_at, expiry_date, vol, cnt, avg_tx, cur, debit_frac)
+        (quote_id, merchant_name, merchant_email, rate, fixed_fee, brand, created_at, expiry_date, vol, cnt, avgTx, cur, debitFrac)
       VALUES
-        (@quote_id, @merchant_name, @merchant_email, @rate, @fixed_fee, @brand,
-         @created_at, @expiry_date, @vol, @cnt, @avg_tx, @cur, @debit_frac)
-    `).run({
-      quote_id,
-      merchant_name:  merchant_name  || "",
-      merchant_email: merchant_email || "",
-      rate:       parseFloat(rate)      || 0,
-      fixed_fee:  parseFloat(fixed_fee) || 0,
-      brand:      typeof brand === "object" ? JSON.stringify(brand) : (brand || ""),
-      created_at: created_at || new Date().toISOString(),
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    stmt.run(
+      q.quote_id,
+      q.merchant_name  || "",
+      q.merchant_email || "",
+      parseFloat(q.rate)      || 0,
+      parseFloat(q.fixed_fee) || 0,
+      brandJson,
+      q.created_at || new Date().toISOString(),
       expiry_date,
-      vol:        parseFloat(vol)       || 0,
-      cnt:        parseFloat(cnt)       || 0,
-      avg_tx:     parseFloat(avgTx)     || 0,
-      cur:        parseFloat(cur)       || 0,
-      debit_frac: parseFloat(debitFrac) || 0.70,
+      parseFloat(q.vol)       || 0,
+      parseFloat(q.cnt)       || 0,
+      parseFloat(q.avgTx)     || 0,
+      parseFloat(q.cur)       || 0,
+      parseFloat(q.debitFrac) || 0.70
+    );
+
+    // Build shareable link pointing to quote.html (merchant page)
+    const origin = process.env.PUBLIC_URL || (req.protocol + "://" + req.get("host"));
+    const url = `${origin}/quote.html?quote=${q.quote_id}`;
+
+    res.json({
+      success:     true,
+      url:         url,
+      quote_id:    q.quote_id,
+      expiry_date: expiry_date
     });
 
-    const host = process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || 3000}`;
-    return res.json({ url: `${host}/?quote=${quote_id}`, quote_id, expiry_date });
   } catch (err) {
-    console.error("POST /api/quotes error:", err);
-    return res.status(500).json({ error: "Failed to save quote" });
+    console.error("Error saving quote:", err);
+    res.status(500).json({ error: "Failed to save quote" });
   }
 });
 
-// ── GET /api/quotes/:quote_id ─────────────────────────────────
+// ── GET /api/quotes/:quote_id — load a stored quote ───────────
 router.get("/:quote_id", (req, res) => {
   try {
-    const row = db
-      .prepare("SELECT * FROM quotes WHERE quote_id = ?")
-      .get(req.params.quote_id);
+    const row = db.prepare("SELECT * FROM quotes WHERE quote_id = ?").get(req.params.quote_id);
 
     if (!row) {
       return res.status(404).json({ error: "Quote not found" });
     }
 
-    try { row.brand = JSON.parse(row.brand); } catch (_) {}
+    // Check expiry
+    if (row.expiry_date && new Date(row.expiry_date) < new Date()) {
+      return res.status(410).json({ error: "Quote has expired", expired_at: row.expiry_date });
+    }
 
-    // Map DB column names to JS names expected by the frontend
-    row.avgTx     = row.avg_tx     || 0;
-    row.debitFrac = row.debit_frac || 0.70;
+    // Parse brand JSON back to object
+    let brand = {};
+    try { brand = JSON.parse(row.brand || "{}"); } catch(e) { /* keep empty */ }
 
-    return res.json(row);
+    res.json({
+      quote_id:       row.quote_id,
+      merchant_name:  row.merchant_name,
+      merchant_email: row.merchant_email,
+      rate:           row.rate,
+      fixed_fee:      row.fixed_fee,
+      brand:          brand,
+      created_at:     row.created_at,
+      expiry_date:    row.expiry_date,
+      vol:            row.vol       || 0,
+      cnt:            row.cnt       || 0,
+      avgTx:          row.avgTx     || 0,
+      cur:            row.cur       || 0,
+      debitFrac:      row.debitFrac || 0.70
+    });
+
   } catch (err) {
-    console.error("GET /api/quotes/:id error:", err);
-    return res.status(500).json({ error: "Failed to load quote" });
+    console.error("Error loading quote:", err);
+    res.status(500).json({ error: "Failed to load quote" });
   }
 });
 
