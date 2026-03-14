@@ -2629,14 +2629,25 @@ document.addEventListener("DOMContentLoaded", loadQuoteFromUrl);
   function createQuoteLink() {
 
   if (!window.quoteId) {
-    window.quoteId = generateQuoteId();
+    const year = new Date().getFullYear();
+    const random = Math.floor(1000 + Math.random() * 9000);
+    window.quoteId = "MP-" + year + "-" + random;
   }
 
-  const shareUrl = window.location.origin + "/Quote.html?quote=" + window.quoteId;
+  const shareUrl =
+    window.location.origin +
+    "/public/quote.html?quote=" +
+    window.quoteId;
 
-  navigator.clipboard.writeText(shareUrl);
+  navigator.clipboard.writeText(shareUrl)
+    .then(() => {
+      alert("Quote link copied:\n\n" + shareUrl);
+    })
+    .catch(() => {
+      prompt("Copy this quote link:", shareUrl);
+    });
 
-  alert("Quote link copied:\n\n" + shareUrl);
+}
 
 }function createQuoteLink() {
 
