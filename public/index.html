@@ -2700,7 +2700,28 @@ document.addEventListener("DOMContentLoaded", loadQuoteFromUrl);
       prompt("Copy this quote link:", shareUrl);
     });
 
-}
+}1"}
+function createQuoteLink() {
+
+  // create quote id if missing
+  if (!window.quoteId) {
+    const year = new Date().getFullYear();
+    const rand = Math.floor(1000 + Math.random() * 9000);
+    window.quoteId = "MP-" + year + "-" + rand;
+  }
+
+  const link =
+    window.location.origin +
+    "/public/quote.html?quote=" +
+    window.quoteId;
+
+  navigator.clipboard.writeText(link)
+    .then(() => {
+      alert("Quote link copied:\n\n" + link);
+    })
+    .catch(() => {
+      prompt("Copy this quote link:", link);
+    });
 </script>
 </script>
 </body>
