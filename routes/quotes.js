@@ -21,10 +21,23 @@ router.post("/", (req, res) => {
 
     const stmt = db.prepare(`
       INSERT OR REPLACE INTO quotes
-        (quote_id, merchant_name, merchant_email, rate, fixed_fee, brand, created_at, expiry_date, vol, cnt, avgTx, cur, debitFrac)
+        (quote_id, merchant_name, merchant_email, rate, fixed_fee, brand, created_at, expiry_date, vol, cnt, avgTx, cur, debitFrac, addons)
       VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
+
+    // Bundle addon fees into a JSON blob
+    const addons = JSON.stringify({
+      addAmex:       !!q.addAmex,
+      amexPct:       parseFloat(q.amexPct)   || 3.5,
+      amexFixed:     parseFloat(q.amexFixed)  || 20,
+      addFX:         !!q.addFX,
+      fxPct:         parseFloat(q.fxPct)      || 1.5,
+      addChargeback: !!q.addChargeback,
+      cbAmt:         parseFloat(q.cbAmt)      || 15,
+      addRefund:     !!q.addRefund,
+      refAmt:        parseFloat(q.refAmt)     || 1
+    });
 
     stmt.run(
       q.quote_id,
@@ -39,7 +52,8 @@ router.post("/", (req, res) => {
       parseFloat(q.cnt)       || 0,
       parseFloat(q.avgTx)     || 0,
       parseFloat(q.cur)       || 0,
-      parseFloat(q.debitFrac) || 0.70
+      parseFloat(q.debitFrac) || 0.70,
+      addons
     );
 
     // Build shareable link pointing to quote.html (merchant page)
@@ -77,6 +91,10 @@ router.get("/:quote_id", (req, res) => {
     let brand = {};
     try { brand = JSON.parse(row.brand || "{}"); } catch(e) { /* keep empty */ }
 
+    // Parse addons JSON
+    let addons = {};
+    try { addons = JSON.parse(row.addons || "{}"); } catch(e) { /* keep empty */ }
+
     res.json({
       quote_id:       row.quote_id,
       merchant_name:  row.merchant_name,
@@ -90,7 +108,8 @@ router.get("/:quote_id", (req, res) => {
       cnt:            row.cnt       || 0,
       avgTx:          row.avgTx     || 0,
       cur:            row.cur       || 0,
-      debitFrac:      row.debitFrac || 0.70
+      debitFrac:      row.debitFrac || 0.70,
+      addons:         addons
     });
 
   } catch (err) {
