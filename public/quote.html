@@ -793,7 +793,46 @@ document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("confirmBtn");
   if(cb && btn){ cb.addEventListener("change", () => { btn.disabled = !cb.checked; }); }
   loadQuote();
-});
+});function getQuoteId() {
+
+  const params = new URLSearchParams(window.location.search);
+  return params.get("quote");
+
+}
+
+function loadQuote() {
+
+  const quoteId = getQuoteId();
+
+  if (!quoteId) {
+    document.body.innerHTML = "Quote not found.";
+    return;
+  }
+
+  const data = localStorage.getItem(quoteId);
+
+  if (!data) {
+    document.body.innerHTML = "Quote expired or not found.";
+    return;
+  }
+
+  const quote = JSON.parse(data);
+
+  document.getElementById("merchantName").innerText = quote.merchantName;
+  document.getElementById("rate").innerText = quote.rate + "%";
+  document.getElementById("fixedFee").innerText = quote.fixedFee + "p";
+
+}
+
+window.onload = loadQuote;
+
+function acceptQuote() {
+
+  const quoteId = getQuoteId();
+
+  alert("Quote " + quoteId + " accepted.");
+
+}
 </script>
 </body>
 </html>
