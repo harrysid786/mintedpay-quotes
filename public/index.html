@@ -2638,7 +2638,22 @@ document.addEventListener("DOMContentLoaded", loadQuoteFromUrl);
 
   alert("Quote link copied:\n\n" + shareUrl);
 
+}function createQuoteLink() {
+
+  if (!window.quoteId) {
+    window.quoteId = generateQuoteId();
+  }
+
+  const shareUrl = window.location.origin + "/quote.html?quote=" + window.quoteId;
+
+  navigator.clipboard.writeText(shareUrl);
+
+  alert("Quote link copied:\n\n" + shareUrl);
+
 }
+
+// DO NOT REMOVE THIS
+</script>
 </script>
 </body>
 </html>
