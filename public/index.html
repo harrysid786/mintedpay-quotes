@@ -2792,7 +2792,51 @@ window.createQuoteLink = function(){
 
   }
 
-};
+};async function createQuoteLink(){
+
+  const merchantName =
+    document.getElementById("mName")?.value;
+
+  const merchantEmail =
+    document.getElementById("merchantEmail")?.value;
+
+  const rate =
+    parseFloat(document.getElementById("simInp")?.value || 0);
+
+  const fee =
+    parseFloat(document.getElementById("gateFee")?.value || 0);
+
+  if(!merchantName){
+    alert("Enter merchant name first");
+    return;
+  }
+
+  const quoteId =
+    "MP-" + new Date().getFullYear() + "-" +
+    Math.floor(Math.random()*9000+1000);
+
+  const res = await fetch("/api/quotes",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      quote_id:quoteId,
+      merchant_name:merchantName,
+      merchant_email:merchantEmail,
+      rate:rate,
+      fixed_fee:fee,
+      created_at:new Date().toISOString()
+    })
+  });
+
+  const data = await res.json();
+
+  navigator.clipboard.writeText(data.url);
+
+  alert("Quote link copied:\n\n"+data.url);
+
+}
 </script>
 </body>
 </html>
