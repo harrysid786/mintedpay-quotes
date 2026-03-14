@@ -2690,7 +2690,57 @@ window.refreshPreview = function () {
     btn.style.display = "inline-block";
   }
 
-};
+};/* ================================
+   ADD CREATE QUOTE LINK BUTTON
+================================ */
+
+function createQuoteLink(){
+
+  const merchant =
+    document.getElementById("mName")?.value || "";
+
+  const rate =
+    document.getElementById("simInp")?.value || "";
+
+  const fee =
+    document.getElementById("gateFee")?.value || "";
+
+  if(!merchant){
+    alert("Enter merchant name first");
+    return;
+  }
+
+  const link =
+    window.location.origin +
+    "/quote.html?merchant=" +
+    encodeURIComponent(merchant) +
+    "&rate=" +
+    rate +
+    "&fee=" +
+    fee;
+
+  navigator.clipboard.writeText(link);
+
+  alert("Quote link copied:\n\n" + link);
+
+}
+
+
+/* Automatically add the button */
+
+document.addEventListener("DOMContentLoaded", function(){
+
+  const btn = document.createElement("button");
+
+  btn.innerText = "🔗 Create Quote Link";
+
+  btn.className = "qbtn qbtn-o";
+
+  btn.onclick = createQuoteLink;
+
+  document.body.appendChild(btn);
+
+});
 </script>
 </body>
 </html>
