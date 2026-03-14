@@ -22,7 +22,7 @@
 }
 body{font-family:'Inter',sans-serif;background:var(--g7);color:var(--black);font-size:13px;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--g7)}::-webkit-scrollbar-thumb{background:var(--g5);border-radius:10px}
-
+ 
 /* TOPBAR */
 .topbar{background:var(--white);border-bottom:2px solid var(--g5);height:54px;display:flex;align-items:center;padding:0 28px;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .tb-left{display:flex;align-items:center;gap:16px}
@@ -35,21 +35,21 @@ body{font-family:'Inter',sans-serif;background:var(--g7);color:var(--black);font
 .tb-meta{font-size:11px;color:var(--g4);display:flex;align-items:center;gap:14px}
 .live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;margin-right:4px;animation:blink 2s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-
+ 
 /* LAYOUT */
 .layout{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 54px)}
-
+ 
 /* SIDEBAR */
 .sidebar{background:var(--white);border-right:1px solid var(--g6);padding:18px 16px;overflow-y:auto;max-height:calc(100vh - 54px);position:sticky;top:54px}
 .s-sec{margin-bottom:18px}
 .s-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--g3);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
 .s-tag{font-size:8px;font-weight:600;padding:1px 5px;background:var(--g7);border:1px solid var(--g6);border-radius:3px;color:var(--g4);letter-spacing:.8px}
-
+ 
 /* TABS */
 .tabs{display:flex;border:1px solid var(--g6);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
 .tab{flex:1;padding:7px;text-align:center;font-size:11px;font-weight:600;cursor:pointer;background:var(--white);color:var(--g3);border:none;font-family:'Inter',sans-serif;transition:all .15s}
 .tab.on{background:var(--brand);color:var(--white)}
-
+ 
 /* UPLOAD */
 .dz{border:1.5px dashed var(--g5);border-radius:var(--r);background:var(--g7);padding:18px 12px;text-align:center;cursor:pointer;transition:all .2s;position:relative;margin-bottom:8px}
 .dz:hover,.dz.over{border-color:var(--brand);background:var(--brand-lt)}
@@ -60,14 +60,14 @@ body{font-family:'Inter',sans-serif;background:var(--g7);color:var(--black);font
 .file-ok{display:flex;align-items:center;gap:8px;background:var(--green-lt);border:1px solid var(--green-bd);border-radius:var(--r);padding:7px 10px;margin-bottom:8px}
 .file-ok-name{font-size:11px;font-weight:600;color:var(--green)}
 .file-ok-rows{font-size:10px;color:var(--g3)}
-
+ 
 /* MAP */
 .map-items{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
 .map-item{display:flex;align-items:center;gap:6px;padding:5px 7px;background:var(--g7);border-radius:4px}
 .map-key{font-size:9px;font-weight:700;color:var(--g3);width:60px;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px}
 .map-key em{color:var(--red);font-style:normal}
 .map-item select{flex:1;font-size:10px;font-family:'Inter',sans-serif;background:var(--white);border:1px solid var(--g5);border-radius:4px;padding:3px 5px;color:var(--black);outline:none}
-
+ 
 /* FIELD */
 .field{margin-bottom:8px}
 .field>label{display:block;font-size:9px;font-weight:700;color:var(--g3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
@@ -79,24 +79,24 @@ body{font-family:'Inter',sans-serif;background:var(--g7);color:var(--black);font
 .pfx-wrap:focus-within{border-color:var(--brand)}
 .pfx-wrap .pfx{background:var(--g7);border-right:1px solid var(--g5);padding:0 8px;display:flex;align-items:center;font-size:11px;color:var(--g3);font-weight:600;flex-shrink:0}
 .pfx-wrap input{border:none;flex:1;padding:7px 8px;font-size:12px;font-family:'Inter',sans-serif;color:var(--black);outline:none;min-width:0}
-
+ 
 /* RANGE */
 .rng-group{display:flex;align-items:center;gap:8px}
 .rng-group input[type=range]{flex:1;accent-color:var(--brand);cursor:pointer}
 .rng-val{font-size:10px;font-weight:700;color:var(--brand);min-width:46px;text-align:right;white-space:nowrap}
-
+ 
 /* TIER BTNS */
 .tier-row{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
 .tbtn{padding:3px 7px;font-size:9px;font-weight:600;border:1px solid var(--g5);border-radius:4px;background:var(--white);color:var(--g3);cursor:pointer;line-height:1.5;font-family:'Inter',sans-serif;text-align:center;transition:all .12s}
 .tbtn small{display:block;font-size:7.5px;font-weight:400;color:var(--g4)}
 .tbtn.on{background:var(--brand);color:var(--white);border-color:var(--brand)}
 .tbtn.on small{color:rgba(255,255,255,.6)}
-
+ 
 .divider{border:none;border-top:1px solid var(--g6);margin:14px 0}
 .note{background:var(--blue-lt);border-left:2px solid var(--blue);border-radius:0 4px 4px 0;padding:6px 9px;font-size:10px;color:#1e40af;line-height:1.6;margin-top:6px}
 .run-btn{width:100%;padding:11px;background:var(--brand);color:var(--white);border:none;border-radius:var(--r);font-size:13px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s;margin-top:2px;letter-spacing:.2px}
 .run-btn:hover{background:#3b20e0}
-
+ 
 /* MAIN */
 .main{padding:22px;overflow-y:auto}
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:10px;text-align:center;color:var(--g4)}
@@ -106,18 +106,18 @@ body{font-family:'Inter',sans-serif;background:var(--g7);color:var(--black);font
 .results{display:none}
 .results.show{display:block;animation:fi .3s ease}
 @keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-
+ 
 /* SECTION TITLE */
 .sec-t{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--g3);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--g6);display:flex;align-items:center;gap:8px}
 .sec-t-action{margin-left:auto;font-size:9px;font-weight:600;color:var(--brand);cursor:pointer;letter-spacing:.5px;text-transform:none}
-
+ 
 /* OVERVIEW STRIP */
 .overview{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--g6);border:1px solid var(--g6);border-radius:8px;overflow:hidden;margin-bottom:20px;box-shadow:var(--sh)}
 .ov{background:var(--white);padding:14px 12px}
 .ov-l{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--g4);margin-bottom:5px}
 .ov-v{font-size:19px;font-weight:700;color:var(--black);line-height:1;font-family:'Syne',sans-serif}
 .ov-s{font-size:10px;color:var(--g3);margin-top:3px}
-
+ 
 /* CARD MIX */
 .mix-panel{background:var(--white);border:1.5px solid var(--g6);border-radius:8px;padding:16px;margin-bottom:20px;box-shadow:var(--sh)}
 .analytics-panel{background:var(--white);border:1.5px solid var(--g6);border-radius:8px;overflow:hidden;margin-bottom:20px;box-shadow:var(--sh)}
@@ -157,7 +157,7 @@ body{font-family:'Inter',sans-serif;background:var(--g7);color:var(--black);font
 .md-l{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g4);margin-bottom:4px}
 .md-v{font-size:14px;font-weight:700;color:var(--black);font-family:'Syne',sans-serif}
 .md-s{font-size:9px;color:var(--g3);margin-top:2px}
-
+ 
 /* RATE CARDS */
 .rate-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;align-items:stretch}
 .rc{background:var(--white);border:1.5px solid var(--g6);border-radius:8px;padding:16px;box-shadow:var(--sh);position:relative;overflow:hidden;cursor:pointer;transition:all .2s;height:100%;display:flex;flex-direction:column}
@@ -183,7 +183,7 @@ body{font-family:'Inter',sans-serif;background:var(--g7);color:var(--black);font
 .mg-track{flex:1;height:3px;background:var(--g6);border-radius:2px;overflow:hidden}
 .mg-fill{height:100%;border-radius:2px;transition:width .4s}
 .mg-val{font-size:9px;font-weight:700;min-width:34px;text-align:right}
-
+ 
 /* MANUAL PROFIT VIEW */
 .profit-view{background:var(--white);border:1.5px solid var(--g6);border-radius:8px;padding:16px;margin-bottom:20px;box-shadow:var(--sh)}
 .cost-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--g6);border:1px solid var(--g6);border-radius:6px;overflow:hidden;margin-bottom:14px}
@@ -191,7 +191,7 @@ body{font-family:'Inter',sans-serif;background:var(--g7);color:var(--black);font
 .cb-l{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g4);margin-bottom:4px}
 .cb-v{font-size:16px;font-weight:700;color:var(--black);font-family:'Syne',sans-serif}
 .cb-s{font-size:9px;color:var(--g3);margin-top:2px}
-
+ 
 /* SIMULATOR */
 .sim-card{background:var(--white);border:1.5px solid var(--g6);border-radius:8px;padding:16px;margin-bottom:20px;box-shadow:var(--sh)}
 .sim-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px;flex-wrap:nowrap}
@@ -226,7 +226,7 @@ body{font-family:'Inter',sans-serif;background:var(--g7);color:var(--black);font
 .ss-s{font-size:9px;color:var(--g3);margin-top:2px}
 .ztag{display:inline-block;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:2px 5px;border-radius:3px;margin-top:3px}
 .ztag-l{background:var(--red-lt);color:var(--red)}.ztag-s{background:var(--green-lt);color:var(--green)}.ztag-o{background:var(--amber-lt);color:var(--amber)}
-
+ 
 /* QUOTE PANEL */
 .quote-card{background:var(--white);border:1.5px solid var(--g6);border-radius:8px;padding:16px;box-shadow:var(--sh)}
 .quote-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:12px;flex-wrap:wrap}
@@ -297,7 +297,7 @@ body{font-family:'Inter',sans-serif;background:var(--g7);color:var(--black);font
 .qp-snap-card{background:var(--white);padding:14px 12px}
 .qp-snap-l{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--g4);margin-bottom:5px}
 .qp-snap-v{font-size:19px;font-weight:700;color:var(--black);line-height:1;font-family:'Syne',sans-serif}
-
+ 
 .hidden{display:none!important}
 .brand-switcher{display:flex;gap:4px;background:var(--g7);border-radius:6px;padding:3px}
 .brand-switcher-btn{padding:3px 12px;border:none;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;background:transparent;color:var(--g3);font-family:'Inter',sans-serif}
@@ -321,7 +321,7 @@ body{width:100%;margin:0;padding:0}.container,.content,.wrapper{max-width:100%}
 </style>
 </head>
 <body>
-
+ 
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="tb-left">
@@ -332,25 +332,25 @@ body{width:100%;margin:0;padding:0}.container,.content,.wrapper{max-width:100%}
     <span id="quoteIdDisplay" style="font-weight:600;color:var(--black)"></span>
   </div>
 </div>
-
+ 
 <!-- MAIN -->
 <div style="max-width:960px;margin:0 auto;padding:22px">
-
+ 
   <!-- Loading -->
   <div id="loadingState" style="text-align:center;padding:80px 40px;color:var(--g4)">
     <div style="font-size:28px;margin-bottom:12px">⏳</div>
     <div style="font-size:14px">Loading your quote…</div>
   </div>
-
+ 
   <!-- Quote preview -->
   <div id="qprev"></div>
-
+ 
   <!-- Accept button -->
   <div style="text-align:center;margin-top:16px;padding-bottom:40px">
     <button id="acceptQuoteBtn" class="qbtn qbtn-p" onclick="openAcceptance()" style="display:none;background:#16a34a;border-color:#16a34a;padding:12px 32px;font-size:14px" onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">✓ Accept Quote</button>
   </div>
 </div>
-
+ 
 <!-- ACCEPTANCE MODAL -->
 <div id="acceptModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:999;align-items:center;justify-content:center">
   <div style="background:#fff;width:820px;max-width:95vw;max-height:85vh;overflow:auto;border-radius:8px;padding:28px">
@@ -383,11 +383,11 @@ body{width:100%;margin:0;padding:0}.container,.content,.wrapper{max-width:100%}
     </div>
   </div>
 </div>
-
+ 
 <script>
 // ═══ GLOBAL STATE ═══
 let quoteData = null;
-
+ 
 // ═══ HELPERS ═══
 function getQuoteExpiry(){
   const d = new Date();
@@ -402,7 +402,7 @@ function fmtK(n){
 }
 function f2(n){ return "£"+Math.abs(n).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function n0(n){ return Math.round(n).toLocaleString("en-GB"); }
-
+ 
 // ═══ RENDER QUOTE PREVIEW ═══
 function renderQuote(data){
   const brand = data.brand || {name:"MintedPay",nameParts:["Minted","Pay"],tagline:"Payment Processing Proposal",legal:""};
@@ -418,19 +418,19 @@ function renderQuote(data){
   const curRate = (cur > 0 && vol > 0) ? (cur/vol*100) : null;
   const isManual = vol === 0 && cnt === 0;
   const a = data.addons || {};
-
+ 
   // Savings calc
   const rev = vol*(rate/100) + (ftx/100)*cnt;
   const mSave = cur > 0 ? cur - rev : 0;
-
+ 
   const brandLabel = brand.nameParts && brand.nameParts[1]
     ? brand.nameParts[0] + '<em>' + brand.nameParts[1] + '</em>'
     : brand.name;
-
+ 
   const logoStyle = brand.key === 'ummah'
     ? 'height:36px;width:auto;max-width:180px'
     : 'height:36px;width:auto';
-
+ 
   document.getElementById("qprev").innerHTML = `
     <div class="qprev">
       <div class="qp-hdr">
@@ -447,16 +447,16 @@ function renderQuote(data){
           <span style="font-size:10px;color:var(--g3)">Valid until: ${expiryStr}</span>
         </div>
       </div>
-
+ 
       <div class="qp-intro">This payment processing proposal has been prepared for <strong>${name}</strong> based on the transaction data provided.</div>
-
+ 
       ${!isManual ? `<div class="qp-snapshot">
         <div class="qp-snap-card"><div class="qp-snap-l">Volume Analysed</div><div class="qp-snap-v">${fmtK(vol)}</div></div>
         <div class="qp-snap-card"><div class="qp-snap-l">Transactions Analysed</div><div class="qp-snap-v">${n0(cnt)}</div></div>
         <div class="qp-snap-card"><div class="qp-snap-l">Average Transaction</div><div class="qp-snap-v">${f2(avgTx)}</div></div>
         <div class="qp-snap-card"><div class="qp-snap-l">Current Effective Rate</div><div class="qp-snap-v" style="color:${curRate!==null?(curRate<1?'var(--green)':curRate<2.2?'var(--amber)':'var(--red)'):'var(--g4)'}">${curRate!==null?curRate.toFixed(2)+'%':'—'}</div></div>
       </div>` : ''}
-
+ 
       <div class="qp-rate-compare">
         ${curRate!==null ? `
         <div class="qp-rate-block qp-rate-current">
@@ -471,13 +471,13 @@ function renderQuote(data){
           <div class="qp-rate-block-sub">percentage per transaction<br><strong style="color:var(--brand)">+ ${ftx}p fixed fee per transaction</strong></div>
         </div>
       </div>
-
+ 
       ${!isManual && cur > 0 && mSave > 0 ? `
       <div class="qp-save-banner">
         <div class="qp-save-l">Estimated Saving Based on Provided Data</div>
         <div class="qp-save-v">+${fmtK(mSave)}</div>
       </div>` : ''}
-
+ 
       <div class="qp-section">
         <div class="qp-section-title">Why ${brand.name}</div>
         <div class="qp-section-body">
@@ -491,7 +491,7 @@ function renderQuote(data){
           </ul>
         </div>
       </div>
-
+ 
       <div class="qp-section">
         <div class="qp-section-title">Your Pricing</div>
         <div class="qp-section-body">We believe in keeping things simple. Your rate is a single blended percentage plus a small fixed fee that already factors in interchange, scheme fees, and our margin — no hidden surprises, no complicated breakdowns on your statements.</div>
@@ -533,7 +533,7 @@ function renderQuote(data){
           </tbody>
         </table>
       </div>
-
+ 
       <div class="qp-section">
         <div class="qp-section-title">Next Steps</div>
         <ol class="qp-next-steps" style="margin:0;padding-left:18px;color:var(--black)">
@@ -543,11 +543,11 @@ function renderQuote(data){
           <li>Go-live with your existing checkout, POS, or payment link.</li>
         </ol>
       </div>
-
+ 
       <div class="qp-footer">${brand.legal||''}</div>
     </div>`;
 }
-
+ 
 // ═══ ACCEPTANCE FLOW ═══
 function openAcceptance(){
   const d = quoteData;
@@ -556,7 +556,7 @@ function openAcceptance(){
   const a = d.addons || {};
   document.getElementById("acceptModalTitle").textContent = brand.name + " Merchant Agreement";
   const expiryStr = getQuoteExpiry();
-
+ 
   let addonRows = '';
   if(a.addAmex){
     addonRows += `<tr style="background:#f3f4f6">
@@ -582,7 +582,7 @@ function openAcceptance(){
       <td style="padding:8px 10px;border:1px solid #e5e5e5"><strong>£${(a.refAmt||1).toFixed(2)}</strong></td>
     </tr>`;
   }
-
+ 
   document.getElementById("scheduleA").innerHTML = `
     <div style="border:1px solid #e5e5e5;border-radius:6px;padding:18px;margin-bottom:4px;background:#fafafa">
       <h3 style="margin-top:0;font-family:'Syne',sans-serif">Schedule A — Fees &amp; Pricing</h3>
@@ -599,41 +599,25 @@ function openAcceptance(){
           <td style="padding:8px 10px;border:1px solid #e5e5e5"><strong>${d.fixed_fee}p</strong></td>
         </tr>
         ${addonRows}
-        <tr style="background:#f3f4f6">
-          <td style="padding:8px 10px;border:1px solid #e5e5e5">Monthly Minimum</td>
-          <td style="padding:8px 10px;border:1px solid #e5e5e5"><strong>None</strong></td>
-        </tr>
-        <tr>
-          <td style="padding:8px 10px;border:1px solid #e5e5e5">Monthly Platform Fee</td>
-          <td style="padding:8px 10px;border:1px solid #e5e5e5"><strong>None</strong></td>
-        </tr>
-        <tr style="background:#f3f4f6">
-          <td style="padding:8px 10px;border:1px solid #e5e5e5">PCI Compliance Fee</td>
-          <td style="padding:8px 10px;border:1px solid #e5e5e5"><strong>None</strong></td>
-        </tr>
-        <tr>
-          <td style="padding:8px 10px;border:1px solid #e5e5e5">Gateway Fee</td>
-          <td style="padding:8px 10px;border:1px solid #e5e5e5"><strong>None</strong></td>
-        </tr>
       </table>
     </div>`;
   document.getElementById("acceptCheck").checked = false;
   document.getElementById("confirmBtn").disabled = true;
   document.getElementById("acceptModal").style.display = "flex";
 }
-
+ 
 function closeAccept(){ document.getElementById("acceptModal").style.display = "none"; }
-
+ 
 function confirmAcceptance(){
   const d = quoteData;
   const timestamp = new Date().toISOString();
   const confirmBtn = document.getElementById("confirmBtn");
   confirmBtn.disabled = true;
   confirmBtn.textContent = "Processing…";
-
+ 
   const brandName = (d.brand && d.brand.name) || "MintedPay";
   const qprev = document.getElementById("qprev");
-
+ 
   fetch("/api/quote_acceptance", {
     method: "POST",
     headers: {"Content-Type":"application/json"},
@@ -680,7 +664,7 @@ function confirmAcceptance(){
     alert("A network error occurred. Please try again.");
   });
 }
-
+ 
 // ═══ AGREEMENT PDF ═══
 function generateAgreementPDF(d, brandName, timestamp){
   const {jsPDF} = window.jspdf;
@@ -688,23 +672,23 @@ function generateAgreementPDF(d, brandName, timestamp){
   const W=210, ml=20, mr=20, cw=W-ml-mr;
   const brand="#4F35F3", black="#111111", grey="#6b7280";
   const expiryStr = getQuoteExpiry();
-
+ 
   function hline(y,col){ doc.setDrawColor(col||"#e5e5e5"); doc.line(ml,y,W-mr,y); }
-
+ 
   // PAGE 1 — Agreement
   doc.setFillColor(brand); doc.rect(0,0,W,18,"F");
   doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor("#ffffff");
   doc.text(brandName.toUpperCase(),ml,11.5);
   doc.setFont("helvetica","normal"); doc.setFontSize(8);
   doc.text("MERCHANT SERVICES AGREEMENT",W-mr,11.5,{align:"right"});
-
+ 
   doc.setFont("helvetica","bold"); doc.setFontSize(20); doc.setTextColor(black);
   doc.text("Merchant Services",ml,38); doc.text("Agreement",ml,48);
   doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(grey);
   doc.text("Quote ID: "+(d.quote_id||"—"),ml,56);
   doc.text("Valid until: "+expiryStr,ml,61);
   hline(67);
-
+ 
   const sections=[
     ["Parties","This Merchant Services Agreement is entered into between Nova Advisory Limited trading as "+brandName+" and the Merchant named in Schedule A."],
     ["Electronic Acceptance","This Agreement may be accepted electronically. Electronic acceptance has the same legal effect as a signed written contract."],
@@ -724,7 +708,7 @@ function generateAgreementPDF(d, brandName, timestamp){
   doc.setFontSize(7.5); doc.setTextColor(grey);
   doc.text(brandName+" — Confidential",ml,290);
   doc.text("Page 1 of 3",W-mr,290,{align:"right"});
-
+ 
   // PAGE 2 — Schedule A
   doc.addPage();
   doc.setFillColor(brand); doc.rect(0,0,W,18,"F");
@@ -736,7 +720,7 @@ function generateAgreementPDF(d, brandName, timestamp){
   doc.text("Schedule A",ml,34);
   doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(grey);
   doc.text("Fees & Pricing",ml,41); hline(47);
-
+ 
   // Build Schedule A rows dynamically
   const a = d.addons || {};
   const scheduleRows = [
@@ -747,8 +731,7 @@ function generateAgreementPDF(d, brandName, timestamp){
   if(a.addFX)         scheduleRows.push(["International / FX Transactions", (a.fxPct||1.5).toFixed(2)+"%"]);
   if(a.addChargeback)  scheduleRows.push(["Chargeback Fee", "£"+(a.cbAmt||15).toFixed(2)]);
   if(a.addRefund)      scheduleRows.push(["Refund Fee", "£"+(a.refAmt||1).toFixed(2)]);
-  scheduleRows.push(["Monthly Minimum","None"],["Monthly Platform Fee","None"],["PCI Compliance Fee","None"],["Gateway Fee","None"]);
-
+ 
   doc.autoTable({
     startY:55, margin:{left:ml,right:mr},
     head:[["Fee Type","Amount"]],
@@ -761,7 +744,7 @@ function generateAgreementPDF(d, brandName, timestamp){
   doc.setFontSize(7.5); doc.setTextColor(grey);
   doc.text(brandName+" — Confidential",ml,290);
   doc.text("Page 2 of 3",W-mr,290,{align:"right"});
-
+ 
   // PAGE 3 — Acceptance Record
   doc.addPage();
   doc.setFillColor(brand); doc.rect(0,0,W,18,"F");
@@ -771,12 +754,12 @@ function generateAgreementPDF(d, brandName, timestamp){
   doc.text("ACCEPTANCE RECORD",W-mr,11.5,{align:"right"});
   doc.setFont("helvetica","bold"); doc.setFontSize(16); doc.setTextColor(black);
   doc.text("Acceptance Record",ml,34); hline(40);
-
+ 
   doc.setFillColor("#dcfce7"); doc.setDrawColor("#16a34a");
   doc.roundedRect(ml,46,60,10,2,2,"FD");
   doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor("#16a34a");
   doc.text("✓  AGREEMENT ACCEPTED",ml+5,53);
-
+ 
   // Build acceptance record rows
   const acceptRows = [
     ["Quote ID",d.quote_id||"—"],
@@ -790,7 +773,7 @@ function generateAgreementPDF(d, brandName, timestamp){
   if(a.addChargeback)  acceptRows.push(["Chargeback Fee", "£"+(a.cbAmt||15).toFixed(2)]);
   if(a.addRefund)      acceptRows.push(["Refund Fee", "£"+(a.refAmt||1).toFixed(2)]);
   acceptRows.push(["Accepted At (UTC)",timestamp||"—"],["Quote Expiry",expiryStr]);
-
+ 
   doc.autoTable({
     startY:65, margin:{left:ml,right:mr},
     head:[["Field","Value"]],
@@ -802,15 +785,15 @@ function generateAgreementPDF(d, brandName, timestamp){
   doc.setFontSize(7.5); doc.setTextColor(grey);
   doc.text(brandName+" — Confidential",ml,290);
   doc.text("Page 3 of 3",W-mr,290,{align:"right"});
-
+ 
   doc.save("Merchant_Agreement_"+(d.quote_id||"draft")+".pdf");
 }
-
+ 
 // ═══ LOAD QUOTE FROM URL ═══
 async function loadQuote(){
   const params = new URLSearchParams(window.location.search);
   const quoteId = params.get("quote");
-
+ 
   if(!quoteId){
     document.getElementById("loadingState").innerHTML =
       '<div style="font-size:28px;margin-bottom:12px">📋</div>' +
@@ -818,9 +801,9 @@ async function loadQuote(){
       '<div style="font-size:12px;color:#9ca3af;margin-top:8px">Please use the link provided by your sales representative.</div>';
     return;
   }
-
+ 
   document.getElementById("quoteIdDisplay").textContent = quoteId;
-
+ 
   let data;
   try {
     const res = await fetch("/api/quotes/" + quoteId);
@@ -839,12 +822,12 @@ async function loadQuote(){
       '<div style="font-size:14px;color:#6b7280">Unable to load quote. Please check your connection.</div>';
     return;
   }
-
+ 
   if(!data || typeof data !== "object") return;
-
+ 
   // Store globally for acceptance flow
   quoteData = data;
-
+ 
   // Update topbar with brand
   const brand = data.brand || {};
   if(brand.logoData){
@@ -857,15 +840,15 @@ async function loadQuote(){
   else if(brand.nameParts && brand.nameParts[1]){
     wm.innerHTML = brand.nameParts[0] + '<em>' + brand.nameParts[1] + '</em>';
   }
-
+ 
   // Hide loading, render quote
   document.getElementById("loadingState").style.display = "none";
   renderQuote(data);
-
+ 
   // Show accept button
   document.getElementById("acceptQuoteBtn").style.display = "inline-block";
 }
-
+ 
 // ═══ INIT ═══
 document.addEventListener("DOMContentLoaded", () => {
   const cb = document.getElementById("acceptCheck");
@@ -876,3 +859,4 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 </body>
 </html>
+ 
