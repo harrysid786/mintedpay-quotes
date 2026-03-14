@@ -816,6 +816,38 @@ if (quoteId) {
       console.error("Quote load error:", err);
     });
 
+}// Get quote ID from URL
+const params = new URLSearchParams(window.location.search);
+const quoteId = params.get("quote");
+
+// If a quote exists in the URL
+if (quoteId) {
+
+  // Request quote data from the backend
+  fetch("/api/quotes/" + quoteId)
+    .then(res => res.json())
+    .then(data => {
+
+      if (!data) {
+        console.error("Quote not found");
+        return;
+      }
+
+      // Fill quote page with data
+      if (document.getElementById("merchantName"))
+        document.getElementById("merchantName").textContent = data.merchantName || "";
+
+      if (document.getElementById("quoteRate"))
+        document.getElementById("quoteRate").textContent = data.rate + "%";
+
+      if (document.getElementById("quoteFixed"))
+        document.getElementById("quoteFixed").textContent = data.fixed + "p";
+
+    })
+    .catch(err => {
+      console.error("Quote load error:", err);
+    });
+
 }
 </script>
 </body>
