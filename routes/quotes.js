@@ -1,7 +1,7 @@
 const express = require("express");
 const router  = express.Router();
 const db      = require("../db");
-const { createLead } = require("../services/zohoCRM");
+const { createLead, updateLeadByQuoteId } = require("../services/zohoCRM");
 
 // ── POST /api/quotes — save a quote and return shareable link ──
 router.post("/", (req, res) => {
@@ -90,6 +90,29 @@ router.post("/", (req, res) => {
   } catch (err) {
     console.error("Error saving quote:", err);
     res.status(500).json({ error: "Failed to save quote" });
+  }
+});
+
+// ── POST /api/quotes/viewed — track when merchant views a quote ──
+router.post("/viewed", async (req, res) => {
+  try {
+    const { quote_id } = req.body;
+
+    if (!quote_id) {
+      return res.status(400).json({ error: "quote_id is required" });
+    }
+
+    // Fire-and-forget: update Zoho Lead status
+    updateLeadByQuoteId(quote_id, {
+      Quote_Status: "Quote Viewed",
+    }).catch(err => console.error("⚠️  Zoho CRM viewed-update error:", err.message));
+
+    console.log(`👁️  Quote viewed: ${quote_id}`);
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("Error recording quote view:", err);
+    res.status(500).json({ error: "Failed to record quote view" });
   }
 });
 
