@@ -129,4 +129,90 @@ async function createLead(opts) {
   return body;
 }
 
-module.exports = { createLead };
+// ── Update an existing Lead by Quote_ID ──────────────────────
+/**
+ * Searches for a Lead matching the given quoteId, then patches it
+ * with the supplied field object.
+ *
+ * @param {string} quoteId  – e.g. "MP-2026-4821"
+ * @param {Object} fields   – key/value pairs to update, e.g. { Quote_Status: "Quote Viewed" }
+ * @returns {Object|null}   – Zoho API response body, or null if skipped / not found
+ */
+async function updateLeadByQuoteId(quoteId, fields) {
+  // Guard: skip if Zoho env vars are not configured
+  if (!process.env.ZOHO_CLIENT_ID || !process.env.ZOHO_REFRESH_TOKEN) {
+    console.warn("⚠️  Zoho CRM env vars missing — skipping lead update");
+    return null;
+  }
+
+  if (!quoteId || !fields || Object.keys(fields).length === 0) {
+    console.warn("⚠️  updateLeadByQuoteId called with empty quoteId or fields — skipping");
+    return null;
+  }
+
+  const token = await getAccessToken();
+
+  // ── 1. Search for the Lead by Quote_ID ──────────────────────
+  const searchUrl = `${API_DOMAIN()}/crm/v6/Leads/search?criteria=(Quote_ID:equals:${encodeURIComponent(quoteId)})`;
+
+  const searchRes = await fetch(searchUrl, {
+    method:  "GET",
+    headers: {
+      Authorization:  `Zoho-oauthtoken ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  // 204 = no matching records
+  if (searchRes.status === 204) {
+    console.warn(`⚠️  Zoho Lead not found for Quote_ID: ${quoteId}`);
+    return null;
+  }
+
+  if (!searchRes.ok) {
+    const text = await searchRes.text();
+    throw new Error(`Zoho Lead search failed (${searchRes.status}): ${text}`);
+  }
+
+  const searchBody = await searchRes.json();
+  const lead = searchBody.data?.[0];
+
+  if (!lead || !lead.id) {
+    console.warn(`⚠️  Zoho Lead not found for Quote_ID: ${quoteId}`);
+    return null;
+  }
+
+  const leadId = lead.id;
+
+  // ── 2. Update the Lead ──────────────────────────────────────
+  const updatePayload = {
+    data: [
+      {
+        id: leadId,
+        ...fields,
+      },
+    ],
+    trigger: ["workflow"],
+  };
+
+  const updateRes = await fetch(`${API_DOMAIN()}/crm/v6/Leads`, {
+    method:  "PUT",
+    headers: {
+      Authorization:  `Zoho-oauthtoken ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(updatePayload),
+  });
+
+  const updateBody = await updateRes.json();
+
+  if (!updateRes.ok || (updateBody.data && updateBody.data[0]?.status === "error")) {
+    const detail = updateBody.data?.[0]?.message || JSON.stringify(updateBody);
+    throw new Error(`Zoho Lead update failed for ${quoteId}: ${detail}`);
+  }
+
+  console.log(`✅  Zoho Lead updated — ID: ${leadId}  Quote: ${quoteId}  Fields: ${Object.keys(fields).join(", ")}`);
+  return updateBody;
+}
+
+module.exports = { createLead, updateLeadByQuoteId };
