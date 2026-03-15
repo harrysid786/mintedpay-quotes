@@ -15,6 +15,9 @@ app.use("/api/quotes",           quotesRoute);
 app.use("/api/quote_acceptance", acceptanceRoute);
 app.use("/api/calculate_quote",  pricingRoute);
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/index.html"));
+});
 app.listen(PORT, () => {
   console.log(`\n🚀  MintedPay Quote Server running on http://localhost:${PORT}`);
 });
