@@ -1,6 +1,7 @@
 const express = require("express");
 const router  = express.Router();
 const db      = require("../db");
+const { createLead } = require("../services/zohoCRM");
 
 // ── POST /api/quotes — save a quote and return shareable link ──
 router.post("/", (req, res) => {
@@ -59,6 +60,25 @@ router.post("/", (req, res) => {
     // Build shareable link pointing to quote.html (merchant page)
     const origin = process.env.PUBLIC_URL || (req.protocol + "://" + req.get("host"));
     const url = `${origin}/quote.html?quote=${q.quote_id}`;
+
+    // ── Zoho CRM: create Lead (fire-and-forget, never blocks response) ──
+    const vol = parseFloat(q.vol) || 0;
+    const cnt = parseFloat(q.cnt) || 0;
+    const curRate = (vol > 0 && parseFloat(q.cur) > 0)
+      ? Math.round((parseFloat(q.cur) / vol) * 10000) / 100
+      : null;
+
+    createLead({
+      merchant_name:     q.merchant_name  || "",
+      merchant_email:    q.merchant_email || "",
+      quote_id:          q.quote_id,
+      quote_link:        url,
+      monthly_volume:    vol,
+      transaction_count: cnt,
+      current_rate:      curRate,
+      quoted_rate:       parseFloat(q.rate) || 0,
+      quote_source:      "Admin Quote Builder",
+    }).catch(err => console.error("⚠️  Zoho CRM lead error (admin):", err.message));
 
     res.json({
       success:     true,
