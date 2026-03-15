@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Get Your Rate — MintedPay</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0a0a0a;--slate:#475569;--mute:#94a3b8;--line:#e2e8f0;--wash:#f8fafc;--white:#fff;
+  --brand:#4b2afd;--brand-lt:#f0edff;--brand-glow:rgba(75,42,253,.12);
+  --green:#059669;--green-lt:#ecfdf5;--green-bd:#a7f3d0;
+  --red:#dc2626;--red-lt:#fef2f2;
+  --r:10px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-webkit-font-smoothing:antialiased}
+
+.topbar{background:var(--white);border-bottom:1px solid var(--line);height:60px;display:flex;align-items:center;padding:0 clamp(16px,4vw,40px);position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.wordmark{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.5px}
+.wordmark em{color:var(--brand);font-style:normal}
+
+.hero{text-align:center;padding:48px 24px 32px}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(28px,5vw,42px);font-weight:800;letter-spacing:-1px;line-height:1.15;margin-bottom:12px}
+.hero h1 em{color:var(--brand);font-style:normal}
+.hero p{font-size:16px;color:var(--slate);max-width:520px;margin:0 auto;line-height:1.6}
+
+.card{background:var(--white);border:1px solid var(--line);border-radius:14px;max-width:580px;margin:0 auto 60px;padding:36px 32px;box-shadow:0 4px 24px rgba(0,0,0,.04)}
+
+.step{display:none}
+.step.active{display:block;animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.step-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--brand);margin-bottom:6px}
+.step-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:20px;letter-spacing:-.3px}
+
+.field{margin-bottom:18px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:5px}
+.field label span{color:var(--brand);margin-left:2px}
+.field input{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:var(--r);font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;transition:border .15s}
+.field input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-glow)}
+.field input::placeholder{color:var(--mute)}
+.field-hint{font-size:11px;color:var(--mute);margin-top:4px}
+.field-error{font-size:11px;color:var(--red);margin-top:4px;display:none}
+
+.pfx-wrap{display:flex;border:1.5px solid var(--line);border-radius:var(--r);overflow:hidden;transition:border .15s}
+.pfx-wrap:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-glow)}
+.pfx{background:var(--wash);border-right:1px solid var(--line);padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:var(--slate)}
+.pfx-wrap input{border:none;flex:1;padding:12px 14px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 28px;border-radius:var(--r);font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;border:none}
+.btn-primary{background:var(--brand);color:var(--white)}
+.btn-primary:hover{background:#3b1ee0;transform:translateY(-1px);box-shadow:0 6px 20px rgba(75,42,253,.25)}
+.btn-primary:disabled{background:var(--mute);cursor:not-allowed;transform:none;box-shadow:none}
+.btn-secondary{background:var(--white);color:var(--ink);border:1.5px solid var(--line)}
+.btn-secondary:hover{border-color:var(--ink)}
+.btn-row{display:flex;gap:10px;margin-top:24px}
+
+/* TABS */
+.tabs{display:flex;border:1.5px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:22px}
+.tab{flex:1;padding:11px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;background:var(--white);color:var(--slate);border:none;font-family:'DM Sans',sans-serif;transition:all .15s}
+.tab.on{background:var(--brand);color:var(--white)}
+
+/* DROPZONE */
+.dz{border:2px dashed var(--line);border-radius:var(--r);background:var(--wash);padding:28px 16px;text-align:center;cursor:pointer;transition:all .2s;position:relative;margin-bottom:14px}
+.dz:hover,.dz.over{border-color:var(--brand);background:var(--brand-lt)}
+.dz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dz-icon{font-size:28px;display:block;margin-bottom:8px}
+.dz-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:3px}
+.dz-sub{font-size:12px;color:var(--mute)}
+
+/* FILE OK */
+.file-ok{display:flex;align-items:center;gap:10px;background:var(--green-lt);border:1px solid var(--green-bd);border-radius:var(--r);padding:10px 14px;margin-bottom:14px}
+.file-ok-name{font-size:13px;font-weight:600;color:var(--green)}
+.file-ok-rows{font-size:12px;color:var(--slate)}
+.hidden{display:none!important}
+
+/* MAP PANEL */
+.map-panel{background:var(--wash);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:16px}
+.map-panel-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
+.map-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
+.map-item:last-child{border-bottom:none}
+.map-key{font-size:12px;font-weight:600;color:var(--slate);width:100px;flex-shrink:0}
+.map-key em{color:var(--red);font-style:normal}
+.map-item select{flex:1;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--white);border:1px solid var(--line);border-radius:6px;padding:6px 8px;color:var(--ink);outline:none}
+
+/* CSV SUMMARY */
+.csv-summary{background:var(--brand-lt);border:1px solid #c4b5fd;border-radius:var(--r);padding:14px 16px;margin-bottom:16px}
+.csv-summary-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--brand);margin-bottom:8px}
+.csv-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
+.csv-row-k{color:var(--slate)}.csv-row-v{font-weight:700;color:var(--ink)}
+
+/* CARD MIX */
+.card-mix{margin-top:10px}
+.card-mix-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-bottom:6px;background:var(--line)}
+.card-mix-bar div{height:100%;transition:width .3s}
+.card-mix-legend{display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--slate)}
+.card-mix-legend span{display:inline-flex;align-items:center;gap:4px}
+.card-mix-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:20px}
+.metric{background:var(--white);padding:16px}
+.metric-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mute);margin-bottom:4px}
+.metric-value{font-family:'Syne',sans-serif;font-size:22px;font-weight:700}
+
+.loading{text-align:center;padding:40px}
+.spinner{width:36px;height:36px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{font-size:14px;color:var(--slate)}
+.error-box{background:var(--red-lt);border:1px solid #fca5a5;border-radius:var(--r);padding:14px 16px;margin-bottom:18px;font-size:13px;color:var(--red);display:none}
+.footer{text-align:center;padding:24px;font-size:12px;color:var(--mute)}
+.footer a{color:var(--brand);text-decoration:none}
+
+@media(max-width:600px){
+  .card{margin:0 12px 40px;padding:28px 20px}
+  .btn-row{flex-direction:column}
+  .metrics{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wordmark">Minted<em>Pay</em></div></div>
+
+<div class="hero">
+  <h1>Get your <em>instant rate</em></h1>
+  <p>Enter your business details and we'll generate a personalised payment processing quote in seconds.</p>
+</div>
+
+<div class="card">
+  <div id="errorBox" class="error-box"></div>
+
+  <!-- STEP 1: Business Details -->
+  <div id="step1" class="step active">
+    <div class="step-label">Step 1 of 3</div>
+    <div class="step-title">Your business</div>
+    <div class="field">
+      <label>Business name</label>
+      <input type="text" id="bizName" placeholder="e.g. Acme Coffee Ltd">
+    </div>
+    <div class="field">
+      <label>Email address<span>*</span></label>
+      <input type="email" id="bizEmail" placeholder="accounts@acmecoffee.com">
+      <div class="field-error" id="emailError">Please enter a valid email address</div>
+    </div>
+    <div class="btn-row" style="justify-content:flex-end">
+      <button class="btn btn-primary" onclick="goStep2()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Upload or Manual -->
+  <div id="step2" class="step">
+    <div class="step-label">Step 2 of 3</div>
+    <div class="step-title">Your volume</div>
+
+    <div class="tabs">
+      <button class="tab on" id="tabUpload" onclick="switchTab('upload')">📄 Upload Statement</button>
+      <button class="tab" id="tabManual" onclick="switchTab('manual')">✏️ Manual Entry</button>
+    </div>
+
+    <!-- TAB: Upload -->
+    <div id="panelUpload">
+      <div class="dz" id="dropzone">
+        <input type="file" id="fileInput" accept=".csv,.tsv,.txt">
+        <div class="dz-icon">📄</div>
+        <div class="dz-title">Drop your CSV statement or click to browse</div>
+        <div class="dz-sub">Stripe · Worldpay · Barclaycard · Any card processor export</div>
+      </div>
+
+      <div id="filePill" class="file-ok hidden">
+        <span style="font-size:18px">✓</span>
+        <div>
+          <div class="file-ok-name" id="fName">—</div>
+          <div class="file-ok-rows" id="fRows">—</div>
+        </div>
+      </div>
+
+      <div id="mapPanel" class="map-panel hidden">
+        <div class="map-panel-title">Map Columns</div>
+        <div id="mapList"></div>
+        <div style="margin-top:12px">
+          <button class="btn btn-primary" onclick="processCSV()" style="width:100%;padding:10px">Analyse Statement</button>
+        </div>
+      </div>
+
+      <div id="csvSummary" class="csv-summary hidden">
+        <div class="csv-summary-title">Statement Analysis</div>
+        <div class="csv-row"><span class="csv-row-k">Transactions</span><span class="csv-row-v" id="csvCnt">—</span></div>
+        <div class="csv-row"><span class="csv-row-k">Total Volume</span><span class="csv-row-v" id="csvVol">—</span></div>
+        <div class="csv-row"><span class="csv-row-k">Avg Transaction</span><span class="csv-row-v" id="csvAvg">—</span></div>
+        <div class="csv-row" id="csvFeeRow" class="hidden"><span class="csv-row-k">Current Fees</span><span class="csv-row-v" id="csvFees">—</span></div>
+        <div id="cardMixArea" class="card-mix hidden">
+          <div class="csv-row" style="margin-top:6px"><span class="csv-row-k">Card Mix</span><span class="csv-row-v" id="csvDebit">—</span></div>
+          <div class="card-mix-bar" id="mixBar"></div>
+          <div class="card-mix-legend" id="mixLegend"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Manual -->
+    <div id="panelManual" style="display:none">
+      <div class="field">
+        <label>Monthly card volume<span>*</span></label>
+        <div class="pfx-wrap">
+          <div class="pfx">£</div>
+          <input type="number" id="volInput" placeholder="e.g. 50000" min="0" step="1">
+        </div>
+      </div>
+      <div class="field">
+        <label>Number of transactions per month<span>*</span></label>
+        <input type="number" id="cntInput" placeholder="e.g. 1200" min="0" step="1">
+      </div>
+      <div class="field">
+        <label>Current monthly processing fees (optional)</label>
+        <div class="pfx-wrap">
+          <div class="pfx">£</div>
+          <input type="number" id="curInput" placeholder="Leave blank if unknown" min="0" step="0.01">
+        </div>
+        <div class="field-hint">If you know what you currently pay, we can show your estimated saving.</div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep3()" style="margin-left:auto">Review →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Review & Generate -->
+  <div id="step3" class="step">
+    <div class="step-label">Step 3 of 3</div>
+    <div class="step-title">Review &amp; generate</div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Monthly Volume</div><div class="metric-value" id="revVol">—</div></div>
+      <div class="metric"><div class="metric-label">Transactions</div><div class="metric-value" id="revCnt">—</div></div>
+      <div class="metric"><div class="metric-label">Avg Transaction</div><div class="metric-value" id="revAvg">—</div></div>
+      <div class="metric"><div class="metric-label">Current Fees</div><div class="metric-value" id="revCur">—</div></div>
+    </div>
+    <div style="background:var(--wash);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:20px">
+      <div style="font-size:12px;color:var(--slate);margin-bottom:2px">Generating a quote for</div>
+      <div style="font-size:15px;font-weight:700" id="revName">—</div>
+      <div style="font-size:13px;color:var(--slate)" id="revEmail">—</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
+      <button class="btn btn-primary" id="generateBtn" onclick="generateQuote()" style="margin-left:auto">Generate My Quote →</button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div id="stepLoading" class="step">
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Calculating your personalised rate…</p>
+    </div>
+  </div>
+</div>
+
+<div class="footer">MintedPay · Nova Advisory Ireland Limited · <a href="https://www.mintedpay.com">www.mintedpay.com</a></div>
+
+<script>
+// ═══ STATE ═══
+let csvData = null; // { vol, cnt, cur, debitFrac, cardData }
+
+// ═══ INLINE CSV PARSER ═══
+const Papa = {
+  parse: function(file, opts) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const text = e.target.result;
+        const rows = [];
+        let cur = '', inQ = false, fields = [];
+        for (let i = 0; i < text.length; i++) {
+          const ch = text[i], nx = text[i+1];
+          if (ch === '"') {
+            if (inQ && nx === '"') { cur += '"'; i++; }
+            else inQ = !inQ;
+          } else if (ch === ',' && !inQ) {
+            fields.push(cur); cur = '';
+          } else if ((ch === '\n' || ch === '\r') && !inQ) {
+            fields.push(cur); cur = '';
+            if (ch === '\r' && nx === '\n') i++;
+            if (fields.some(f => f.trim())) rows.push(fields);
+            fields = [];
+          } else { cur += ch; }
+        }
+        if (cur || fields.length) { fields.push(cur); if(fields.some(f=>f.trim())) rows.push(fields); }
+        const nonEmpty = rows.filter(r => r.some(c => c.trim()));
+        if (nonEmpty.length < 2) { if(opts.complete) opts.complete({data:[],meta:{fields:[]}}); return; }
+        const headers = nonEmpty[0].map(h => h.trim());
+        const data = nonEmpty.slice(1).map(row => {
+          const obj = {};
+          headers.forEach((h, i) => { obj[h] = (row[i] || '').trim(); });
+          return obj;
+        });
+        if (opts.complete) opts.complete({ data, meta: { fields: headers } });
+      } catch(err) {
+        console.error('CSV parse error:', err);
+        if (opts.complete) opts.complete({ data: [], meta: { fields: [] } });
+      }
+    };
+    reader.readAsText(file);
+  }
+};
+
+// ═══ COLUMN HINTS & CARD CLASSIFICATION ═══
+const HINTS = {
+  amount:   ["amount","gross","total","value","sale","payment","charge","net"],
+  fee:      ["fee","fees","processing","commission","cost","charge_amount"],
+  cardType: ["card","brand","scheme","network","card_brand"],
+  rowType:  ["type","transaction_type","entry_type","record_type"]
+};
+const CARD_LABELS = {visa_debit:"Visa Debit",mc_debit:"MC Debit",maestro:"Maestro",visa_credit:"Visa Credit",mc_credit:"MC Credit",amex:"Amex",mixed:"Other"};
+const CARD_COLORS = {visa_debit:"#2563eb",mc_debit:"#7c3aed",maestro:"#0891b2",visa_credit:"#ea580c",mc_credit:"#dc2626",amex:"#059669",mixed:"#94a3b8"};
+
+let parsedRows = [];
+let parsedHeaders = [];
+let colMap = { amount:"", fee:"", cardType:"", rowType:"" };
+
+function pAmt(v) { const n = parseFloat(String(v||"").replace(/[£$€,\s]/g,"")); return isNaN(n)||n<=0?null:n; }
+
+function classCard(s) {
+  s = (s||"").toLowerCase();
+  if(s.includes("amex")||s.includes("american express")) return "amex";
+  if(s.includes("visa")&&(s.includes("debit")||s.includes(" db "))) return "visa_debit";
+  if(s.includes("visa")) return "visa_credit";
+  if((s.includes("master")||s.includes("mc"))&&s.includes("debit")) return "mc_debit";
+  if(s.includes("maestro")) return "maestro";
+  if(s.includes("master")||s.includes("mc")) return "mc_credit";
+  if(s.includes("debit")) return "visa_debit";
+  if(s.includes("credit")) return "visa_credit";
+  return "mixed";
+}
+function isDebitCard(k) { return ["visa_debit","mc_debit","maestro"].includes(k); }
+
+function autoMap() {
+  const lc = parsedHeaders.map(h => h.toLowerCase());
+  for (const [f, hints] of Object.entries(HINTS)) {
+    colMap[f] = "";
+    for (const h of hints) {
+      const m = parsedHeaders.find((_, i) => lc[i].includes(h));
+      if (m) { colMap[f] = m; break; }
+    }
+  }
+}
+
+// ═══ HELPERS ═══
+function fmtGBP(n) { return "£"+Math.abs(n).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtK(n) { const a=Math.abs(n); if(a>=1e6) return "£"+(a/1e6).toFixed(2)+"m"; if(a>=1e3) return "£"+(a/1e3).toFixed(1)+"k"; return "£"+a.toFixed(2); }
+
+function showError(msg) {
+  const box = document.getElementById("errorBox");
+  box.textContent = msg; box.style.display = "block";
+  setTimeout(() => { box.style.display = "none"; }, 5000);
+}
+
+// ═══ NAVIGATION ═══
+function goStep(n) {
+  document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
+  document.getElementById("step"+n).classList.add("active");
+  document.getElementById("errorBox").style.display = "none";
+}
+
+function goStep2() {
+  const email = document.getElementById("bizEmail").value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    document.getElementById("emailError").style.display = "block"; return;
+  }
+  document.getElementById("emailError").style.display = "none";
+  goStep(2);
+}
+
+function switchTab(which) {
+  document.getElementById("tabUpload").classList.toggle("on", which==="upload");
+  document.getElementById("tabManual").classList.toggle("on", which==="manual");
+  document.getElementById("panelUpload").style.display = which==="upload" ? "block" : "none";
+  document.getElementById("panelManual").style.display = which==="manual" ? "block" : "none";
+}
+
+// ═══ CSV UPLOAD ═══
+function handleFile(file) {
+  Papa.parse(file, { header:true, skipEmptyLines:true, complete(res) {
+    parsedRows = res.data;
+    parsedHeaders = res.meta.fields || [];
+    document.getElementById("fName").textContent = file.name;
+    document.getElementById("fRows").textContent = res.data.length + " rows";
+    document.getElementById("filePill").classList.remove("hidden");
+    autoMap();
+    buildMapUI();
+    document.getElementById("mapPanel").classList.remove("hidden");
+    // Hide previous summary
+    document.getElementById("csvSummary").classList.add("hidden");
+    csvData = null;
+  }});
+}
+
+function buildMapUI() {
+  const c = document.getElementById("mapList");
+  c.innerHTML = "";
+  [["amount","Amount","true"],["fee","Fees Paid","false"],["cardType","Card Type","false"],["rowType","Row Type","false"]].forEach(([k,label,req]) => {
+    const d = document.createElement("div");
+    d.className = "map-item";
+    d.innerHTML = `<div class="map-key">${label}${req==="true"?'<em> *</em>':''}</div>
+      <select onchange="colMap['${k}']=this.value">
+        <option value="">— skip —</option>
+        ${parsedHeaders.map(h => `<option value="${h}"${colMap[k]===h?' selected':''}>${h}</option>`).join("")}
+      </select>`;
+    c.appendChild(d);
+  });
+}
+
+function processCSV() {
+  if (!colMap.amount) { showError("Please map the Amount column."); return; }
+
+  let vol=0, cnt=0, totalFees=0;
+  const cardData = {};
+
+  parsedRows.forEach(r => {
+    if (colMap.rowType) {
+      const rowT = (r[colMap.rowType]||"").toUpperCase().trim();
+      if (rowT && rowT!=="CHARGE" && rowT!=="PAYMENT" && rowT!=="SALE" && rowT!=="TRANSACTION" && rowT!=="DEBIT") return;
+    }
+    const a = pAmt(r[colMap.amount]); if (!a) return;
+    cnt++; vol += a;
+    const fv = colMap.fee ? (pAmt(r[colMap.fee])||0) : 0;
+    if (fv) totalFees += fv;
+    const k = colMap.cardType ? classCard(r[colMap.cardType]) : "mixed";
+    if (!cardData[k]) cardData[k] = { vol:0, cnt:0 };
+    cardData[k].vol += a; cardData[k].cnt++;
+  });
+
+  if (!vol) { showError("No valid amounts found. Check column mapping."); return; }
+
+  let dv = 0;
+  Object.entries(cardData).forEach(([k,v]) => { if(isDebitCard(k)) dv += v.vol; });
+  const debitFrac = vol > 0 ? dv / vol : 0.70;
+
+  // Store CSV results
+  csvData = { vol, cnt, cur: totalFees, debitFrac, cardData };
+
+  // Render summary
+  document.getElementById("csvCnt").textContent = cnt.toLocaleString("en-GB");
+  document.getElementById("csvVol").textContent = fmtK(vol);
+  document.getElementById("csvAvg").textContent = fmtGBP(vol/cnt);
+
+  const feeRow = document.getElementById("csvFeeRow");
+  if (totalFees > 0) {
+    document.getElementById("csvFees").textContent = fmtGBP(totalFees);
+    feeRow.style.display = "flex";
+  } else { feeRow.style.display = "none"; }
+
+  // Card mix
+  const cardKeys = Object.keys(cardData).filter(k => cardData[k].vol > 0);
+  const mixArea = document.getElementById("cardMixArea");
+  if (cardKeys.length > 1 || (cardKeys.length === 1 && cardKeys[0] !== "mixed")) {
+    document.getElementById("csvDebit").textContent = Math.round(debitFrac*100) + "% debit / " + Math.round((1-debitFrac)*100) + "% credit";
+    const bar = document.getElementById("mixBar");
+    const legend = document.getElementById("mixLegend");
+    bar.innerHTML = ""; legend.innerHTML = "";
+    cardKeys.sort((a,b) => cardData[b].vol - cardData[a].vol);
+    cardKeys.forEach(k => {
+      const pct = (cardData[k].vol / vol * 100).toFixed(1);
+      const div = document.createElement("div");
+      div.style.width = pct + "%";
+      div.style.background = CARD_COLORS[k] || "#94a3b8";
+      bar.appendChild(div);
+      legend.innerHTML += `<span><span class="card-mix-dot" style="background:${CARD_COLORS[k]||'#94a3b8'}"></span>${CARD_LABELS[k]||k} ${pct}%</span>`;
+    });
+    mixArea.classList.remove("hidden");
+  } else { mixArea.classList.add("hidden"); }
+
+  document.getElementById("csvSummary").classList.remove("hidden");
+  document.getElementById("mapPanel").classList.add("hidden");
+}
+
+// ═══ STEP 3: REVIEW ═══
+function goStep3() {
+  const isUpload = document.getElementById("tabUpload").classList.contains("on");
+
+  let vol, cnt, cur;
+  if (isUpload) {
+    if (!csvData) { showError("Please upload and analyse a CSV statement first."); return; }
+    vol = csvData.vol; cnt = csvData.cnt; cur = csvData.cur || 0;
+  } else {
+    vol = parseFloat(document.getElementById("volInput").value);
+    cnt = parseFloat(document.getElementById("cntInput").value);
+    cur = parseFloat(document.getElementById("curInput").value) || 0;
+    if (!vol || vol <= 0) { showError("Please enter your monthly card volume."); return; }
+    if (!cnt || cnt <= 0) { showError("Please enter your number of transactions."); return; }
+  }
+
+  document.getElementById("revVol").textContent = fmtK(vol);
+  document.getElementById("revCnt").textContent = Math.round(cnt).toLocaleString("en-GB");
+  document.getElementById("revAvg").textContent = fmtGBP(vol/cnt);
+  document.getElementById("revCur").textContent = cur > 0 ? fmtGBP(cur) : "—";
+  document.getElementById("revName").textContent = document.getElementById("bizName").value || "Your Business";
+  document.getElementById("revEmail").textContent = document.getElementById("bizEmail").value;
+  goStep(3);
+}
+
+// ═══ GENERATE QUOTE ═══
+async function generateQuote() {
+  const btn = document.getElementById("generateBtn");
+  btn.disabled = true;
+  document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
+  document.getElementById("stepLoading").classList.add("active");
+
+  const isUpload = csvData !== null && document.getElementById("tabUpload").classList.contains("on");
+
+  const payload = {
+    merchant_name:     document.getElementById("bizName").value.trim(),
+    merchant_email:    document.getElementById("bizEmail").value.trim(),
+    monthly_volume:    isUpload ? csvData.vol : parseFloat(document.getElementById("volInput").value),
+    transaction_count: isUpload ? csvData.cnt : parseFloat(document.getElementById("cntInput").value),
+    current_fees:      isUpload ? (csvData.cur||0) : (parseFloat(document.getElementById("curInput").value)||0),
+    debit_frac:        isUpload ? csvData.debitFrac : 0.70
+  };
+
+  try {
+    const res = await fetch("/api/calculate_quote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showError(data.error || "Something went wrong. Please try again.");
+      goStep(3); btn.disabled = false; return;
+    }
+    window.location.href = "/quote.html?quote=" + data.quote_id;
+  } catch (e) {
+    console.error("Quote generation failed:", e);
+    showError("Network error. Please check your connection.");
+    goStep(3); btn.disabled = false;
+  }
+}
+
+// ═══ INIT ═══
+document.addEventListener("DOMContentLoaded", () => {
+  const dz = document.getElementById("dropzone");
+  const fi = document.getElementById("fileInput");
+  dz.addEventListener("dragover", e => { e.preventDefault(); dz.classList.add("over"); });
+  dz.addEventListener("dragleave", () => dz.classList.remove("over"));
+  dz.addEventListener("drop", e => { e.preventDefault(); dz.classList.remove("over"); if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+  fi.addEventListener("change", e => { if(e.target.files[0]) handleFile(e.target.files[0]); });
+});
+</script>
+</body>
+</html>
