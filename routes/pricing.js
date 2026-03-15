@@ -83,7 +83,7 @@ function generateQuoteId() {
 // ── POST /api/calculate_quote ─────────────────────────────────
 router.post("/", (req, res) => {
   try {
-    const { merchant_name, merchant_email, monthly_volume, transaction_count, current_fees } = req.body;
+    const { merchant_name, merchant_email, monthly_volume, transaction_count, current_fees, debit_frac } = req.body;
 
     if (!merchant_email) {
       return res.status(400).json({ error: "Email address is required" });
@@ -98,8 +98,9 @@ router.post("/", (req, res) => {
     const vol = parseFloat(monthly_volume);
     const cnt = parseFloat(transaction_count);
     const cur = parseFloat(current_fees) || 0;
+    const debitFrac = (debit_frac !== undefined && debit_frac >= 0 && debit_frac <= 1) ? parseFloat(debit_frac) : DEFAULT_DEBIT_FRAC;
 
-    const result = calculateRate(vol, cnt, DEFAULT_DEBIT_FRAC, cur);
+    const result = calculateRate(vol, cnt, debitFrac, cur);
     if (!result) {
       return res.status(400).json({ error: "Unable to calculate rate with the provided data" });
     }
@@ -152,7 +153,7 @@ router.post("/", (req, res) => {
       cnt,
       result.avgTx,
       cur,
-      DEFAULT_DEBIT_FRAC,
+      debitFrac,
       addons
     );
 
