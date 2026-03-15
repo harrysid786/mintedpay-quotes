@@ -1,6 +1,7 @@
 const express = require("express");
 const router  = express.Router();
 const db      = require("../db");
+const { createLead } = require("../services/zohoCRM");
 
 // ═══ SERVER-SIDE PRICING ENGINE ═══
 // All cost assumptions, margins, and undercut logic are server-only.
@@ -163,6 +164,22 @@ router.post("/", (req, res) => {
       debitFrac,
       addons
     );
+
+    // ── Zoho CRM: create Lead (fire-and-forget, never blocks response) ──
+    const origin = process.env.PUBLIC_URL || (req.protocol + "://" + req.get("host"));
+    const quoteLink = `${origin}/quote.html?quote=${quote_id}`;
+
+    createLead({
+      merchant_name:     merchant_name  || "",
+      merchant_email:    merchant_email || "",
+      quote_id:          quote_id,
+      quote_link:        quoteLink,
+      monthly_volume:    vol,
+      transaction_count: cnt,
+      current_rate:      result.current_rate,
+      quoted_rate:       result.rate,
+      quote_source:      "Public Pricing Tool",
+    }).catch(err => console.error("⚠️  Zoho CRM lead error (pricing):", err.message));
 
     // Only expose final rate and savings — no cost breakdown
     res.json({
