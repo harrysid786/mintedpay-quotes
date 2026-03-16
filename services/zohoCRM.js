@@ -126,6 +126,36 @@ async function createLead(opts) {
   return body;
 }
 
+// ── Look up a Lead by Quote_ID (read-only) ──────────────────
+/**
+ * Returns the first Zoho Lead matching the given quoteId, or null.
+ *
+ * @param {string} quoteId
+ * @returns {Object|null} – Lead record with id, Quote_Status, etc.
+ */
+async function getLeadByQuoteId(quoteId) {
+  if (!process.env.ZOHO_CLIENT_ID || !process.env.ZOHO_REFRESH_TOKEN) {
+    return null;
+  }
+  if (!quoteId) return null;
+
+  const token = await getAccessToken();
+  const searchUrl = `${API_DOMAIN()}/crm/v6/Leads/search?criteria=(Quote_ID:equals:${encodeURIComponent(quoteId)})`;
+
+  const searchRes = await fetch(searchUrl, {
+    method:  "GET",
+    headers: {
+      Authorization:  `Zoho-oauthtoken ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (searchRes.status === 204 || !searchRes.ok) return null;
+
+  const body = await searchRes.json();
+  return body.data?.[0] || null;
+}
+
 // ── Update an existing Lead by Quote_ID ──────────────────────
 /**
  * Searches for a Lead matching the given quoteId, then patches it
@@ -212,4 +242,4 @@ async function updateLeadByQuoteId(quoteId, fields) {
   return updateBody;
 }
 
-module.exports = { createLead, updateLeadByQuoteId };
+module.exports = { createLead, getLeadByQuoteId, updateLeadByQuoteId };
