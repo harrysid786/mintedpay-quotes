@@ -1,7 +1,7 @@
 const express = require("express");
 const router  = express.Router();
 const db      = require("../db");
-const { createLead, updateLeadByQuoteId } = require("../services/zohoCRM");
+const { createLead, getLeadByQuoteId, updateLeadByQuoteId } = require("../services/zohoCRM");
 
 // ── POST /api/quotes — save a quote and return shareable link ──
 router.post("/", (req, res) => {
@@ -102,10 +102,20 @@ router.post("/viewed", async (req, res) => {
       return res.status(400).json({ error: "quote_id is required" });
     }
 
-    // Fire-and-forget: update Zoho Lead status
-    updateLeadByQuoteId(quote_id, {
-      Quote_Status: "Quote Viewed",
-    }).catch(err => console.error("⚠️  Zoho CRM viewed-update error:", err.message));
+    // ── Only update to "Quote Viewed" if status is exactly "Quote Generated" ──
+    // Any other status means the pipeline has already moved forward — skip
+    (async () => {
+      const lead = await getLeadByQuoteId(quote_id);
+      if (!lead) return;
+
+      const currentStatus = lead.Quote_Status || "";
+      if (currentStatus !== "Quote Generated") {
+        console.log(`⏭️  Quote ${quote_id} already at "${currentStatus}" — skipping "Quote Viewed" update`);
+        return;
+      }
+
+      await updateLeadByQuoteId(quote_id, { Quote_Status: "Quote Viewed" });
+    })().catch(err => console.error("⚠️  Zoho CRM viewed-update error:", err.message));
 
     console.log(`👁️  Quote viewed: ${quote_id}`);
     res.json({ success: true });
