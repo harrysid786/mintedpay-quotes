@@ -900,6 +900,33 @@
               }).join("")}
             </div>
           </div>`;
+      } else if (f.type === "datalist") {
+        // Country typeahead — custom dropdown for reliable cross-browser filtering
+        const prohibited = window.RiskEngine?.PROHIBITED_COUNTRIES || [];
+        const restricted = window.RiskEngine?.RESTRICTED_COUNTRIES || [];
+        const valLower   = val.toLowerCase();
+        const isProhibited = prohibited.some(c => valLower && valLower.includes(c.toLowerCase()));
+        const isRestricted = !isProhibited && restricted.some(c => valLower && c.toLowerCase() === valLower);
+        const warnClass  = isProhibited ? "lf-industry-prohibited" : isRestricted ? "lf-industry-restricted" : "";
+        ctrl = `
+          <div class="lf-industry-wrap" id="lf-country-wrap">
+            <input class="lf-ctrl lf-country-input ${warnClass}" id="lf-${f.name}" name="${f.name}"
+                   type="text" value="${val}" placeholder="${f.placeholder || ""}"
+                   autocomplete="off" aria-autocomplete="list">
+            ${isProhibited ? `<div class="lf-industry-status lf-industry-status-red">🚫 We do not accept merchants from this country</div>` :
+              isRestricted ? `<div class="lf-industry-status lf-industry-status-amber">⚠️ Higher-risk jurisdiction — additional review required</div>` : ""}
+            <div class="lf-industry-dropdown" id="lf-country-dropdown" style="display:none">
+              ${(f.options || []).map(country => {
+                const cl = country.toLowerCase();
+                const iP = prohibited.some(p => cl.includes(p.toLowerCase()));
+                const iR = !iP && restricted.some(r => cl === r.toLowerCase());
+                const tag = iP ? `<span class="lf-industry-tag lf-tag-prohibited">Prohibited</span>` :
+                            iR ? `<span class="lf-industry-tag lf-tag-restricted">Restricted</span>` : "";
+                return `<div class="lf-industry-opt ${iP ? "lf-opt-prohibited" : iR ? "lf-opt-restricted" : ""}"
+                             data-value="${country}">${country}${tag}</div>`;
+              }).join("")}
+            </div>
+          </div>`;
       } else {
         const minA = f.min !== undefined ? `min="${f.min}"` : "";
         const maxA = f.max !== undefined ? `max="${f.max}"` : "";
@@ -1443,6 +1470,84 @@
         document.addEventListener("click", (e) => {
           if (!industryInput.contains(e.target) && !industryDropdown.contains(e.target)) {
             industryDropdown.style.display = "none";
+          }
+        }, { capture: true });
+      }
+
+      // ── Country typeahead wiring ───────────────────────────
+      const countryInput    = q("lf-country");
+      const countryDropdown = q("lf-country-dropdown");
+      if (countryInput && countryDropdown) {
+        const prohibitedCountries = window.RiskEngine?.PROHIBITED_COUNTRIES || [];
+        const restrictedCountries = window.RiskEngine?.RESTRICTED_COUNTRIES || [];
+
+        const filterCountries = (query) => {
+          const q2 = query.toLowerCase().trim();
+          const opts = countryDropdown.querySelectorAll(".lf-industry-opt");
+          let anyVisible = false;
+          opts.forEach(opt => {
+            const match = !q2 || opt.dataset.value.toLowerCase().includes(q2);
+            opt.style.display = match ? "" : "none";
+            if (match) anyVisible = true;
+          });
+          countryDropdown.style.display = anyVisible ? "" : "none";
+        };
+
+        const updateCountryWarning = (val) => {
+          const wrap = q("lf-country-wrap");
+          if (!wrap) return;
+          wrap.querySelectorAll(".lf-industry-status").forEach(el => el.remove());
+          countryInput.classList.remove("lf-industry-prohibited", "lf-industry-restricted");
+          const vl = val.toLowerCase();
+          const isP = prohibitedCountries.some(c => vl.includes(c.toLowerCase()));
+          const isR = !isP && restrictedCountries.some(c => c.toLowerCase() === vl);
+          if (isP) {
+            countryInput.classList.add("lf-industry-prohibited");
+            const div = document.createElement("div");
+            div.className = "lf-industry-status lf-industry-status-red";
+            div.textContent = "🚫 We do not accept merchants from this country";
+            countryInput.insertAdjacentElement("afterend", div);
+          } else if (isR) {
+            countryInput.classList.add("lf-industry-restricted");
+            const div = document.createElement("div");
+            div.className = "lf-industry-status lf-industry-status-amber";
+            div.textContent = "⚠️ Higher-risk jurisdiction — additional review required";
+            countryInput.insertAdjacentElement("afterend", div);
+          }
+        };
+
+        // Show dropdown on focus (show all if empty, filtered if has value)
+        countryInput.addEventListener("focus", () => {
+          filterCountries(countryInput.value);
+        });
+
+        // Filter as user types
+        countryInput.addEventListener("input", (e) => {
+          filterCountries(e.target.value);
+          this.lead.country = e.target.value;
+          updateCountryWarning(e.target.value);
+          this._updateQualificationWarning();
+          this._scheduleSave();
+        });
+
+        // Select a country from dropdown
+        countryDropdown.querySelectorAll(".lf-industry-opt").forEach(opt => {
+          opt.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+            const chosen = opt.dataset.value;
+            countryInput.value = chosen;
+            this.lead.country = chosen;
+            countryDropdown.style.display = "none";
+            updateCountryWarning(chosen);
+            this._updateQualificationWarning();
+            this._scheduleSave();
+          });
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener("click", (e) => {
+          if (!countryInput.contains(e.target) && !countryDropdown.contains(e.target)) {
+            countryDropdown.style.display = "none";
           }
         }, { capture: true });
       }
