@@ -892,8 +892,6 @@
               }).join("")}
             </div>
           </div>`;
-      } else if (false) {
-        // placeholder — never reached, keeps else chain valid
       } else {
         const minA = f.min !== undefined ? `min="${f.min}"` : "";
         const maxA = f.max !== undefined ? `max="${f.max}"` : "";
@@ -1440,6 +1438,9 @@
           }
         }, { capture: true });
       }
+
+      // Input autosave + qualification warnings
+      this.overlay.querySelectorAll(".lf-ctrl").forEach(el => {
         const evt = el.tagName === "SELECT" ? "change" : "input";
         el.addEventListener(evt, e => {
           this.lead[e.target.name] = e.target.value;
