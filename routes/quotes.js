@@ -40,12 +40,15 @@ router.post("/", (req, res) => {
       refAmt:        parseFloat(q.refAmt)     || 1
     });
 
+    // Enforce minimum fixed fee of 10p before saving
+    const safeFee = Math.max(parseFloat(q.fixed_fee) || 0, 10);
+
     stmt.run(
       q.quote_id,
       q.merchant_name  || "",
       q.merchant_email || "",
       parseFloat(q.rate)      || 0,
-      parseFloat(q.fixed_fee) || 0,
+      safeFee,
       brandJson,
       q.created_at || new Date().toISOString(),
       expiry_date,
@@ -61,24 +64,7 @@ router.post("/", (req, res) => {
     const origin = process.env.PUBLIC_URL || (req.protocol + "://" + req.get("host"));
     const url = `${origin}/quote.html?quote=${q.quote_id}`;
 
-    // ── Zoho CRM: create Lead (fire-and-forget, never blocks response) ──
-    const vol = parseFloat(q.vol) || 0;
-    const cnt = parseFloat(q.cnt) || 0;
-    const curRate = (vol > 0 && parseFloat(q.cur) > 0)
-      ? Math.round((parseFloat(q.cur) / vol) * 10000) / 100
-      : null;
-
-    createLead({
-      merchant_name:     q.merchant_name  || "",
-      merchant_email:    q.merchant_email || "",
-      quote_id:          q.quote_id,
-      quote_link:        url,
-      monthly_volume:    vol,
-      transaction_count: cnt,
-      current_rate:      curRate,
-      quoted_rate:       parseFloat(q.rate) || 0,
-      quote_source:      "Admin Quote Builder",
-    }).catch(err => console.error("⚠️  Zoho CRM lead error (admin):", err.message));
+    // Zoho push moved to dedicated /api/leads/:id/push-zoho endpoint
 
     res.json({
       success:     true,
