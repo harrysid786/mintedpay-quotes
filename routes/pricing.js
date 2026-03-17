@@ -56,6 +56,9 @@ function calculateQuote(vol, cnt, debitFrac, curFees) {
   else if (vol < 200000)  fixedFee = 8;
   else                    fixedFee = 5;
 
+  // ── 6b. ENFORCE MINIMUM FIXED FEE (CRITICAL) ──────────
+  fixedFee = Math.max(fixedFee, 10);
+
   // ── 7. ROUND FINAL RATE ──────────────────────────────────
   quoteRate = Math.ceil(quoteRate * 100) / 100;
 
@@ -165,21 +168,7 @@ router.post("/", (req, res) => {
       addons
     );
 
-    // ── Zoho CRM: create Lead (fire-and-forget, never blocks response) ──
-    const origin = process.env.PUBLIC_URL || (req.protocol + "://" + req.get("host"));
-    const quoteLink = `${origin}/quote.html?quote=${quote_id}`;
-
-    createLead({
-      merchant_name:     merchant_name  || "",
-      merchant_email:    merchant_email || "",
-      quote_id:          quote_id,
-      quote_link:        quoteLink,
-      monthly_volume:    vol,
-      transaction_count: cnt,
-      current_rate:      result.current_rate,
-      quoted_rate:       result.rate,
-      quote_source:      "Public Pricing Tool",
-    }).catch(err => console.error("⚠️  Zoho CRM lead error (pricing):", err.message));
+    // Zoho push moved to /api/leads/:id/push-zoho — no longer auto-fires on calculate
 
     // Only expose final rate and savings — no cost breakdown
     res.json({
