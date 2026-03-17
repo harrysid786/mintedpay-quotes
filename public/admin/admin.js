@@ -25,11 +25,14 @@
 
   function statusBadge(status) {
     const cfg = {
+      new:         { cls: "bd-grey",   lbl: "New"         },
       draft:       { cls: "bd-grey",   lbl: "Draft"       },
-      completed:   { cls: "bd-blue",   lbl: "Completed"   },
       qualified:   { cls: "bd-green",  lbl: "Qualified"   },
-      rejected:    { cls: "bd-red",    lbl: "Rejected"    },
+      quoted:      { cls: "bd-blue",   lbl: "Quoted"      },
       kyb_pending: { cls: "bd-purple", lbl: "KYB Pending" },
+      live:        { cls: "bd-green",  lbl: "✓ Live"      },
+      rejected:    { cls: "bd-red",    lbl: "Rejected"    },
+      archived:    { cls: "bd-grey",   lbl: "Archived"    },
     };
     const c = cfg[status] || { cls: "bd-grey", lbl: status || "—" };
     return `<span class="db-badge ${c.cls}">${c.lbl}</span>`;
@@ -41,11 +44,16 @@
     return `<span class="db-badge ${cls}">${level.charAt(0).toUpperCase() + level.slice(1)}</span>`;
   }
 
+  function brandBadge(brand) {
+    if (!brand || brand === "minted") return "";
+    return `<span class="db-brand-badge">${brand.charAt(0).toUpperCase() + brand.slice(1)}</span>`;
+  }
+
   // ── Load & render leads table ────────────────────────────
   async function loadLeads() {
     const tbody = document.getElementById("leads-tbody");
     if (!tbody) return;
-    tbody.innerHTML = `<tr><td colspan="8" class="tbl-info">Loading…</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" class="tbl-info">Loading…</td></tr>`;
 
     try {
       const resp = await fetch("/api/leads");
@@ -58,7 +66,7 @@
       if (!leads.length) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="8" class="tbl-empty">
+            <td colspan="10" class="tbl-empty">
               No leads yet.<br>
               <button class="tbl-new-btn" onclick="window.adminNewLead()">+ Create your first lead</button>
             </td>
@@ -69,7 +77,10 @@
       tbody.innerHTML = leads.map(lead => `
         <tr class="db-row" data-id="${lead.id}">
           <td class="td-biz">
-            <div class="td-biz-name">${lead.businessName || "<em class='muted'>Untitled</em>"}</div>
+            <div class="td-biz-name">
+              ${lead.businessName || "<em class='muted'>Untitled</em>"}
+              ${brandBadge(lead.brand)}
+            </div>
             <div class="td-biz-sub">${lead.industry || ""}</div>
           </td>
           <td class="td-country">${lead.country || "—"}</td>
@@ -80,15 +91,17 @@
             <div>${lead.contactName || "—"}</div>
             ${lead.email ? `<div class="td-email">${lead.email}</div>` : ""}
           </td>
+          <td class="td-assignee">${lead.assignedTo || "—"}</td>
           <td class="td-date">${fmtDate(lead.createdAt)}</td>
           <td class="td-act">
             <button class="db-open-btn" onclick="window.adminOpenLead('${lead.id}')">Open →</button>
+            <button class="db-delete-btn" onclick="window.adminDeleteLead('${lead.id}')" title="Delete lead">🗑</button>
           </td>
         </tr>
       `).join("");
 
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="8" class="tbl-error">⚠️ Could not load leads. Is the server running?</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" class="tbl-error">⚠️ Could not load leads. Is the server running?</td></tr>`;
       console.error("Error loading leads:", e);
     }
   }
@@ -97,16 +110,20 @@
   function updateStats(leads) {
     if (!Array.isArray(leads)) return;
     const total     = leads.length;
-    const active    = leads.filter(l => l.status === "qualified" || l.status === "kyb_pending").length;
-    const draft     = leads.filter(l => l.status === "draft" || l.status === "completed").length;
+    const active    = leads.filter(l => l.status === "qualified" || l.status === "kyb_pending" || l.status === "live").length;
+    const draft     = leads.filter(l => l.status === "draft" || l.status === "new").length;
+    const quoted    = leads.filter(l => l.status === "quoted").length;
     const rejected  = leads.filter(l => l.status === "rejected").length;
+    const archived  = leads.filter(l => l.status === "archived").length;
     const totalVol  = leads.reduce((s, l) => s + (parseFloat(l.monthlyVolume) || 0), 0);
 
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     set("stat-total",    total);
     set("stat-active",   active);
     set("stat-draft",    draft);
+    set("stat-quoted",   quoted);
     set("stat-rejected", rejected);
+    set("stat-archived", archived);
     set("stat-vol",      fmtVolume(totalVol));
   }
 
@@ -131,9 +148,8 @@
       const val = sel.value;
       document.querySelectorAll(".db-row").forEach(row => {
         if (!val) { row.style.display = ""; return; }
-        const id   = row.getAttribute("data-id");
         const badge = row.querySelector(".db-badge");
-        const status = badge ? badge.textContent.toLowerCase().replace(" ", "_") : "";
+        const status = badge ? badge.textContent.toLowerCase().replace(/ /g, "_").replace("✓_live", "live") : "";
         row.style.display = status.includes(val) ? "" : "none";
       });
     });
@@ -154,6 +170,29 @@
       flow.open(lead);
     } catch (e) {
       alert("Could not load lead. Please try again.");
+    }
+  };
+
+  // ── Public: delete lead ────────────────────────────────────
+  window.adminDeleteLead = async function (id) {
+    const confirmDelete = confirm("Archive this lead? Click OK to archive, or Cancel to dismiss.");
+    if (!confirmDelete) return;
+
+    const permanent = confirm("Permanently delete? Click OK to permanently delete, or Cancel to just archive.");
+
+    try {
+      const url = permanent ? `/api/leads/${id}?permanent=true` : `/api/leads/${id}`;
+      const resp = await fetch(url, { method: "DELETE" });
+
+      if (!resp.ok) {
+        alert("Error deleting lead. Please try again.");
+        return;
+      }
+
+      loadLeads();
+    } catch (e) {
+      alert("Could not delete lead. Please try again.");
+      console.error("Error deleting lead:", e);
     }
   };
 
