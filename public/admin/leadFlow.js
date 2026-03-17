@@ -161,9 +161,6 @@
       title: "Volume & Transactions",
       subtitle: "Monthly processing volume and average transaction size",
       fields: [
-        { name: "volumeTab", label: "Entry Method", type: "select", options: [
-          { value: "manual",  label: "Manual Entry" },
-        ]},
         { name: "monthlyVolume",       label: "Monthly Processing Volume (£)", type: "number", required: true, placeholder: "e.g. 50000", min: 0 },
         { name: "avgTransactionValue", label: "Average Transaction Value (£)",  type: "number", required: true, placeholder: "e.g. 45",    min: 0 },
       ],
@@ -305,237 +302,409 @@
     // ── Build Lead Overview Page ───────────────────────────
     _buildOverview() {
       const lead = this.lead;
-      const displayVal = (v) => v !== undefined && v !== null && v !== "" ? String(v) : "—";
+      const empty = (v) => v === undefined || v === null || v === "";
+      const val = (v, suffix = "") => empty(v) ? `<span class="ov-empty">Not provided</span>` : `${String(v)}${suffix}`;
       const badge = (text, color = "gray") => {
-        const colorClass = color === "green" ? "lf-badge-green" :
-                          color === "red" ? "lf-badge-red" :
-                          color === "amber" ? "lf-badge-amber" : "lf-badge-gray";
-        return `<span class="lf-badge ${colorClass}">${text}</span>`;
+        const cls = color === "green" ? "lf-badge-green" :
+                    color === "red" ? "lf-badge-red" :
+                    color === "amber" ? "lf-badge-amber" :
+                    color === "blue" ? "bd-blue" : "bd-grey";
+        return `<span class="lf-badge ${cls}">${text}</span>`;
       };
 
-      let html = `
-        <div class="lf-overview">
-          <div class="lf-overview-header">
-            <div class="lf-overview-title">
-              <h1>${lead.businessName || "Lead Overview"}</h1>
-              <p>${lead.country || ""}</p>
-            </div>
-            <button class="lf-back-btn" id="lf-overview-close">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path d="M19 12H5M12 5l-7 7 7 7"/>
-              </svg>
-              Back to Dashboard
+      // Status badge for header
+      const statusColor = { qualified: "green", kyb_pending: "green", live: "green", quoted: "blue", rejected: "red" };
+      const statusCls = statusColor[lead.status] || "gray";
+      const statusLabel = (lead.status || "draft").replace(/_/g, " ").toUpperCase();
+
+      // Risk badge for header
+      const riskColor = lead.riskLevel === "low" ? "green" : lead.riskLevel === "medium" ? "amber" : lead.riskLevel === "high" ? "red" : "";
+
+      // Volume helpers
+      const vol   = parseFloat(lead.monthlyVolume) || 0;
+      const avgTx = parseFloat(lead.avgTransactionValue) || 0;
+
+      // Activity timeline helper
+      const activity = Array.isArray(lead.activity) ? lead.activity : [];
+      const activityLabels = {
+        lead_created: "Lead created",
+        status_changed: "Status changed",
+        note_added: "Note added",
+        kyb_submitted: "KYB submitted",
+        archived: "Lead archived",
+        reassigned: "Lead reassigned",
+        zoho_pushed: "Pushed to Zoho",
+        quote_generated: "Quote generated",
+      };
+      const activityIcons = {
+        lead_created: "🆕",
+        status_changed: "🔄",
+        note_added: "📝",
+        kyb_submitted: "🔐",
+        archived: "📦",
+        reassigned: "👤",
+        zoho_pushed: "☁️",
+        quote_generated: "📄",
+      };
+      const highlightedEvents = ["quote_generated", "zoho_pushed"];
+
+      const fmtTs = (iso) => {
+        if (!iso) return "";
+        const d = new Date(iso);
+        return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) + " " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+      };
+
+      const fmtDate = (iso) => {
+        if (!iso) return "";
+        const d = new Date(iso);
+        return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+      };
+
+      // Group activity by date
+      const groupedActivity = [...activity].reverse().reduce((acc, a) => {
+        const dateKey = fmtDate(a.timestamp);
+        if (!acc[dateKey]) acc[dateKey] = [];
+        acc[dateKey].push(a);
+        return acc;
+      }, {});
+
+      // Notes helper
+      const notes = Array.isArray(lead.notes) ? lead.notes : [];
+
+      // Action button states
+      const isKYB = lead.status === "kyb_pending";
+      const hasQuote = !!lead.quote_id;
+
+      return `
+        <div class="ov-page">
+          <!-- ═══ STICKY HEADER ═══ -->
+          <div class="ov-topbar">
+            <button class="ov-back" id="lf-overview-close">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+              Dashboard
             </button>
-          </div>
-
-          <div class="lf-overview-grid">
-      `;
-
-      // Business Info
-      html += `
-        <div class="lf-overview-card">
-          <h3>Business Info</h3>
-          <div class="lf-overview-rows">
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Business Name</span>
-              <span class="lf-overview-value">${displayVal(lead.businessName)}</span>
+            <div class="ov-topbar-center">
+              <h1 class="ov-biz-name">${lead.businessName || "Untitled Lead"}</h1>
+              <div class="ov-biz-meta">
+                ${lead.country ? `<span class="ov-country">${lead.country}</span>` : ""}
+                ${badge(statusLabel, statusCls)}
+                ${riskColor ? badge(lead.riskLevel.toUpperCase() + " RISK", riskColor) : ""}
+                ${lead.brand && lead.brand !== "minted" ? `<span class="db-brand-badge">${lead.brand.toUpperCase()}</span>` : ""}
+              </div>
             </div>
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Industry</span>
-              <span class="lf-overview-value">${displayVal(lead.industry)} ${lead.industryDetail ? `(${lead.industryDetail})` : ""}</span>
-            </div>
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Country</span>
-              <span class="lf-overview-value">${displayVal(lead.country)}</span>
+            <div class="ov-topbar-actions">
+              <button class="ov-btn ov-btn-primary" id="lf-overview-edit">Edit Lead</button>
+              <button class="ov-btn ov-btn-secondary" id="lf-overview-resume">Resume Flow</button>
             </div>
           </div>
+
+          <div class="ov-body">
+
+            <!-- ═══ 70/30 LAYOUT ═══ -->
+            <div class="ov-cols">
+
+              <!-- ═══ LEFT COLUMN (70%) ═══ -->
+              <div class="ov-col-left">
+
+                <!-- Pricing Summary Banner (if pricing exists) -->
+                ${lead.processingRate || lead.fixedFee ? `
+                <div class="ov-summary-banner">
+                  <div class="ov-summary-row">
+                    <div class="ov-summary-item">
+                      <div class="ov-summary-label">Processing Rate</div>
+                      <div class="ov-summary-value">${lead.processingRate}%</div>
+                    </div>
+                    <div class="ov-summary-item">
+                      <div class="ov-summary-label">Fixed Fee</div>
+                      <div class="ov-summary-value">${lead.fixedFee}p</div>
+                    </div>
+                    ${lead.estimatedRevenue ? `
+                    <div class="ov-summary-item">
+                      <div class="ov-summary-label">Est. Revenue</div>
+                      <div class="ov-summary-value">£${lead.estimatedRevenue}</div>
+                    </div>` : ""}
+                    ${riskColor ? `
+                    <div class="ov-summary-item">
+                      <div class="ov-summary-label">Risk Level</div>
+                      <div class="ov-summary-value">${badge(lead.riskLevel.toUpperCase(), riskColor)}</div>
+                    </div>` : ""}
+                  </div>
+                </div>` : ""}
+
+                <!-- Pricing Summary (large hero card) -->
+                ${lead.processingRate || lead.fixedFee || lead.riskLevel ? `
+                <div class="ov-results-hero">
+                  <div class="ov-results-grid">
+                    ${lead.processingRate ? `
+                    <div class="ov-result-item ov-result-highlight">
+                      <div class="ov-result-label">Processing Rate</div>
+                      <div class="ov-result-value">${lead.processingRate}%</div>
+                    </div>` : ""}
+                    ${lead.fixedFee ? `
+                    <div class="ov-result-item ov-result-highlight">
+                      <div class="ov-result-label">Fixed Fee</div>
+                      <div class="ov-result-value">${lead.fixedFee}p</div>
+                    </div>` : ""}
+                    ${lead.riskLevel ? `
+                    <div class="ov-result-item">
+                      <div class="ov-result-label">Risk Level</div>
+                      <div class="ov-result-badge">${badge(lead.riskLevel.toUpperCase(), riskColor)}</div>
+                    </div>` : ""}
+                    ${lead.decision ? `
+                    <div class="ov-result-item">
+                      <div class="ov-result-label">Decision</div>
+                      <div class="ov-result-badge">${badge(lead.decision.toUpperCase(), lead.decision === "accept" ? "green" : lead.decision === "review" ? "amber" : "red")}</div>
+                    </div>` : ""}
+                    ${vol > 0 ? `
+                    <div class="ov-result-item">
+                      <div class="ov-result-label">Monthly Volume</div>
+                      <div class="ov-result-value ov-result-sm">\u00A3${vol.toLocaleString("en-GB")}</div>
+                    </div>` : ""}
+                    ${lead.estimatedRevenue ? `
+                    <div class="ov-result-item">
+                      <div class="ov-result-label">Est. Revenue</div>
+                      <div class="ov-result-value ov-result-sm">\u00A3${lead.estimatedRevenue}</div>
+                    </div>` : ""}
+                  </div>
+                </div>` : ""}
+
+                <!-- Business Info -->
+                <div class="ov-card">
+                  <div class="ov-card-hdr">Business Info</div>
+                  <div class="ov-card-body">
+                    <div class="ov-field">
+                      <div class="ov-field-label">Business Name</div>
+                      <div class="ov-field-value">${val(lead.businessName)}</div>
+                    </div>
+                    <div class="ov-field">
+                      <div class="ov-field-label">Industry</div>
+                      <div class="ov-field-value">${val(lead.industry)}${lead.industryDetail ? ` <span class="ov-detail">(${lead.industryDetail})</span>` : ""}</div>
+                    </div>
+                    <div class="ov-field">
+                      <div class="ov-field-label">Country</div>
+                      <div class="ov-field-value">${val(lead.country)}</div>
+                    </div>
+                    <div class="ov-field">
+                      <div class="ov-field-label">Sales Channels</div>
+                      <div class="ov-field-value">${val(lead.salesChannels)}</div>
+                    </div>
+                    <div class="ov-field">
+                      <div class="ov-field-label">Website</div>
+                      <div class="ov-field-value">${lead.website ? `<a href="${lead.website}" target="_blank">${lead.website}</a>` : `<span class="ov-empty">Not provided</span>`}</div>
+                    </div>
+                    ${!empty(lead.description) ? `
+                    <div class="ov-field">
+                      <div class="ov-field-label">Description</div>
+                      <div class="ov-field-value">${lead.description}</div>
+                    </div>` : ""}
+                  </div>
+                </div>
+
+                <!-- Risk Signals -->
+                <div class="ov-card">
+                  <div class="ov-card-hdr">Risk Signals</div>
+                  <div class="ov-card-body">
+                    <div class="ov-field">
+                      <div class="ov-field-label">Intl Transactions</div>
+                      <div class="ov-field-value">${empty(lead.intlPercentage) ? `<span class="ov-empty">Not provided</span>` : lead.intlPercentage + "%"}</div>
+                    </div>
+                    <div class="ov-field">
+                      <div class="ov-field-label">Refund Rate</div>
+                      <div class="ov-field-value">${empty(lead.refundRate) ? `<span class="ov-empty">Not provided</span>` : lead.refundRate + "%"}</div>
+                    </div>
+                    <div class="ov-field">
+                      <div class="ov-field-label">Chargeback Rate</div>
+                      <div class="ov-field-value">${empty(lead.chargebackRate) ? `<span class="ov-empty">Not provided</span>` : lead.chargebackRate + "%"}</div>
+                    </div>
+                    <div class="ov-field">
+                      <div class="ov-field-label">Holds Funds</div>
+                      <div class="ov-field-value">${lead.holdsFunds === "yes" ? badge("YES", "amber") : "No"}</div>
+                    </div>
+                    <div class="ov-field">
+                      <div class="ov-field-label">Business Age</div>
+                      <div class="ov-field-value">${val(lead.businessAge)}</div>
+                    </div>
+                    <div class="ov-field">
+                      <div class="ov-field-label">Delivery Time</div>
+                      <div class="ov-field-value">${val(lead.deliveryTime)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Volume & Current Setup -->
+                <div class="ov-card">
+                  <div class="ov-card-hdr">Volume & Setup</div>
+                  <div class="ov-card-body">
+                    <div class="ov-field">
+                      <div class="ov-field-label">Monthly Volume</div>
+                      <div class="ov-field-value">${vol > 0 ? "\u00A3" + vol.toLocaleString("en-GB") : `<span class="ov-empty">Not provided</span>`}</div>
+                    </div>
+                    <div class="ov-field">
+                      <div class="ov-field-label">Avg Transaction</div>
+                      <div class="ov-field-value">${avgTx > 0 ? "\u00A3" + avgTx : `<span class="ov-empty">Not provided</span>`}</div>
+                    </div>
+                    <div class="ov-field">
+                      <div class="ov-field-label">Current Provider</div>
+                      <div class="ov-field-value">${val(lead.currentProvider)}</div>
+                    </div>
+                    <div class="ov-field">
+                      <div class="ov-field-label">Platform</div>
+                      <div class="ov-field-value">${val(lead.platform)}</div>
+                    </div>
+                    ${!empty(lead.painPoints) ? `
+                    <div class="ov-field">
+                      <div class="ov-field-label">Pain Points</div>
+                      <div class="ov-field-value">${lead.painPoints}</div>
+                    </div>` : ""}
+                  </div>
+                </div>
+
+                <!-- Contact -->
+                <div class="ov-card">
+                  <div class="ov-card-hdr">Contact</div>
+                  <div class="ov-card-body">
+                    <div class="ov-field">
+                      <div class="ov-field-label">Name</div>
+                      <div class="ov-field-value">${val(lead.contactName)}</div>
+                    </div>
+                    <div class="ov-field">
+                      <div class="ov-field-label">Email</div>
+                      <div class="ov-field-value">${lead.email ? `<a href="mailto:${lead.email}">${lead.email}</a>` : `<span class="ov-empty">Not provided</span>`}</div>
+                    </div>
+                    ${!empty(lead.phone) ? `
+                    <div class="ov-field">
+                      <div class="ov-field-label">Phone</div>
+                      <div class="ov-field-value">${lead.phone}</div>
+                    </div>` : ""}
+                  </div>
+                </div>
+
+              </div><!-- /ov-col-left -->
+
+              <!-- ═══ RIGHT COLUMN (30%) ═══ -->
+              <div class="ov-col-right">
+
+                <!-- Actions Card -->
+                <div class="ov-card ov-card-actions">
+                  <div class="ov-card-hdr">Actions</div>
+                  <div class="ov-actions-body">
+                    <button class="ov-action-btn ov-action-primary" id="lf-overview-quote" ${(lead.processingRate || lead.fixedFee) && !hasQuote ? "" : "disabled"}>
+                      ${hasQuote ? "✓ Quote Generated" : "📄 Generate Quote"}
+                    </button>
+                    ${hasQuote ? `
+                    <a class="ov-action-btn ov-action-link" href="/quote.html?quote=${lead.quote_id}" target="_blank">
+                      📤 View Quote
+                    </a>
+                    <button class="ov-action-btn ov-action-secondary" id="lf-send-quote-email">
+                      📧 Send via Email
+                    </button>
+                    <button class="ov-action-btn ov-action-secondary" id="lf-copy-quote-link">
+                      📋 Copy Quote Link
+                    </button>` : ""}
+                    <button class="ov-action-btn ov-action-secondary" id="lf-ov-push-zoho" ${!lead.zohoPushed ? "" : "disabled"}>
+                      ${lead.zohoPushed ? "✓ Pushed to Zoho" : "☁️ Push to Zoho"}
+                    </button>
+                    <button class="ov-action-btn ${isKYB ? "ov-action-done" : "ov-action-kyb"}" id="lf-ov-mark-kyb" ${isKYB ? "disabled" : ""}>
+                      ${isKYB ? "✓ KYB Pending" : "🔐 Mark as KYB Ready"}
+                    </button>
+                  </div>
+                  <!-- CRM Meta -->
+                  <div class="ov-crm-meta">
+                    <div class="ov-crm-row">
+                      <span class="ov-crm-label">Assigned</span>
+                      <span class="ov-crm-val">${empty(lead.assignedTo) ? "Unassigned" : lead.assignedTo}</span>
+                    </div>
+                    <div class="ov-crm-row">
+                      <span class="ov-crm-label">Brand</span>
+                      <span class="ov-crm-val">${lead.brand === "ummah" ? "Ummah Pay" : "Minted Pay"}</span>
+                    </div>
+                    <div class="ov-crm-row">
+                      <span class="ov-crm-label">Zoho</span>
+                      <span class="ov-crm-val">${lead.zohoPushed ? badge("SYNCED", "green") : `<span class="ov-empty">Not synced</span>`}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Risk Reasoning Card -->
+                ${lead.riskLevel ? `
+                <div class="ov-card ov-card-risk">
+                  <div class="ov-card-hdr">Risk Reasoning</div>
+                  <div class="ov-card-body">
+                    <div class="ov-field">
+                      <div class="ov-field-label">Intl Transactions</div>
+                      <div class="ov-field-value">${lead.intlPercentage || 0}%</div>
+                    </div>
+                    <div class="ov-field">
+                      <div class="ov-field-label">Industry</div>
+                      <div class="ov-field-value">${lead.industry || "—"}</div>
+                    </div>
+                    <div class="ov-field">
+                      <div class="ov-field-label">Business Age</div>
+                      <div class="ov-field-value">${lead.businessAge || "—"}</div>
+                    </div>
+                    <div class="ov-field">
+                      <div class="ov-field-label">Delivery Time</div>
+                      <div class="ov-field-value">${lead.deliveryTime || "—"}</div>
+                    </div>
+                  </div>
+                </div>` : ""}
+
+                <!-- Activity Timeline Card -->
+                <div class="ov-card ov-card-timeline">
+                  <div class="ov-card-hdr">Activity Timeline</div>
+                  <div class="ov-timeline-body">
+                    ${activity.length === 0 ? `<div class="ov-timeline-empty">No activity yet</div>` : `
+                      ${Object.entries(groupedActivity).map(([dateKey, events]) => `
+                        <div class="ov-tl-date-group">
+                          <div class="ov-tl-date-header">${dateKey}</div>
+                          ${events.map(a => `
+                            <div class="ov-tl-item ${highlightedEvents.includes(a.type) ? "ov-tl-highlight" : ""}">
+                              <div class="ov-tl-dot"></div>
+                              <div class="ov-tl-content">
+                                <div class="ov-tl-label">
+                                  <span class="ov-tl-icon">${activityIcons[a.type] || "📌"}</span>
+                                  ${activityLabels[a.type] || a.type}
+                                  ${a.oldStatus && a.newStatus ? `<span class="ov-tl-detail">${a.oldStatus} → ${a.newStatus}</span>` : ""}
+                                  ${a.newAssignedTo ? `<span class="ov-tl-detail">→ ${a.newAssignedTo}</span>` : ""}
+                                </div>
+                                <div class="ov-tl-time">${fmtTs(a.timestamp)}</div>
+                              </div>
+                            </div>
+                          `).join("")}
+                        </div>
+                      `).join("")}
+                    `}
+                  </div>
+                </div>
+
+                <!-- Notes Card -->
+                <div class="ov-card ov-card-notes">
+                  <div class="ov-card-hdr">
+                    Notes
+                    <span class="ov-note-count">${notes.length}</span>
+                  </div>
+                  <div class="ov-notes-body">
+                    ${notes.length === 0 ? `<div class="ov-notes-empty">No notes yet</div>` :
+                      [...notes].reverse().map(n => `
+                        <div class="ov-note-item">
+                          <div class="ov-note-text">${n.text}</div>
+                          <div class="ov-note-time">${fmtTs(n.timestamp)}</div>
+                        </div>
+                      `).join("")
+                    }
+                    <div class="ov-note-add">
+                      <textarea class="ov-note-input" id="lf-ov-note-input" placeholder="Add a note..." rows="2"></textarea>
+                      <button class="ov-note-btn" id="lf-ov-add-note">Add Note</button>
+                    </div>
+                  </div>
+                </div>
+
+              </div><!-- /ov-col-right -->
+            </div><!-- /ov-cols -->
+
+          </div><!-- /ov-body -->
         </div>
       `;
-
-      // Business Model
-      html += `
-        <div class="lf-overview-card">
-          <h3>Business Model</h3>
-          <div class="lf-overview-rows">
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Sales Channels</span>
-              <span class="lf-overview-value">${displayVal(lead.salesChannels)}</span>
-            </div>
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Payment Types</span>
-              <span class="lf-overview-value">${displayVal(lead.paymentTypes)}</span>
-            </div>
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Website</span>
-              <span class="lf-overview-value">${lead.website ? `<a href="${lead.website}" target="_blank">${lead.website}</a>` : "—"}</span>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // Risk Signals
-      html += `
-        <div class="lf-overview-card">
-          <h3>Risk Signals</h3>
-          <div class="lf-overview-rows">
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Intl Transactions</span>
-              <span class="lf-overview-value">${displayVal(lead.intlPercentage)}%</span>
-            </div>
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Refund Rate</span>
-              <span class="lf-overview-value">${displayVal(lead.refundRate)}%</span>
-            </div>
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Chargeback Rate</span>
-              <span class="lf-overview-value">${displayVal(lead.chargebackRate)}%</span>
-            </div>
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Holds Funds</span>
-              <span class="lf-overview-value">${lead.holdsFunds === "yes" ? badge("YES", "amber") : "No"}</span>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // Current Setup
-      html += `
-        <div class="lf-overview-card">
-          <h3>Current Setup</h3>
-          <div class="lf-overview-rows">
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Current Provider</span>
-              <span class="lf-overview-value">${displayVal(lead.currentProvider)}</span>
-            </div>
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Pain Points</span>
-              <span class="lf-overview-value">${displayVal(lead.painPoints)}</span>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // Tech Stack
-      html += `
-        <div class="lf-overview-card">
-          <h3>Tech Stack</h3>
-          <div class="lf-overview-rows">
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Platform</span>
-              <span class="lf-overview-value">${displayVal(lead.platform)}</span>
-            </div>
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Integrations</span>
-              <span class="lf-overview-value">${displayVal(lead.integrations)}</span>
-            </div>
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Accounting</span>
-              <span class="lf-overview-value">${displayVal(lead.accountingSoftware)}</span>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // Volume
-      html += `
-        <div class="lf-overview-card">
-          <h3>Volume</h3>
-          <div class="lf-overview-rows">
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Monthly Volume</span>
-              <span class="lf-overview-value">£${lead.monthlyVolume ? parseFloat(lead.monthlyVolume).toLocaleString("en-GB") : "—"}</span>
-            </div>
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Avg Transaction</span>
-              <span class="lf-overview-value">£${displayVal(lead.avgTransactionValue)}</span>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // Results (if available)
-      if (lead.processingRate || lead.fixedFee || lead.riskLevel) {
-        html += `
-          <div class="lf-overview-card">
-            <h3>Results</h3>
-            <div class="lf-overview-rows">
-              ${lead.processingRate ? `
-              <div class="lf-overview-row">
-                <span class="lf-overview-label">Processing Rate</span>
-                <span class="lf-overview-value">${lead.processingRate}%</span>
-              </div>` : ""}
-              ${lead.fixedFee ? `
-              <div class="lf-overview-row">
-                <span class="lf-overview-label">Fixed Fee</span>
-                <span class="lf-overview-value">${lead.fixedFee}p</span>
-              </div>` : ""}
-              ${lead.estimatedRevenue ? `
-              <div class="lf-overview-row">
-                <span class="lf-overview-label">Estimated Revenue</span>
-                <span class="lf-overview-value">£${lead.estimatedRevenue}</span>
-              </div>` : ""}
-              ${lead.margin ? `
-              <div class="lf-overview-row">
-                <span class="lf-overview-label">Margin</span>
-                <span class="lf-overview-value">~${lead.margin}% pts</span>
-              </div>` : ""}
-              ${lead.riskLevel ? `
-              <div class="lf-overview-row">
-                <span class="lf-overview-label">Risk Level</span>
-                <span class="lf-overview-value">${badge(lead.riskLevel.toUpperCase(), lead.riskLevel === "low" ? "green" : lead.riskLevel === "medium" ? "amber" : "red")}</span>
-              </div>` : ""}
-              ${lead.decision ? `
-              <div class="lf-overview-row">
-                <span class="lf-overview-label">Decision</span>
-                <span class="lf-overview-value">${badge(lead.decision.toUpperCase(), lead.decision === "accept" ? "green" : lead.decision === "review" ? "amber" : "red")}</span>
-              </div>` : ""}
-            </div>
-          </div>
-        `;
-      }
-
-      // CRM Info
-      html += `
-        <div class="lf-overview-card">
-          <h3>CRM Info</h3>
-          <div class="lf-overview-rows">
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Status</span>
-              <span class="lf-overview-value">${lead.status ? badge(lead.status.toUpperCase(), lead.status === "qualified" || lead.status === "kyb_pending" ? "green" : "gray") : "—"}</span>
-            </div>
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Assigned To</span>
-              <span class="lf-overview-value">${displayVal(lead.assignedTo)}</span>
-            </div>
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Brand</span>
-              <span class="lf-overview-value">${lead.brand === "ummah" ? "Ummah Pay" : "Minted Pay"}</span>
-            </div>
-            ${lead.notesCount ? `
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Notes</span>
-              <span class="lf-overview-value">${lead.notesCount} note${lead.notesCount > 1 ? "s" : ""}</span>
-            </div>` : ""}
-            <div class="lf-overview-row">
-              <span class="lf-overview-label">Zoho Pushed</span>
-              <span class="lf-overview-value">${lead.zohoPushed ? badge("YES", "green") : "No"}</span>
-            </div>
-          </div>
-        </div>
-      `;
-
-      html += `
-          </div>
-
-          <div class="lf-overview-actions">
-            <button class="lf-act-btn lf-act-primary" id="lf-overview-edit">✏️ Edit Lead</button>
-            <button class="lf-act-btn lf-act-secondary" id="lf-overview-resume">▶️ Resume Flow</button>
-            <button class="lf-act-btn lf-act-secondary" id="lf-overview-quote" ${lead.zohoPushed || !lead.processingRate ? "disabled" : ""}>📄 Generate Quote</button>
-          </div>
-        </div>
-      `;
-
-      return html;
     }
 
     // ── Main layout skeleton ───────────────────────────────
@@ -582,6 +751,45 @@
     _buildStep() {
       const s = STEPS[this.currentStep - 1];
       if (s.isOutput) return this._buildOutput();
+
+      // Special handling for Step 7: Tab UI for CSV vs Manual
+      if (this.currentStep === 7) {
+        const activeTab = this.lead.volumeTab || "manual";
+        return `
+          <div class="lf-step-wrap">
+            <div class="lf-step-head">
+              <div class="lf-step-num">Step ${s.id}</div>
+              <h2 class="lf-step-title">${s.title}</h2>
+              <p class="lf-step-sub">${s.subtitle}</p>
+            </div>
+
+            <!-- Tab UI for Volume Entry Method -->
+            <div class="lf-tab-container">
+              <div class="lf-tab-buttons">
+                <button class="lf-tab-btn ${activeTab === "manual" ? "active" : ""}" data-tab="manual">
+                  Manual Entry
+                </button>
+                <button class="lf-tab-btn ${activeTab === "csv" ? "active" : ""}" data-tab="csv">
+                  Upload CSV
+                </button>
+              </div>
+            </div>
+
+            <!-- Manual Entry Tab -->
+            <div class="lf-tab-content ${activeTab === "manual" ? "active" : ""}" data-tab="manual">
+              <div class="lf-fields">
+                ${s.fields.map(f => this._buildField(f)).join("")}
+              </div>
+            </div>
+
+            <!-- CSV Upload Tab -->
+            <div class="lf-tab-content ${activeTab === "csv" ? "active" : ""}" data-tab="csv">
+              ${this._buildCSVUploadTab()}
+            </div>
+          </div>
+        `;
+      }
+
       return `
         <div class="lf-step-wrap">
           <div class="lf-step-head">
@@ -592,19 +800,42 @@
           <div class="lf-fields">
             ${s.fields.map(f => this._buildField(f)).join("")}
           </div>
-          ${"" /* CSV upload disabled temporarily — will re-enable later */}
         </div>
       `;
     }
 
     // ── CSV Upload Tab for Step 7 ───────────────────────────
     _buildCSVUploadTab() {
+      const hasError = this.lead.csvParseError || false;
+      const isLoading = this.lead.csvLoading || false;
+
       return `
         <div class="lf-csv-upload-section" id="lf-csv-upload-section">
-          <h3>Or Upload CSV</h3>
-          <div class="lf-dropzone" id="lf-csv-dropzone">
-            <p>Drag and drop CSV file here</p>
-            <input type="file" id="lf-csv-file-input" accept=".csv" style="display:none;">
+          <div class="lf-fields">
+            ${isLoading ? `
+            <div class="lf-csv-loading">
+              <div class="lf-spinner"></div>
+              <p>Parsing CSV file…</p>
+            </div>` : ""}
+
+            ${hasError ? `
+            <div class="lf-csv-error">
+              <span class="lf-csv-error-icon">⚠️</span>
+              <span>${this.lead.csvParseError}</span>
+            </div>` : ""}
+
+            <div class="lf-dropzone" id="lf-csv-dropzone" ${isLoading ? "disabled" : ""}>
+              <p>Drag and drop your CSV file here, or click to browse</p>
+              <span class="lf-csv-hint">Supported columns: Amount, Volume, Count, Currency (optional)</span>
+              <input type="file" id="lf-csv-file-input" accept=".csv" style="display:none;">
+            </div>
+
+            ${this.lead.monthlyVolume && this.lead.volumeTab === "csv" && !isLoading ? `
+            <div class="lf-csv-result">
+              ✓ Auto-filled: Volume £${parseFloat(this.lead.monthlyVolume).toLocaleString("en-GB")}
+              ${this.lead.avgTransactionValue ? ` · Avg Tx £${this.lead.avgTransactionValue}` : ""}
+              ${this.lead.transactionCount ? ` · ${this.lead.transactionCount} transactions` : ""}
+            </div>` : ""}
           </div>
         </div>
       `;
@@ -653,6 +884,33 @@
       `;
     }
 
+    // ── Get risk reason explanation ────────────────────────
+    _getRiskReasonText(riskLevel, lead) {
+      const factors = [];
+      const intl = parseFloat(lead.intlPercentage) || 0;
+      const cb = parseFloat(lead.chargebackRate) || 0;
+      const refund = parseFloat(lead.refundRate) || 0;
+      const businessAge = lead.businessAge;
+
+      if (intl > 70) factors.push("High intl % (>70%)");
+      else if (intl > 40) factors.push("Elevated intl %");
+
+      if (cb > 2.0) factors.push("High chargeback rate");
+      else if (cb > 1.0) factors.push("Moderate chargeback");
+
+      if (refund > 10) factors.push("High refund rate");
+
+      if (lead.holdsFunds === "yes") factors.push("Holds customer funds");
+
+      if (businessAge === "less_than_6") factors.push("Startup (<6mo)");
+      else if (businessAge === "6_to_12") factors.push("Early stage (6-12mo)");
+
+      if (lead.deliveryTime === "delayed") factors.push("Delayed delivery");
+
+      if (factors.length === 0) return "Low-risk profile with stable metrics.";
+      return factors.slice(0, 3).join(" · ");
+    }
+
     // ── Output step (Step 10) ───────────────────────────────
     _buildOutput() {
       if (this.isCalculating || !this.pricingResult) {
@@ -681,7 +939,16 @@
                    : "lf-badge-red";
 
       const isKYB       = this.lead.status === "kyb_pending";
-      const isQualified = this.lead.status === "qualified" || isKYB;
+
+      // Confidence badge logic
+      const hasVolume   = vol > 0;
+      const hasAvgTx    = avgTx > 0 && avgTx !== 55;
+      const hasRisk     = !!r.riskLevel;
+      const hasCountry  = !!this.lead.country;
+      const hasIndustry = !!this.lead.industry;
+      const dataPoints  = [hasVolume, hasAvgTx, hasRisk, hasCountry, hasIndustry].filter(Boolean).length;
+      const confidence  = dataPoints >= 4 ? "HIGH" : dataPoints >= 2 ? "MEDIUM" : "LOW";
+      const confClass   = confidence === "HIGH" ? "lf-conf-high" : confidence === "MEDIUM" ? "lf-conf-med" : "lf-conf-low";
 
       return `
         <div class="lf-step-wrap lf-output">
@@ -694,110 +961,171 @@
             </p>
           </div>
 
-          <div class="lf-output-grid">
-            <!-- Pricing card with manual override -->
-            <div class="lf-card">
-              <div class="lf-card-hdr">💰 Pricing Recommendation</div>
-              <div class="lf-pricing-rows">
-                <div class="lf-pr"><span class="lf-pr-lbl">Processing Rate</span>
-                  <span class="lf-pr-val big">${p.rate}%</span></div>
-                <div class="lf-pr"><span class="lf-pr-lbl">Fixed Fee / Transaction</span>
-                  <span class="lf-pr-val">${p.fixed_fee}p</span></div>
-                <div class="lf-pr"><span class="lf-pr-lbl">Est. Monthly Revenue</span>
-                  <span class="lf-pr-val">£${estRev.toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</span></div>
-                <div class="lf-pr"><span class="lf-pr-lbl">Est. Gross Margin</span>
-                  <span class="lf-pr-val">~${estMrg}% pts</span></div>
-                ${p.monthly_saving > 0 ? `
-                <div class="lf-pr lf-savings">
-                  <span class="lf-pr-lbl">Saving vs Current Provider</span>
-                  <span class="lf-pr-val green">£${p.monthly_saving.toLocaleString("en-GB")}/mo</span>
-                </div>` : ""}
+          <!-- ═══ SECTION 1: System Recommendation (read-only) ═══ -->
+          <div class="lf-section-card lf-section-recommendation">
+            <div class="lf-section-hdr">
+              <span class="lf-section-icon">💰</span>
+              <span class="lf-section-title">System Recommendation</span>
+              <span class="lf-conf-badge ${confClass}">Confidence: ${confidence}</span>
+            </div>
+            <div class="lf-rec-grid">
+              <div class="lf-rec-item lf-rec-primary">
+                <div class="lf-rec-label">Processing Rate</div>
+                <div class="lf-rec-value">${p.rate}%</div>
               </div>
-
-              <div class="lf-pricing-override">
-                <h4>Manual Override</h4>
-                <div class="lf-override-fields">
-                  <div class="lf-override-field">
-                    <label>Processing Rate (%)</label>
-                    <input type="number" id="lf-override-rate" value="${p.rate}" min="0" step="0.01">
-                  </div>
-                  <div class="lf-override-field">
-                    <label>Fixed Fee (pence)</label>
-                    <input type="number" id="lf-override-fixed" value="${p.fixed_fee}" min="10" step="1">
-                  </div>
-                </div>
-                <button class="lf-act-btn lf-act-secondary" id="lf-apply-override">Apply Override</button>
+              <div class="lf-rec-item lf-rec-primary">
+                <div class="lf-rec-label">Fixed Fee</div>
+                <div class="lf-rec-value">${p.fixed_fee}p</div>
               </div>
-
-              <div class="lf-fee-toggles">
-                <h4>Fee Toggles</h4>
-                <div class="lf-fee-toggle">
-                  <label>
-                    <input type="checkbox" id="lf-toggle-amex" checked>
-                    Amex Fee (<span id="lf-amex-val">3.5</span>%)
-                  </label>
-                  <input type="number" id="lf-amex-input" value="3.5" min="0" step="0.1">
-                </div>
-                <div class="lf-fee-toggle">
-                  <label>
-                    <input type="checkbox" id="lf-toggle-fx" checked>
-                    FX Fee (<span id="lf-fx-val">1.5</span>%)
-                  </label>
-                  <input type="number" id="lf-fx-input" value="1.5" min="0" step="0.1">
-                </div>
-                <div class="lf-fee-toggle">
-                  <label>
-                    <input type="checkbox" id="lf-toggle-chargeback" checked>
-                    Chargeback Fee (£<span id="lf-chargeback-val">15</span>)
-                  </label>
-                  <input type="number" id="lf-chargeback-input" value="15" min="0" step="1">
-                </div>
-                <div class="lf-fee-toggle">
-                  <label>
-                    <input type="checkbox" id="lf-toggle-refund" checked>
-                    Refund Fee (£<span id="lf-refund-val">1</span>)
-                  </label>
-                  <input type="number" id="lf-refund-input" value="1" min="0" step="1">
-                </div>
+              <div class="lf-rec-item">
+                <div class="lf-rec-label">Est. Monthly Revenue</div>
+                <div class="lf-rec-value lf-rec-sm">£${estRev.toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+              </div>
+              <div class="lf-rec-item">
+                <div class="lf-rec-label">Est. Gross Margin</div>
+                <div class="lf-rec-value lf-rec-sm">~${estMrg}% pts</div>
               </div>
             </div>
-
-            <!-- Risk card -->
-            <div class="lf-card">
-              <div class="lf-card-hdr">🔍 Risk Assessment</div>
-              <div class="lf-risk-rows">
-                <div class="lf-rr"><span class="lf-rr-lbl">Risk Level</span>
-                  <span class="lf-badge ${rBadge}">${r.riskLevel.toUpperCase()}</span></div>
-                <div class="lf-rr"><span class="lf-rr-lbl">Decision</span>
-                  <span class="lf-badge ${dBadge}">${r.decision.toUpperCase()}</span></div>
-                <div class="lf-rr"><span class="lf-rr-lbl">Monthly Volume</span>
-                  <span class="lf-rr-val">£${vol.toLocaleString("en-GB")}</span></div>
-                <div class="lf-rr"><span class="lf-rr-lbl">Avg Transaction</span>
-                  <span class="lf-rr-val">£${avgTx}</span></div>
-                <div class="lf-rr"><span class="lf-rr-lbl">Intl Transactions</span>
-                  <span class="lf-rr-val">${this.lead.intlPercentage || 0}%</span></div>
-                ${this.lead.chargebackRate ? `
-                <div class="lf-rr"><span class="lf-rr-lbl">Chargeback Rate</span>
-                  <span class="lf-rr-val">${this.lead.chargebackRate}%</span></div>` : ""}
-                ${this.lead.holdsFunds === "yes" ? `
-                <div class="lf-rr"><span class="lf-rr-lbl">Holds Funds</span>
-                  <span class="lf-badge lf-badge-amber">YES</span></div>` : ""}
-              </div>
-            </div>
+            ${p.monthly_saving > 0 ? `
+            <div class="lf-savings-banner">
+              <span>Saving vs Current Provider</span>
+              <strong>£${p.monthly_saving.toLocaleString("en-GB")}/mo</strong>
+            </div>` : ""}
           </div>
 
-          <!-- Action buttons -->
-          <div class="lf-actions">
-            <button class="lf-act-btn lf-act-primary" id="lf-gen-quote" ${!this.lead.zohoPushed && this.lead.processingRate ? "" : "disabled"}>
-              📄 Generate Quote
-            </button>
-            <button class="lf-act-btn lf-act-secondary" id="lf-push-zoho" ${!this.lead.zohoPushed ? "" : "disabled"}>
-              ${this.lead.zohoPushed ? "✓ Pushed to Zoho" : "☁️ Push to Zoho"}
-            </button>
-            <button class="lf-act-btn ${isKYB ? "lf-act-kyb-done" : "lf-act-kyb"}" id="lf-mark-kyb"
-                    ${isKYB ? "disabled" : ""}>
-              ${isKYB ? "✓ KYB Pending" : "🔐 Mark as KYB Ready"}
-            </button>
+          <div class="lf-output-cols">
+            <!-- ═══ LEFT COLUMN ═══ -->
+            <div class="lf-output-left">
+
+              <!-- ═══ SECTION 2: Manual Overrides ═══ -->
+              <div class="lf-section-card lf-section-overrides">
+                <div class="lf-section-hdr">
+                  <span class="lf-section-icon">✏️</span>
+                  <span class="lf-section-title">Manual Overrides</span>
+                </div>
+                <div class="lf-adj-grid">
+                  <div class="lf-adj-field">
+                    <label class="lf-adj-label">Processing Rate (%)</label>
+                    <input type="number" class="lf-adj-input" id="lf-override-rate" value="${p.rate}" min="0" step="0.01">
+                  </div>
+                  <div class="lf-adj-field">
+                    <label class="lf-adj-label">Fixed Fee (pence)</label>
+                    <input type="number" class="lf-adj-input" id="lf-override-fixed" value="${p.fixed_fee}" min="10" step="1">
+                  </div>
+                </div>
+                <button class="lf-update-btn" id="lf-apply-override">Update Pricing</button>
+              </div>
+
+              <!-- ═══ SECTION 3: Additional Fees ═══ -->
+              <div class="lf-section-card lf-section-fees">
+                <div class="lf-section-hdr">
+                  <span class="lf-section-icon">⚙️</span>
+                  <span class="lf-section-title">Additional Fees</span>
+                </div>
+                <div class="lf-fee-cards">
+                  <div class="lf-fee-card">
+                    <label class="lf-fee-left">
+                      <input type="checkbox" id="lf-toggle-amex" checked>
+                      <span class="lf-fee-name">Amex Fee</span>
+                    </label>
+                    <div class="lf-fee-right">
+                      <input type="number" class="lf-fee-input" id="lf-amex-input" value="3.5" min="0" step="0.1">
+                      <span class="lf-fee-unit">%</span>
+                    </div>
+                    <span class="lf-fee-hidden-val" id="lf-amex-val" style="display:none">3.5</span>
+                  </div>
+                  <div class="lf-fee-card">
+                    <label class="lf-fee-left">
+                      <input type="checkbox" id="lf-toggle-fx" checked>
+                      <span class="lf-fee-name">FX Fee</span>
+                    </label>
+                    <div class="lf-fee-right">
+                      <input type="number" class="lf-fee-input" id="lf-fx-input" value="1.5" min="0" step="0.1">
+                      <span class="lf-fee-unit">%</span>
+                    </div>
+                    <span class="lf-fee-hidden-val" id="lf-fx-val" style="display:none">1.5</span>
+                  </div>
+                  <div class="lf-fee-card">
+                    <label class="lf-fee-left">
+                      <input type="checkbox" id="lf-toggle-chargeback" checked>
+                      <span class="lf-fee-name">Chargeback Fee</span>
+                    </label>
+                    <div class="lf-fee-right">
+                      <span class="lf-fee-unit">£</span>
+                      <input type="number" class="lf-fee-input" id="lf-chargeback-input" value="15" min="0" step="1">
+                    </div>
+                    <span class="lf-fee-hidden-val" id="lf-chargeback-val" style="display:none">15</span>
+                  </div>
+                  <div class="lf-fee-card">
+                    <label class="lf-fee-left">
+                      <input type="checkbox" id="lf-toggle-refund" checked>
+                      <span class="lf-fee-name">Refund Fee</span>
+                    </label>
+                    <div class="lf-fee-right">
+                      <span class="lf-fee-unit">£</span>
+                      <input type="number" class="lf-fee-input" id="lf-refund-input" value="1" min="0" step="1">
+                    </div>
+                    <span class="lf-fee-hidden-val" id="lf-refund-val" style="display:none">1</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ═══ RIGHT COLUMN ═══ -->
+            <div class="lf-output-right">
+
+              <!-- ═══ SECTION 4: Risk Assessment ═══ -->
+              <div class="lf-section-card lf-section-risk">
+                <div class="lf-section-hdr">
+                  <span class="lf-section-icon">🔍</span>
+                  <span class="lf-section-title">Risk Assessment</span>
+                </div>
+                <div class="lf-risk-rows">
+                  <div class="lf-rr"><span class="lf-rr-lbl">Risk Level</span>
+                    <span class="lf-badge ${rBadge}">${r.riskLevel.toUpperCase()}</span></div>
+                  <div class="lf-rr"><span class="lf-rr-lbl">Decision</span>
+                    <span class="lf-badge ${dBadge}">${r.decision.toUpperCase()}</span></div>
+                  <div style="border-top: 1px solid #e5e7eb; margin: 8px -20px 8px -20px; padding-top: 8px;">
+                    <div class="lf-rr"><span class="lf-rr-lbl">Industry</span>
+                      <span class="lf-rr-val">${this.lead.industry || "—"}</span></div>
+                    <div class="lf-rr"><span class="lf-rr-lbl">Intl Transactions</span>
+                      <span class="lf-rr-val">${this.lead.intlPercentage || 0}%</span></div>
+                    <div class="lf-rr"><span class="lf-rr-lbl">Business Age</span>
+                      <span class="lf-rr-val">${this.lead.businessAge || "—"}</span></div>
+                    <div class="lf-rr"><span class="lf-rr-lbl">Delivery Time</span>
+                      <span class="lf-rr-val">${this.lead.deliveryTime || "—"}</span></div>
+                  </div>
+                  <div style="border-top: 1px solid #e5e7eb; margin: 8px -20px 8px -20px; padding-top: 8px;">
+                    <div class="lf-risk-reason">
+                      <span class="lf-risk-reason-label">Why this risk?</span>
+                      <span class="lf-risk-reason-text">
+                        ${this._getRiskReasonText(r.riskLevel, this.lead)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ═══ SECTION 5: Actions ═══ -->
+              <div class="lf-section-card lf-section-actions">
+                <div class="lf-section-hdr">
+                  <span class="lf-section-icon">🚀</span>
+                  <span class="lf-section-title">Actions</span>
+                </div>
+                <div class="lf-action-stack">
+                  <button class="lf-action-btn ${this.lead.quote_id ? "lf-action-done" : "lf-action-primary"}" id="lf-gen-quote" ${this.lead.processingRate && !this.lead.quote_id ? "" : "disabled"}>
+                    ${this.lead.quote_id ? "✓ Quote Generated" : "📄 Generate Quote"}
+                  </button>
+                  <button class="lf-action-btn lf-action-secondary" id="lf-push-zoho" ${!this.lead.zohoPushed ? "" : "disabled"}>
+                    ${this.lead.zohoPushed ? "✓ Pushed to Zoho" : "☁️ Push to Zoho"}
+                  </button>
+                  <button class="lf-action-btn ${isKYB ? "lf-action-done" : "lf-action-kyb"}" id="lf-mark-kyb"
+                          ${isKYB ? "disabled" : ""}>
+                    ${isKYB ? "✓ KYB Pending" : "🔐 Mark as KYB Ready"}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           ${this.lead.quote_id ? `
@@ -865,8 +1193,42 @@
         this._render();
       });
       q("lf-overview-quote")?.addEventListener("click", () => {
-        if (this.lead.processingRate && !this.lead.zohoPushed) {
+        if (this.lead.processingRate && !this.lead.quote_id) {
           this._generateQuote();
+        }
+      });
+      q("lf-ov-push-zoho")?.addEventListener("click", () => this._pushZoho());
+      q("lf-ov-mark-kyb")?.addEventListener("click", () => this._markKYB());
+      q("lf-send-quote-email")?.addEventListener("click", () => {
+        const quoteUrl = `/quote.html?quote=${this.lead.quote_id}`;
+        const subject = encodeURIComponent("Your MintedPay Quote");
+        const body = encodeURIComponent(`View your quote:\n${quoteUrl}`);
+        window.location.href = `mailto:${this.lead.email}?subject=${subject}&body=${body}`;
+      });
+      q("lf-copy-quote-link")?.addEventListener("click", () => {
+        const quoteUrl = `${window.location.origin}/quote.html?quote=${this.lead.quote_id}`;
+        navigator.clipboard.writeText(quoteUrl).then(() => {
+          alert("Quote link copied to clipboard!");
+        }).catch(() => {
+          alert("Failed to copy. Please try again.");
+        });
+      });
+      q("lf-ov-add-note")?.addEventListener("click", async () => {
+        const input = q("lf-ov-note-input");
+        if (!input || !input.value.trim()) return;
+        try {
+          await fetch(`/api/leads/${this.leadId}/notes`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: input.value.trim() }),
+          });
+          // Refresh lead data and re-render
+          const resp = await fetch(`/api/leads/${this.leadId}`);
+          const updated = await resp.json();
+          this.lead = updated;
+          this._render();
+        } catch (e) {
+          alert("Could not add note. Please try again.");
         }
       });
 
@@ -898,12 +1260,28 @@
         });
       });
 
-      // Input autosave
+      // Tab switching for Step 7
+      this.overlay.querySelectorAll(".lf-tab-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          const tabName = e.target.dataset.tab;
+          this.lead.volumeTab = tabName;
+          this._scheduleSave();
+          this._render();
+        });
+      });
+
+      // Input autosave + qualification warnings for Step 1
       this.overlay.querySelectorAll(".lf-ctrl").forEach(el => {
         const evt = el.tagName === "SELECT" ? "change" : "input";
         el.addEventListener(evt, e => {
           this.lead[e.target.name] = e.target.value;
           if (e.target.name === "paymentTypes") this._updateConditional();
+
+          // Show/hide qualification warnings on Step 1 country/industry change
+          if (this.currentStep === 1 && (e.target.name === "country" || e.target.name === "industry")) {
+            this._updateQualificationWarning();
+          }
+
           this._scheduleSave();
         });
       });
@@ -935,6 +1313,42 @@
       }
     }
 
+    // ── Update qualification warning banners for Step 1 ──────
+    _updateQualificationWarning() {
+      const oldWarning = this.overlay.querySelector(".lf-qual-warning");
+      if (oldWarning) oldWarning.remove();
+
+      if (this.currentStep !== 1) return;
+
+      const check = window.RiskEngine.checkQualification(this.lead.country, this.lead.industryDetail || this.lead.industry);
+
+      if (!check.allowed) {
+        // RED banner: PROHIBITED
+        const banner = document.createElement("div");
+        banner.className = "lf-qual-warning lf-qual-prohibited";
+        banner.innerHTML = `
+          <span class="lf-qual-icon">🚫</span>
+          <span class="lf-qual-text">This country/industry is prohibited. This lead cannot proceed.</span>
+        `;
+        const fieldsContainer = this.overlay.querySelector(".lf-fields");
+        if (fieldsContainer) {
+          fieldsContainer.parentElement.insertBefore(banner, fieldsContainer);
+        }
+      } else if (check.restricted) {
+        // AMBER banner: RESTRICTED
+        const banner = document.createElement("div");
+        banner.className = "lf-qual-warning lf-qual-restricted";
+        banner.innerHTML = `
+          <span class="lf-qual-icon">⚠️</span>
+          <span class="lf-qual-text">Warning: This country/industry is restricted. Additional review may be required.</span>
+        `;
+        const fieldsContainer = this.overlay.querySelector(".lf-fields");
+        if (fieldsContainer) {
+          fieldsContainer.parentElement.insertBefore(banner, fieldsContainer);
+        }
+      }
+    }
+
     // ── Show/hide subscriptionFrequency when paymentTypes changes
     _updateConditional() {
       const wrap = this.overlay.querySelector('[data-field="subscriptionFrequency"]');
@@ -956,6 +1370,10 @@
 
     // ── Handle CSV File Upload ──────────────────────────────
     async _handleCSVFile(file) {
+      this.lead.csvLoading = true;
+      this.lead.csvParseError = null;
+      this._render();
+
       const reader = new FileReader();
       reader.onload = async (e) => {
         const csv = e.target.result;
@@ -968,8 +1386,7 @@
 
           const lines = csv.split("\n").filter(l => l.trim());
           if (lines.length < 2) {
-            alert("CSV must have at least a header row and one data row.");
-            return;
+            throw new Error("CSV must have at least a header row and one data row");
           }
 
           const header = lines[0].toLowerCase().split(",").map(h => h.trim());
@@ -1025,12 +1442,15 @@
             this.lead.transactionCount = Math.round(this.lead.monthlyVolume / this.lead.avgTransactionValue);
           }
 
+          this.lead.csvLoading = false;
+          this.lead.csvParseError = null;
           await this._saveNow();
           this._render();
         } catch (err) {
           console.error("CSV parse error:", err);
-          // Non-blocking: don't prevent user from continuing
-          alert("Could not fully parse CSV. You can still enter values manually.");
+          this.lead.csvLoading = false;
+          this.lead.csvParseError = err.message || "Could not parse CSV file. Please check the format.";
+          this._render();
         }
       };
       reader.readAsText(file);
@@ -1081,51 +1501,101 @@
       }
     }
 
+    // ── Validation method for current step ────────────────────
+    _validateStep() {
+      const step = STEPS[this.currentStep - 1];
+      if (!step) return true;
+
+      // Step 1: businessName, country, industry required
+      if (this.currentStep === 1) {
+        if (!this.lead.businessName || !String(this.lead.businessName).trim()) {
+          this._fieldError("lf-businessName", "Business Name is required");
+          return false;
+        }
+        if (!this.lead.country || !String(this.lead.country).trim()) {
+          this._fieldError("lf-country", "Country is required");
+          return false;
+        }
+        // Validate country is in COUNTRIES list
+        if (!COUNTRIES.includes(this.lead.country)) {
+          this._fieldError("lf-country", "Please select a valid country from the list");
+          return false;
+        }
+        if (!this.lead.industry || !String(this.lead.industry).trim()) {
+          this._fieldError("lf-industry", "Industry is required");
+          return false;
+        }
+      }
+
+      // Step 4: intlPercentage, businessAge, deliveryTime required
+      if (this.currentStep === 4) {
+        if (this.lead.intlPercentage === undefined || this.lead.intlPercentage === null || this.lead.intlPercentage === "") {
+          this._fieldError("lf-intlPercentage", "International transactions percentage is required");
+          return false;
+        }
+        if (!this.lead.businessAge || !String(this.lead.businessAge).trim()) {
+          this._fieldError("lf-businessAge", "Business Age is required");
+          return false;
+        }
+        if (!this.lead.deliveryTime || !String(this.lead.deliveryTime).trim()) {
+          this._fieldError("lf-deliveryTime", "Delivery Time is required");
+          return false;
+        }
+      }
+
+      // Step 7: monthlyVolume, avgTransactionValue required
+      if (this.currentStep === 7) {
+        if (!this.lead.monthlyVolume || parseFloat(this.lead.monthlyVolume) <= 0) {
+          this._fieldError("lf-monthlyVolume", "Monthly Volume must be greater than 0");
+          return false;
+        }
+        if (!this.lead.avgTransactionValue || parseFloat(this.lead.avgTransactionValue) <= 0) {
+          this._fieldError("lf-avgTransactionValue", "Average Transaction Value must be greater than 0");
+          return false;
+        }
+      }
+
+      // Step 8: contactName, email required + format validation
+      if (this.currentStep === 8) {
+        if (!this.lead.contactName || !String(this.lead.contactName).trim()) {
+          this._fieldError("lf-contactName", "Contact Name is required");
+          return false;
+        }
+        if (!this.lead.email || !String(this.lead.email).trim()) {
+          this._fieldError("lf-email", "Email is required");
+          return false;
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(this.lead.email)) {
+          this._fieldError("lf-email", "Invalid email address format");
+          return false;
+        }
+        // Validate website if filled
+        if (this.lead.website && String(this.lead.website).trim()) {
+          const website = this.lead.website.trim();
+          if (!/^https?:\/\//.test(website)) {
+            const testUrl = "https://" + website;
+            if (!/^https?:\/\/[^\s@]+\.[^\s@]+$/.test(testUrl)) {
+              this._fieldError("lf-website", "Invalid website URL format");
+              return false;
+            }
+          }
+        }
+      }
+
+      return true;
+    }
+
     // ── Navigation: next (with validation + qualification check)
     async _next() {
       this._collectFields();
 
-      // Validate required fields on current step
-      const step = STEPS[this.currentStep - 1];
-      for (const f of step.fields || []) {
-        if (!f.required) continue;
-        if (f.showIf && !f.showIf(this.lead)) continue;
-        if (!this.lead[f.name] || !String(this.lead[f.name]).trim()) {
-          this._fieldError(`lf-${f.name}`, `${f.label} is required`);
-          return;
-        }
+      // Validate current step
+      if (!this._validateStep()) {
+        return;
       }
 
-      // Step 2: Website validation
-      if (this.currentStep === 2 && this.lead.website) {
-        const website = this.lead.website.trim();
-        if (!/^https?:\/\//.test(website)) {
-          this.lead.website = "https://" + website;
-        }
-        if (!/^https?:\/\/[^\s@]+\.[^\s@]+$/.test(this.lead.website)) {
-          this._fieldError("lf-website", "Invalid website URL format");
-          return;
-        }
-      }
-
-      // Step 4: intlPercentage must be provided
-      if (this.currentStep === 4) {
-        if (this.lead.intlPercentage === undefined || this.lead.intlPercentage === null || this.lead.intlPercentage === "") {
-          this._fieldError("lf-intlPercentage", "International transactions percentage is required");
-          return;
-        }
-      }
-
-      // Step 8: Email validation
-      if (this.currentStep === 8 && this.lead.email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(this.lead.email)) {
-          this._fieldError("lf-email", "Invalid email address");
-          return;
-        }
-      }
-
-      // Step 1 → qualification gate
+      // Step 1 → qualification gate (after validation passes)
       if (this.currentStep === 1) {
         const check = window.RiskEngine.checkQualification(this.lead.country, this.lead.industryDetail || this.lead.industry);
         if (!check.allowed) {
