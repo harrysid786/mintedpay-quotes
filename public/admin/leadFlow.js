@@ -1489,7 +1489,9 @@
 
       if (this.currentStep !== 1) return;
 
-      const country  = this.lead.country || "";
+      const rawCountry = this.lead.country || "";
+      const matchedC   = COUNTRIES.find(c => c.toLowerCase() === rawCountry.toLowerCase()) || rawCountry;
+      const country  = matchedC;
       const industry = this.lead.industryDetail || this.lead.industry || "";
       const check    = window.RiskEngine.checkQualification(country, industry);
 
@@ -1788,11 +1790,17 @@
           this._fieldError("lf-country", "Country is required");
           return false;
         }
-        // Validate country is in COUNTRIES list
-        if (!COUNTRIES.includes(this.lead.country)) {
+        // Case-insensitive country match — also auto-corrects casing
+        const typedCountry = String(this.lead.country).trim();
+        const matchedCountry = COUNTRIES.find(c => c.toLowerCase() === typedCountry.toLowerCase());
+        if (!matchedCountry) {
           this._fieldError("lf-country", "Please select a valid country from the list");
           return false;
         }
+        // Fix casing so downstream logic (RiskEngine) works correctly
+        this.lead.country = matchedCountry;
+        const countryEl = document.getElementById("lf-country");
+        if (countryEl) countryEl.value = matchedCountry;
         if (!this.lead.industry || !String(this.lead.industry).trim()) {
           this._fieldError("lf-industry", "Industry is required");
           return false;
