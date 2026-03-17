@@ -302,56 +302,70 @@
     // ── Build Lead Overview Page ───────────────────────────
     _buildOverview() {
       const lead = this.lead;
+
+      // ── Helpers ──────────────────────────────────────────
       const empty = (v) => v === undefined || v === null || v === "";
-      const val = (v, suffix = "") => empty(v) ? `<span class="ov-empty">Not provided</span>` : `${String(v)}${suffix}`;
+      const muted = `<span class="ov-empty">Not provided</span>`;
+      const val   = (v, suffix = "") => empty(v) ? muted : `${String(v)}${suffix}`;
+
       const badge = (text, color = "gray") => {
         const cls = color === "green" ? "lf-badge-green" :
-                    color === "red" ? "lf-badge-red" :
-                    color === "amber" ? "lf-badge-amber" :
-                    color === "blue" ? "bd-blue" : "bd-grey";
+                    color === "red"   ? "lf-badge-red"   :
+                    color === "amber" ? "lf-badge-amber"  :
+                    color === "blue"  ? "bd-blue"         : "bd-grey";
         return `<span class="lf-badge ${cls}">${text}</span>`;
       };
 
-      // Status badge for header
-      const statusColor = { qualified: "green", kyb_pending: "green", live: "green", quoted: "blue", rejected: "red" };
-      const statusCls = statusColor[lead.status] || "gray";
-      const statusLabel = (lead.status || "draft").replace(/_/g, " ").toUpperCase();
+      // ── Enum label formatters ─────────────────────────────
+      const fmtBusinessAge = (v) => ({
+        less_than_6: "Less than 6 months",
+        "6_to_12":   "6–12 months",
+        "1_to_2":    "1–2 years",
+        "2_plus":    "2+ years",
+      }[v] || v || null);
 
-      // Risk badge for header
-      const riskColor = lead.riskLevel === "low" ? "green" : lead.riskLevel === "medium" ? "amber" : lead.riskLevel === "high" ? "red" : "";
+      const fmtDelivery = (v) => ({
+        instant: "Instant / same-day",
+        delayed: "Delayed (days / weeks)",
+      }[v] || v || null);
 
-      // Volume helpers
-      const vol   = parseFloat(lead.monthlyVolume) || 0;
-      const avgTx = parseFloat(lead.avgTransactionValue) || 0;
+      const fmtChannels = (v) => ({
+        online: "Online only",
+        retail: "Retail / In-person only",
+        both:   "Both online & retail",
+      }[v] || v || null);
 
-      // Activity timeline helper
-      const activity = Array.isArray(lead.activity) ? lead.activity : [];
-      const activityLabels = {
-        lead_created: "Lead created",
-        status_changed: "Status changed",
-        note_added: "Note added",
-        kyb_submitted: "KYB submitted",
-        archived: "Lead archived",
-        reassigned: "Lead reassigned",
-        zoho_pushed: "Pushed to Zoho",
-        quote_generated: "Quote generated",
+      const fmtPaymentTypes = (v) => ({
+        "one-off":      "One-off payments",
+        subscription:   "Subscriptions / recurring",
+        both:           "Both one-off & recurring",
+      }[v] || v || null);
+
+      const fmtPlatform = (v) => ({
+        shopify:     "Shopify",
+        woocommerce: "WooCommerce",
+        magento:     "Magento / Adobe Commerce",
+        bigcommerce: "BigCommerce",
+        squarespace: "Squarespace",
+        wix:         "Wix",
+        custom:      "Custom built",
+        none:        "None / Not applicable",
+        other:       "Other",
+      }[v] || v || null);
+
+      const fmtCurrency = (n) => {
+        const num = parseFloat(n);
+        if (!num) return null;
+        if (num >= 1_000_000) return "£" + (num / 1_000_000).toFixed(2) + "m";
+        if (num >= 1_000)     return "£" + (num / 1_000).toFixed(1) + "k";
+        return "£" + num.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       };
-      const activityIcons = {
-        lead_created: "🆕",
-        status_changed: "🔄",
-        note_added: "📝",
-        kyb_submitted: "🔐",
-        archived: "📦",
-        reassigned: "👤",
-        zoho_pushed: "☁️",
-        quote_generated: "📄",
-      };
-      const highlightedEvents = ["quote_generated", "zoho_pushed"];
 
       const fmtTs = (iso) => {
         if (!iso) return "";
         const d = new Date(iso);
-        return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) + " " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+        return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) +
+               " " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
       };
 
       const fmtDate = (iso) => {
@@ -360,355 +374,334 @@
         return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
       };
 
-      // Group activity by date
+      // ── Computed values ───────────────────────────────────
+      const vol    = parseFloat(lead.monthlyVolume) || 0;
+      const avgTx  = parseFloat(lead.avgTransactionValue) || 0;
+      const txCnt  = vol > 0 && avgTx > 0 ? Math.round(vol / avgTx) : 0;
+      const rate   = lead.processingRate || lead.pricing?.rate;
+      const fee    = lead.fixedFee       || lead.pricing?.fixedFee;
+      const hasPricing = !!(rate || fee);
+      const hasQuote   = !!lead.quote_id;
+      const isKYB      = lead.status === "kyb_pending";
+
+      // Estimated monthly cost
+      const estCost = (rate && fee && vol && txCnt)
+        ? "£" + ((vol * rate / 100) + (txCnt * fee / 100)).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : null;
+
+      // Badges
+      const statusColor = { qualified: "green", kyb_pending: "green", live: "green", quoted: "blue", rejected: "red", completed: "blue" };
+      const statusCls   = statusColor[lead.status] || "gray";
+      const statusLabel = (lead.status || "draft").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const riskColor   = lead.riskLevel === "low" ? "green" : lead.riskLevel === "medium" ? "amber" : lead.riskLevel === "high" ? "red" : "";
+      const decColor    = lead.decision === "accept" ? "green" : lead.decision === "review" ? "amber" : lead.decision === "reject" ? "red" : "";
+
+      // Activity
+      const activity = Array.isArray(lead.activity) ? lead.activity : [];
+      const activityLabels = {
+        lead_created:   "Lead created",
+        status_changed: "Status changed",
+        note_added:     "Note added",
+        kyb_submitted:  "KYB submitted",
+        archived:       "Lead archived",
+        reassigned:     "Lead reassigned",
+        zoho_pushed:    "Pushed to Zoho",
+        quote_generated:"Quote generated",
+      };
+      const activityIcons = {
+        lead_created:    "🆕", status_changed: "🔄", note_added:      "📝",
+        kyb_submitted:   "🔐", archived:       "📦", reassigned:      "👤",
+        zoho_pushed:     "☁️", quote_generated: "📄",
+      };
       const groupedActivity = [...activity].reverse().reduce((acc, a) => {
-        const dateKey = fmtDate(a.timestamp);
-        if (!acc[dateKey]) acc[dateKey] = [];
-        acc[dateKey].push(a);
+        const dk = fmtDate(a.timestamp);
+        if (!acc[dk]) acc[dk] = [];
+        acc[dk].push(a);
         return acc;
       }, {});
 
-      // Notes helper
       const notes = Array.isArray(lead.notes) ? lead.notes : [];
 
-      // Action button states
-      const isKYB = lead.status === "kyb_pending";
-      const hasQuote = !!lead.quote_id;
+      // ── Field row helper ──────────────────────────────────
+      const row = (label, value, opts = {}) => {
+        if (opts.hideEmpty && (value === null || value === undefined || value === "")) return "";
+        const display = (value === null || value === undefined || value === "")
+          ? muted
+          : opts.html ? value : String(value);
+        return `
+          <div class="ov-field">
+            <div class="ov-field-label">${label}</div>
+            <div class="ov-field-value">${display}</div>
+          </div>`;
+      };
 
+      // ── BUILD HTML ────────────────────────────────────────
       return `
         <div class="ov-page">
-          <!-- ═══ STICKY HEADER ═══ -->
+
+          <!-- ═══ STICKY TOPBAR ═══ -->
           <div class="ov-topbar">
-            <button class="ov-back" id="lf-overview-close">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            <button class="ov-back-btn" id="lf-overview-close">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
               Dashboard
             </button>
-            <div class="ov-topbar-center">
-              <h1 class="ov-biz-name">${lead.businessName || "Untitled Lead"}</h1>
-              <div class="ov-biz-meta">
-                ${lead.country ? `<span class="ov-country">${lead.country}</span>` : ""}
+            <div class="ov-topbar-mid">
+              <div class="ov-topbar-name">${lead.businessName || "Untitled Lead"}</div>
+              <div class="ov-topbar-badges">
+                ${lead.country ? `<span class="ov-country-chip">${lead.country}</span>` : ""}
                 ${badge(statusLabel, statusCls)}
-                ${riskColor ? badge(lead.riskLevel.toUpperCase() + " RISK", riskColor) : ""}
+                ${riskColor ? badge((lead.riskLevel || "").toUpperCase() + " RISK", riskColor) : ""}
+                ${decColor  ? badge((lead.decision  || "").toUpperCase(), decColor) : ""}
                 ${lead.brand && lead.brand !== "minted" ? `<span class="db-brand-badge">${lead.brand.toUpperCase()}</span>` : ""}
               </div>
             </div>
             <div class="ov-topbar-actions">
-              <button class="ov-btn ov-btn-primary" id="lf-overview-edit">Edit Lead</button>
-              <button class="ov-btn ov-btn-secondary" id="lf-overview-resume">Resume Flow</button>
+              <button class="ov-hdr-btn ov-hdr-btn-ghost" id="lf-overview-edit">Edit Lead</button>
+              <button class="ov-hdr-btn ov-hdr-btn-ghost" id="lf-overview-resume">Resume Flow</button>
             </div>
           </div>
 
+          <!-- ═══ BODY ═══ -->
           <div class="ov-body">
+            <div class="ov-layout">
 
-            <!-- ═══ 70/30 LAYOUT ═══ -->
-            <div class="ov-cols">
+              <!-- ══════ LEFT COLUMN ══════ -->
+              <div class="ov-col-main">
 
-              <!-- ═══ LEFT COLUMN (70%) ═══ -->
-              <div class="ov-col-left">
-
-                <!-- Pricing Summary Banner (if pricing exists) -->
-                ${lead.processingRate || lead.fixedFee ? `
-                <div class="ov-summary-banner">
-                  <div class="ov-summary-row">
-                    <div class="ov-summary-item">
-                      <div class="ov-summary-label">Processing Rate</div>
-                      <div class="ov-summary-value">${lead.processingRate}%</div>
-                    </div>
-                    <div class="ov-summary-item">
-                      <div class="ov-summary-label">Fixed Fee</div>
-                      <div class="ov-summary-value">${lead.fixedFee}p</div>
-                    </div>
-                    ${lead.estimatedRevenue ? `
-                    <div class="ov-summary-item">
-                      <div class="ov-summary-label">Est. Revenue</div>
-                      <div class="ov-summary-value">£${lead.estimatedRevenue}</div>
-                    </div>` : ""}
-                    ${riskColor ? `
-                    <div class="ov-summary-item">
-                      <div class="ov-summary-label">Risk Level</div>
-                      <div class="ov-summary-value">${badge(lead.riskLevel.toUpperCase(), riskColor)}</div>
-                    </div>` : ""}
+                <!-- A. Pricing Summary Card (shown once, only if pricing exists) -->
+                ${hasPricing ? `
+                <div class="ov-card">
+                  <div class="ov-card-hdr">
+                    <span class="ov-card-icon">💰</span>
+                    Pricing Summary
                   </div>
-                </div>` : ""}
-
-                <!-- Pricing Summary (large hero card) -->
-                ${lead.processingRate || lead.fixedFee || lead.riskLevel ? `
-                <div class="ov-results-hero">
-                  <div class="ov-results-grid">
-                    ${lead.processingRate ? `
-                    <div class="ov-result-item ov-result-highlight">
-                      <div class="ov-result-label">Processing Rate</div>
-                      <div class="ov-result-value">${lead.processingRate}%</div>
+                  <div class="ov-pricing-grid">
+                    <div class="ov-pricing-cell ov-pricing-primary">
+                      <div class="ov-pricing-label">Processing Rate</div>
+                      <div class="ov-pricing-value">${rate}%</div>
+                    </div>
+                    <div class="ov-pricing-cell ov-pricing-primary">
+                      <div class="ov-pricing-label">Fixed Fee</div>
+                      <div class="ov-pricing-value">${fee}p</div>
+                    </div>
+                    ${riskColor ? `
+                    <div class="ov-pricing-cell">
+                      <div class="ov-pricing-label">Risk Level</div>
+                      <div class="ov-pricing-value">${badge((lead.riskLevel || "").toUpperCase(), riskColor)}</div>
                     </div>` : ""}
-                    ${lead.fixedFee ? `
-                    <div class="ov-result-item ov-result-highlight">
-                      <div class="ov-result-label">Fixed Fee</div>
-                      <div class="ov-result-value">${lead.fixedFee}p</div>
-                    </div>` : ""}
-                    ${lead.riskLevel ? `
-                    <div class="ov-result-item">
-                      <div class="ov-result-label">Risk Level</div>
-                      <div class="ov-result-badge">${badge(lead.riskLevel.toUpperCase(), riskColor)}</div>
-                    </div>` : ""}
-                    ${lead.decision ? `
-                    <div class="ov-result-item">
-                      <div class="ov-result-label">Decision</div>
-                      <div class="ov-result-badge">${badge(lead.decision.toUpperCase(), lead.decision === "accept" ? "green" : lead.decision === "review" ? "amber" : "red")}</div>
+                    ${decColor ? `
+                    <div class="ov-pricing-cell">
+                      <div class="ov-pricing-label">Decision</div>
+                      <div class="ov-pricing-value">${badge((lead.decision || "").toUpperCase(), decColor)}</div>
                     </div>` : ""}
                     ${vol > 0 ? `
-                    <div class="ov-result-item">
-                      <div class="ov-result-label">Monthly Volume</div>
-                      <div class="ov-result-value ov-result-sm">\u00A3${vol.toLocaleString("en-GB")}</div>
+                    <div class="ov-pricing-cell">
+                      <div class="ov-pricing-label">Monthly Volume</div>
+                      <div class="ov-pricing-value ov-pricing-sm">${fmtCurrency(vol)}</div>
                     </div>` : ""}
-                    ${lead.estimatedRevenue ? `
-                    <div class="ov-result-item">
-                      <div class="ov-result-label">Est. Revenue</div>
-                      <div class="ov-result-value ov-result-sm">\u00A3${lead.estimatedRevenue}</div>
+                    ${estCost ? `
+                    <div class="ov-pricing-cell">
+                      <div class="ov-pricing-label">Est. Monthly Cost</div>
+                      <div class="ov-pricing-value ov-pricing-sm">${estCost}</div>
                     </div>` : ""}
                   </div>
+                  ${hasQuote ? `<div class="ov-quote-ref">Quote ID: <strong>${lead.quote_id}</strong></div>` : ""}
                 </div>` : ""}
 
-                <!-- Business Info -->
+                <!-- B. Business Info Card -->
                 <div class="ov-card">
-                  <div class="ov-card-hdr">Business Info</div>
+                  <div class="ov-card-hdr">
+                    <span class="ov-card-icon">🏢</span>
+                    Business Info
+                  </div>
                   <div class="ov-card-body">
-                    <div class="ov-field">
-                      <div class="ov-field-label">Business Name</div>
-                      <div class="ov-field-value">${val(lead.businessName)}</div>
-                    </div>
-                    <div class="ov-field">
-                      <div class="ov-field-label">Industry</div>
-                      <div class="ov-field-value">${val(lead.industry)}${lead.industryDetail ? ` <span class="ov-detail">(${lead.industryDetail})</span>` : ""}</div>
-                    </div>
-                    <div class="ov-field">
-                      <div class="ov-field-label">Country</div>
-                      <div class="ov-field-value">${val(lead.country)}</div>
-                    </div>
-                    <div class="ov-field">
-                      <div class="ov-field-label">Sales Channels</div>
-                      <div class="ov-field-value">${val(lead.salesChannels)}</div>
-                    </div>
-                    <div class="ov-field">
-                      <div class="ov-field-label">Website</div>
-                      <div class="ov-field-value">${lead.website ? `<a href="${lead.website}" target="_blank">${lead.website}</a>` : `<span class="ov-empty">Not provided</span>`}</div>
-                    </div>
-                    ${!empty(lead.description) ? `
-                    <div class="ov-field">
-                      <div class="ov-field-label">Description</div>
-                      <div class="ov-field-value">${lead.description}</div>
-                    </div>` : ""}
+                    ${row("Business Name", lead.businessName)}
+                    ${row("Industry", lead.industry
+                        ? lead.industry + (lead.industryDetail ? ` <span class="ov-detail">(${lead.industryDetail})</span>` : "")
+                        : "", { html: true })}
+                    ${row("Country", lead.country)}
+                    ${row("Sales Channels", fmtChannels(lead.salesChannels))}
+                    ${row("Payment Types",  fmtPaymentTypes(lead.paymentTypes))}
+                    ${row("Website", lead.website
+                        ? `<a href="${lead.website}" target="_blank" rel="noopener">${lead.website}</a>`
+                        : "", { html: true })}
+                    ${row("Description", lead.description, { hideEmpty: true })}
                   </div>
                 </div>
 
-                <!-- Risk Signals -->
+                <!-- C. Risk Signals Card -->
                 <div class="ov-card">
-                  <div class="ov-card-hdr">Risk Signals</div>
+                  <div class="ov-card-hdr">
+                    <span class="ov-card-icon">🔍</span>
+                    Risk Signals
+                  </div>
                   <div class="ov-card-body">
-                    <div class="ov-field">
-                      <div class="ov-field-label">Intl Transactions</div>
-                      <div class="ov-field-value">${empty(lead.intlPercentage) ? `<span class="ov-empty">Not provided</span>` : lead.intlPercentage + "%"}</div>
-                    </div>
-                    <div class="ov-field">
-                      <div class="ov-field-label">Refund Rate</div>
-                      <div class="ov-field-value">${empty(lead.refundRate) ? `<span class="ov-empty">Not provided</span>` : lead.refundRate + "%"}</div>
-                    </div>
-                    <div class="ov-field">
-                      <div class="ov-field-label">Chargeback Rate</div>
-                      <div class="ov-field-value">${empty(lead.chargebackRate) ? `<span class="ov-empty">Not provided</span>` : lead.chargebackRate + "%"}</div>
-                    </div>
-                    <div class="ov-field">
-                      <div class="ov-field-label">Holds Funds</div>
-                      <div class="ov-field-value">${lead.holdsFunds === "yes" ? badge("YES", "amber") : "No"}</div>
-                    </div>
-                    <div class="ov-field">
-                      <div class="ov-field-label">Business Age</div>
-                      <div class="ov-field-value">${val(lead.businessAge)}</div>
-                    </div>
-                    <div class="ov-field">
-                      <div class="ov-field-label">Delivery Time</div>
-                      <div class="ov-field-value">${val(lead.deliveryTime)}</div>
-                    </div>
+                    ${row("Intl Transactions",
+                        !empty(lead.intlPercentage) ? lead.intlPercentage + "%" : "")}
+                    ${row("Refund Rate",
+                        !empty(lead.refundRate) ? lead.refundRate + "%" : "")}
+                    ${row("Chargeback Rate",
+                        !empty(lead.chargebackRate) ? lead.chargebackRate + "%" : "")}
+                    ${row("Holds Customer Funds",
+                        lead.holdsFunds === "yes"
+                          ? badge("YES — holds funds", "amber")
+                          : "No", { html: true })}
+                    ${row("Business Age",    fmtBusinessAge(lead.businessAge))}
+                    ${row("Delivery Time",   fmtDelivery(lead.deliveryTime))}
                   </div>
                 </div>
 
-                <!-- Volume & Current Setup -->
+                <!-- D. Volume & Setup Card -->
                 <div class="ov-card">
-                  <div class="ov-card-hdr">Volume & Setup</div>
+                  <div class="ov-card-hdr">
+                    <span class="ov-card-icon">📊</span>
+                    Volume & Setup
+                  </div>
                   <div class="ov-card-body">
-                    <div class="ov-field">
-                      <div class="ov-field-label">Monthly Volume</div>
-                      <div class="ov-field-value">${vol > 0 ? "\u00A3" + vol.toLocaleString("en-GB") : `<span class="ov-empty">Not provided</span>`}</div>
-                    </div>
-                    <div class="ov-field">
-                      <div class="ov-field-label">Avg Transaction</div>
-                      <div class="ov-field-value">${avgTx > 0 ? "\u00A3" + avgTx : `<span class="ov-empty">Not provided</span>`}</div>
-                    </div>
-                    <div class="ov-field">
-                      <div class="ov-field-label">Current Provider</div>
-                      <div class="ov-field-value">${val(lead.currentProvider)}</div>
-                    </div>
-                    <div class="ov-field">
-                      <div class="ov-field-label">Platform</div>
-                      <div class="ov-field-value">${val(lead.platform)}</div>
-                    </div>
-                    ${!empty(lead.painPoints) ? `
-                    <div class="ov-field">
-                      <div class="ov-field-label">Pain Points</div>
-                      <div class="ov-field-value">${lead.painPoints}</div>
-                    </div>` : ""}
+                    ${row("Monthly Volume",    vol   > 0 ? fmtCurrency(vol)   : "")}
+                    ${row("Avg Transaction",   avgTx > 0 ? fmtCurrency(avgTx) : "")}
+                    ${row("Est. Transactions", txCnt > 0 ? txCnt.toLocaleString("en-GB") + " / mo" : "", { hideEmpty: true })}
+                    ${row("Current Provider",  lead.currentProvider)}
+                    ${row("Platform",          fmtPlatform(lead.platform))}
+                    ${row("Accounting",        lead.accountingSoftware, { hideEmpty: true })}
+                    ${row("Integrations",      lead.integrations, { hideEmpty: true })}
+                    ${row("Pain Points",       lead.painPoints, { hideEmpty: true })}
                   </div>
                 </div>
 
-                <!-- Contact -->
+                <!-- E. Contact Card -->
                 <div class="ov-card">
-                  <div class="ov-card-hdr">Contact</div>
+                  <div class="ov-card-hdr">
+                    <span class="ov-card-icon">👤</span>
+                    Contact
+                  </div>
                   <div class="ov-card-body">
-                    <div class="ov-field">
-                      <div class="ov-field-label">Name</div>
-                      <div class="ov-field-value">${val(lead.contactName)}</div>
-                    </div>
-                    <div class="ov-field">
-                      <div class="ov-field-label">Email</div>
-                      <div class="ov-field-value">${lead.email ? `<a href="mailto:${lead.email}">${lead.email}</a>` : `<span class="ov-empty">Not provided</span>`}</div>
-                    </div>
-                    ${!empty(lead.phone) ? `
-                    <div class="ov-field">
-                      <div class="ov-field-label">Phone</div>
-                      <div class="ov-field-value">${lead.phone}</div>
-                    </div>` : ""}
+                    ${row("Name",   lead.contactName)}
+                    ${row("Email",  lead.email
+                        ? `<a href="mailto:${lead.email}">${lead.email}</a>`
+                        : "", { html: true })}
+                    ${row("Phone",  lead.phone,  { hideEmpty: true })}
+                    ${row("Source", lead.leadSource, { hideEmpty: true })}
                   </div>
                 </div>
 
-              </div><!-- /ov-col-left -->
+              </div><!-- /ov-col-main -->
 
-              <!-- ═══ RIGHT COLUMN (30%) ═══ -->
-              <div class="ov-col-right">
+              <!-- ══════ RIGHT COLUMN ══════ -->
+              <div class="ov-col-side">
 
                 <!-- Actions Card -->
-                <div class="ov-card ov-card-actions">
-                  <div class="ov-card-hdr">Actions</div>
-                  <div class="ov-actions-body">
-                    <button class="ov-action-btn ov-action-primary" id="lf-overview-quote" ${(lead.processingRate || lead.fixedFee) && !hasQuote ? "" : "disabled"}>
+                <div class="ov-card ov-card-sticky">
+                  <div class="ov-card-hdr">
+                    <span class="ov-card-icon">🚀</span>
+                    Actions
+                  </div>
+                  <div class="ov-actions-list">
+                    <button class="ov-act-btn ov-act-primary" id="lf-overview-quote"
+                            ${hasPricing && !hasQuote ? "" : "disabled"}>
                       ${hasQuote ? "✓ Quote Generated" : "📄 Generate Quote"}
                     </button>
                     ${hasQuote ? `
-                    <a class="ov-action-btn ov-action-link" href="/quote.html?quote=${lead.quote_id}&admin=1" target="_blank">
+                    <a class="ov-act-btn ov-act-link" href="/quote.html?quote=${lead.quote_id}&admin=1" target="_blank">
                       👁 View Quote (Admin)
                     </a>
-                    <button class="ov-action-btn ov-action-secondary" id="lf-send-quote-email">
-                      📧 Send Quote to Merchant
+                    <button class="ov-act-btn ov-act-secondary" id="lf-send-quote-email">
+                      📧 Send to Merchant
                     </button>
-                    <button class="ov-action-btn ov-action-secondary" id="lf-copy-quote-link">
+                    <button class="ov-act-btn ov-act-secondary" id="lf-copy-quote-link">
                       📋 Copy Merchant Link
                     </button>
-                    <button class="ov-action-btn ov-action-secondary" id="lf-download-quote-pdf">
+                    <button class="ov-act-btn ov-act-secondary" id="lf-download-quote-pdf">
                       ⬇️ Download PDF
                     </button>` : ""}
-                    <button class="ov-action-btn ov-action-secondary" id="lf-ov-push-zoho" ${!lead.zohoPushed ? "" : "disabled"}>
+                    <div class="ov-act-divider"></div>
+                    <button class="ov-act-btn ov-act-secondary" id="lf-ov-push-zoho"
+                            ${!lead.zohoPushed ? "" : "disabled"}>
                       ${lead.zohoPushed ? "✓ Pushed to Zoho" : "☁️ Push to Zoho"}
                     </button>
-                    <button class="ov-action-btn ${isKYB ? "ov-action-done" : "ov-action-kyb"}" id="lf-ov-mark-kyb" ${isKYB ? "disabled" : ""}>
+                    <button class="ov-act-btn ${isKYB ? "ov-act-done" : "ov-act-kyb"}" id="lf-ov-mark-kyb"
+                            ${isKYB ? "disabled" : ""}>
                       ${isKYB ? "✓ KYB Pending" : "🔐 Mark as KYB Ready"}
                     </button>
                   </div>
-                  <!-- CRM Meta -->
-                  <div class="ov-crm-meta">
-                    <div class="ov-crm-row">
-                      <span class="ov-crm-label">Assigned</span>
-                      <span class="ov-crm-val">${empty(lead.assignedTo) ? "Unassigned" : lead.assignedTo}</span>
+                  <div class="ov-meta-rows">
+                    <div class="ov-meta-row">
+                      <span class="ov-meta-label">Assigned to</span>
+                      <span class="ov-meta-val">${empty(lead.assignedTo) ? "Unassigned" : lead.assignedTo}</span>
                     </div>
-                    <div class="ov-crm-row">
-                      <span class="ov-crm-label">Brand</span>
-                      <span class="ov-crm-val">${lead.brand === "ummah" ? "Ummah Pay" : "Minted Pay"}</span>
+                    <div class="ov-meta-row">
+                      <span class="ov-meta-label">Brand</span>
+                      <span class="ov-meta-val">${lead.brand === "ummah" ? "Ummah Pay" : "Minted Pay"}</span>
                     </div>
-                    <div class="ov-crm-row">
-                      <span class="ov-crm-label">Zoho</span>
-                      <span class="ov-crm-val">${lead.zohoPushed ? badge("SYNCED", "green") : `<span class="ov-empty">Not synced</span>`}</span>
+                    <div class="ov-meta-row">
+                      <span class="ov-meta-label">Zoho CRM</span>
+                      <span class="ov-meta-val">${lead.zohoPushed ? badge("SYNCED", "green") : `<span class="ov-empty">Not synced</span>`}</span>
+                    </div>
+                    <div class="ov-meta-row">
+                      <span class="ov-meta-label">Created</span>
+                      <span class="ov-meta-val">${fmtDate(lead.createdAt)}</span>
                     </div>
                   </div>
                 </div>
 
-                <!-- Risk Reasoning Card -->
-                ${lead.riskLevel ? `
-                <div class="ov-card ov-card-risk">
-                  <div class="ov-card-hdr">Risk Reasoning</div>
-                  <div class="ov-card-body">
-                    <div class="ov-field">
-                      <div class="ov-field-label">Intl Transactions</div>
-                      <div class="ov-field-value">${lead.intlPercentage || 0}%</div>
-                    </div>
-                    <div class="ov-field">
-                      <div class="ov-field-label">Industry</div>
-                      <div class="ov-field-value">${lead.industry || "—"}</div>
-                    </div>
-                    <div class="ov-field">
-                      <div class="ov-field-label">Business Age</div>
-                      <div class="ov-field-value">${lead.businessAge || "—"}</div>
-                    </div>
-                    <div class="ov-field">
-                      <div class="ov-field-label">Delivery Time</div>
-                      <div class="ov-field-value">${lead.deliveryTime || "—"}</div>
-                    </div>
-                  </div>
-                </div>` : ""}
-
-                <!-- Activity Timeline Card -->
-                <div class="ov-card ov-card-timeline">
-                  <div class="ov-card-hdr">Activity Timeline</div>
-                  <div class="ov-timeline-body">
-                    ${activity.length === 0 ? `<div class="ov-timeline-empty">No activity yet</div>` : `
-                      ${Object.entries(groupedActivity).map(([dateKey, events]) => `
-                        <div class="ov-tl-date-group">
-                          <div class="ov-tl-date-header">${dateKey}</div>
-                          ${events.map(a => `
-                            <div class="ov-tl-item ${highlightedEvents.includes(a.type) ? "ov-tl-highlight" : ""}">
-                              <div class="ov-tl-dot"></div>
-                              <div class="ov-tl-content">
-                                <div class="ov-tl-label">
-                                  <span class="ov-tl-icon">${activityIcons[a.type] || "📌"}</span>
-                                  ${activityLabels[a.type] || a.type}
-                                  ${a.oldStatus && a.newStatus ? `<span class="ov-tl-detail">${a.oldStatus} → ${a.newStatus}</span>` : ""}
-                                  ${a.newAssignedTo ? `<span class="ov-tl-detail">→ ${a.newAssignedTo}</span>` : ""}
-                                </div>
-                                <div class="ov-tl-time">${fmtTs(a.timestamp)}</div>
-                              </div>
-                            </div>
-                          `).join("")}
-                        </div>
-                      `).join("")}
-                    `}
-                  </div>
-                </div>
-
-                <!-- Notes Card -->
-                <div class="ov-card ov-card-notes">
+                <!-- Activity Timeline -->
+                <div class="ov-card">
                   <div class="ov-card-hdr">
-                    Notes
-                    <span class="ov-note-count">${notes.length}</span>
+                    <span class="ov-card-icon">🕐</span>
+                    Activity
                   </div>
-                  <div class="ov-notes-body">
-                    ${notes.length === 0 ? `<div class="ov-notes-empty">No notes yet</div>` :
-                      [...notes].reverse().map(n => `
-                        <div class="ov-note-item">
-                          <div class="ov-note-text">${n.text}</div>
-                          <div class="ov-note-time">${fmtTs(n.timestamp)}</div>
-                        </div>
-                      `).join("")
-                    }
+                  <div class="ov-timeline">
+                    ${activity.length === 0
+                      ? `<div class="ov-tl-empty">No activity yet</div>`
+                      : Object.entries(groupedActivity).map(([dateKey, events]) => `
+                          <div class="ov-tl-group">
+                            <div class="ov-tl-date">${dateKey}</div>
+                            ${events.map(a => `
+                              <div class="ov-tl-item">
+                                <div class="ov-tl-dot"></div>
+                                <div class="ov-tl-body">
+                                  <div class="ov-tl-text">
+                                    ${activityIcons[a.type] || "📌"}
+                                    ${activityLabels[a.type] || a.type}
+                                    ${a.oldStatus && a.newStatus ? `<span class="ov-tl-tag">${a.oldStatus} → ${a.newStatus}</span>` : ""}
+                                    ${a.newAssignedTo ? `<span class="ov-tl-tag">→ ${a.newAssignedTo}</span>` : ""}
+                                  </div>
+                                  <div class="ov-tl-time">${fmtTs(a.timestamp)}</div>
+                                </div>
+                              </div>`).join("")}
+                          </div>`).join("")}
+                  </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="ov-card">
+                  <div class="ov-card-hdr">
+                    <span class="ov-card-icon">📝</span>
+                    Notes
+                    ${notes.length > 0 ? `<span class="ov-card-count">${notes.length}</span>` : ""}
+                  </div>
+                  <div class="ov-notes">
+                    ${notes.length === 0
+                      ? `<div class="ov-notes-empty">No notes yet</div>`
+                      : [...notes].reverse().map(n => `
+                          <div class="ov-note">
+                            <div class="ov-note-text">${n.text}</div>
+                            <div class="ov-note-time">${fmtTs(n.timestamp)}</div>
+                          </div>`).join("")}
                     <div class="ov-note-add">
-                      <textarea class="ov-note-input" id="lf-ov-note-input" placeholder="Add a note..." rows="2"></textarea>
+                      <textarea class="ov-note-input" id="lf-ov-note-input" placeholder="Add a note…" rows="2"></textarea>
                       <button class="ov-note-btn" id="lf-ov-add-note">Add Note</button>
                     </div>
                   </div>
                 </div>
 
-              </div><!-- /ov-col-right -->
-            </div><!-- /ov-cols -->
-
+              </div><!-- /ov-col-side -->
+            </div><!-- /ov-layout -->
           </div><!-- /ov-body -->
-        </div>
+        </div><!-- /ov-page -->
       `;
     }
+
 
     // ── Main layout skeleton ───────────────────────────────
     _buildLayout() {
