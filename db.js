@@ -29,6 +29,16 @@ db.exec(`
     accepted_at    TEXT,
     ip_address     TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS leads (
+    id          TEXT PRIMARY KEY,
+    data        TEXT DEFAULT '{}',
+    status      TEXT DEFAULT 'draft',
+    risk_level  TEXT DEFAULT '',
+    decision    TEXT DEFAULT '',
+    created_at  TEXT,
+    updated_at  TEXT
+  );
 `);
 
 // ── Migration: add columns if upgrading from older schema ─────
@@ -39,5 +49,10 @@ if (!cols.includes("avgTx"))     db.exec("ALTER TABLE quotes ADD COLUMN avgTx   
 if (!cols.includes("cur"))       db.exec("ALTER TABLE quotes ADD COLUMN cur       REAL DEFAULT 0");
 if (!cols.includes("debitFrac")) db.exec("ALTER TABLE quotes ADD COLUMN debitFrac REAL DEFAULT 0.70");
 if (!cols.includes("addons"))    db.exec("ALTER TABLE quotes ADD COLUMN addons    TEXT DEFAULT '{}'");
+
+// ── Migration: leads table columns (safe additive) ───────────
+const leadCols = db.pragma("table_info(leads)").map(c => c.name);
+if (!leadCols.includes("risk_level")) db.exec("ALTER TABLE leads ADD COLUMN risk_level TEXT DEFAULT ''");
+if (!leadCols.includes("decision"))   db.exec("ALTER TABLE leads ADD COLUMN decision   TEXT DEFAULT ''");
 
 module.exports = db;
