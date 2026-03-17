@@ -24,6 +24,13 @@
     "Iran", "North Korea", "Syria", "Cuba",
   ];
 
+  // ── Restricted Countries (elevated risk / review) ────────────
+  const RESTRICTED_COUNTRIES = [
+    "Russia", "Pakistan", "Bangladesh", "Afghanistan", "Somalia",
+    "Yemen", "Venezuela", "Myanmar", "Libya", "Iraq", "Lebanon",
+    "South Sudan",
+  ];
+
   // ── Restricted (elevated risk / review) ──────────────────
   const RESTRICTED_INDUSTRIES = [
     "adult", "pornography", "escort",
@@ -36,6 +43,26 @@
     "nutraceutical", "supplements",
     "vaping", "e-cigarette", "tobacco",
     "firearms accessories",
+  ];
+
+  // ── Industry Categories ────────────────────────────────────
+  const INDUSTRY_CATEGORIES = [
+    { value: "ecommerce", label: "E-commerce / Online Retail" },
+    { value: "saas", label: "SaaS / Software" },
+    { value: "retail", label: "Retail / In-person" },
+    { value: "hospitality", label: "Hospitality / Food & Drink" },
+    { value: "professional_services", label: "Professional Services" },
+    { value: "healthcare", label: "Healthcare" },
+    { value: "education", label: "Education" },
+    { value: "travel", label: "Travel & Tourism" },
+    { value: "marketplace", label: "Marketplace / Platform" },
+    { value: "subscription", label: "Subscription Services" },
+    { value: "charity", label: "Charity / Non-profit" },
+    { value: "financial_services", label: "Financial Services" },
+    { value: "gaming", label: "Gaming / Entertainment" },
+    { value: "crypto", label: "Cryptocurrency / Blockchain" },
+    { value: "adult", label: "Adult Content" },
+    { value: "other", label: "Other" },
   ];
 
   /**
@@ -59,12 +86,13 @@
    * Quick qualification gate — call on Step 1 before advancing.
    * @param {string} country
    * @param {string} industry
-   * @returns {{ allowed: boolean, reason?: string }}
+   * @returns {{ allowed: boolean, restricted?: boolean, reason?: string }}
    */
   function checkQualification(country, industry) {
     const c = (country  || "").trim().toLowerCase();
     const i = (industry || "").trim().toLowerCase();
 
+    // Check prohibited countries (hard reject)
     for (const pc of PROHIBITED_COUNTRIES) {
       if (c.includes(pc.toLowerCase())) {
         return {
@@ -74,6 +102,18 @@
       }
     }
 
+    // Check restricted countries (elevated risk)
+    for (const rc of RESTRICTED_COUNTRIES) {
+      if (c.includes(rc.toLowerCase())) {
+        return {
+          allowed: true,
+          restricted: true,
+          reason: "This country has elevated risk requirements. You may continue but additional review will be required.",
+        };
+      }
+    }
+
+    // Check prohibited industries (hard reject)
     for (const pi of PROHIBITED_INDUSTRIES) {
       if (matchesKeyword(i, pi)) {
         return {
@@ -110,6 +150,10 @@
     const isRestricted = RESTRICTED_INDUSTRIES.some(ri => matchesKeyword(i, ri));
     if (isRestricted) score += 3;
 
+    // Restricted country
+    const isRestrictedCountry = RESTRICTED_COUNTRIES.some(rc => c.includes(rc.toLowerCase()));
+    if (isRestrictedCountry) score += 2;
+
     // International transaction percentage
     const intl = parseFloat(lead.intlPercentage) || 0;
     if      (intl > 70) score += 3;
@@ -136,6 +180,14 @@
     const vol = parseFloat(lead.monthlyVolume) || 0;
     if (vol > 500_000) score += 1;
 
+    // Business age
+    const businessAge = parseFloat(lead.businessAge) || 0;
+    if      (businessAge < 6)  score += 2;
+    else if (businessAge < 12) score += 1;
+
+    // Delivery time
+    if (lead.deliveryTime === "delayed") score += 1;
+
     // ── Map score → risk level / decision ────────────────────
     let riskLevel, decision;
 
@@ -160,5 +212,7 @@
     PROHIBITED_INDUSTRIES,
     RESTRICTED_INDUSTRIES,
     PROHIBITED_COUNTRIES,
+    RESTRICTED_COUNTRIES,
+    INDUSTRY_CATEGORIES,
   };
 })();
