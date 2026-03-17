@@ -1113,7 +1113,7 @@
                   <span class="lf-section-title">Actions</span>
                 </div>
                 <div class="lf-action-stack">
-                  <button class="lf-action-btn ${this.lead.quote_id ? "lf-action-done" : "lf-action-primary"}" id="lf-gen-quote" ${this.lead.processingRate && !this.lead.quote_id ? "" : "disabled"}>
+                  <button class="lf-action-btn ${this.lead.quote_id ? "lf-action-done" : "lf-action-primary"}" id="lf-gen-quote" ${this.pricingResult && !this.quoteGenerated ? "" : "disabled"}>
                     ${this.lead.quote_id ? "✓ Quote Generated" : "📄 Generate Quote"}
                   </button>
                   <button class="lf-action-btn lf-action-secondary" id="lf-push-zoho" ${!this.lead.zohoPushed ? "" : "disabled"}>
