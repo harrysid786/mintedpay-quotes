@@ -802,38 +802,53 @@
 
     // ── CSV Upload Tab for Step 7 ───────────────────────────
     _buildCSVUploadTab() {
-      const hasError = this.lead.csvParseError || false;
-      const isLoading = this.lead.csvLoading || false;
+      const hasError   = this.lead.csvParseError || false;
+      const isLoading  = this.lead.csvLoading    || false;
+      const hasResult  = !!(this.lead.monthlyVolume && this.lead.volumeTab === "csv" && !isLoading);
+      const fileName   = this.lead.csvFileName   || "";
 
       return `
-        <div class="lf-csv-upload-section" id="lf-csv-upload-section">
-          <div class="lf-fields">
-            ${isLoading ? `
-            <div class="lf-csv-loading">
-              <div class="lf-spinner"></div>
-              <p>Parsing CSV file…</p>
-            </div>` : ""}
+        <div class="lf-csv-wrap" id="lf-csv-upload-section">
 
-            ${hasError ? `
-            <div class="lf-csv-error">
-              <span class="lf-csv-error-icon">⚠️</span>
-              <span>${this.lead.csvParseError}</span>
-            </div>` : ""}
+          ${isLoading ? `
+          <div class="lf-csv-loading">
+            <div class="lf-spinner"></div>
+            <p style="margin-top:10px;font-size:13px;color:var(--g3)">Parsing CSV file…</p>
+          </div>` : `
 
-            <div class="lf-dropzone" id="lf-csv-dropzone" ${isLoading ? "disabled" : ""}>
-              <p>Drag and drop your CSV file here, or click to browse</p>
-              <span class="lf-csv-hint">Supported columns: Amount, Volume, Count, Currency (optional)</span>
-              <input type="file" id="lf-csv-file-input" accept=".csv" style="display:none;">
+          ${hasError ? `
+          <div class="lf-csv-error-banner">
+            <span>⚠️</span>
+            <span>${this.lead.csvParseError}</span>
+          </div>` : ""}
+
+          ${hasResult ? `
+          <div class="lf-csv-success-banner">
+            <div class="lf-csv-success-top">
+              <span class="lf-csv-success-icon">✓</span>
+              <div class="lf-csv-success-body">
+                <div class="lf-csv-success-title">${fileName || "CSV uploaded successfully"}</div>
+                <div class="lf-csv-success-vals">
+                  <span>Volume: <strong>£${parseFloat(this.lead.monthlyVolume).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong></span>
+                  ${this.lead.avgTransactionValue ? `<span>Avg Tx: <strong>£${parseFloat(this.lead.avgTransactionValue).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></span>` : ""}
+                  ${this.lead.transactionCount ? `<span>${Number(this.lead.transactionCount).toLocaleString("en-GB")} transactions</span>` : ""}
+                </div>
+                ${this.lead.csvDateRange ? `<div class="lf-csv-date-range">📅 ${this.lead.csvDateRange} — extrapolated to monthly</div>` : ""}
+              </div>
+              <button class="lf-csv-clear-btn" id="lf-csv-clear">Replace file</button>
             </div>
+          </div>` : `
 
-            ${this.lead.monthlyVolume && this.lead.volumeTab === "csv" && !isLoading ? `
-            <div class="lf-csv-result">
-              ✓ <strong>Volume: £${parseFloat(this.lead.monthlyVolume).toLocaleString("en-GB", {minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong>
-              ${this.lead.avgTransactionValue ? ` · Avg Tx: £${parseFloat(this.lead.avgTransactionValue).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}` : ""}
-              ${this.lead.transactionCount ? ` · ${Number(this.lead.transactionCount).toLocaleString("en-GB")} transactions` : ""}
-              ${this.lead.csvDateRange ? `<div style="font-size:11px;color:#6b6b6b;margin-top:4px;">📅 Date range: ${this.lead.csvDateRange} (extrapolated to monthly)</div>` : ""}
-            </div>` : ""}
-          </div>
+          <label class="lf-dropzone" id="lf-csv-dropzone" for="lf-csv-file-input">
+            <span class="lf-dz-icon">📂</span>
+            <span class="lf-dz-title">Drag & drop your CSV here, or <u>click to browse</u></span>
+            <span class="lf-dz-hint">Supports: Amount, Volume, Count columns · Stripe exports welcome</span>
+          </label>
+          <input type="file" id="lf-csv-file-input" accept=".csv"
+                 style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;">
+          `}
+          `}
+
         </div>
       `;
     }
@@ -1448,29 +1463,64 @@
         });
       });
 
-      // CSV Upload
-      const dropzone = q("lf-csv-dropzone");
-      const fileInput = q("lf-csv-file-input");
+      // ── CSV Upload wiring ──────────────────────────────────
+      const dropzone  = document.getElementById("lf-csv-dropzone");
+      const fileInput = document.getElementById("lf-csv-file-input");
+      const clearBtn  = document.getElementById("lf-csv-clear");
+
+      if (fileInput) {
+        // fileInput change — primary upload path
+        fileInput.addEventListener("change", async (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          await this._handleCSVFile(file);
+          // reset so same file can be re-selected
+          e.target.value = "";
+        });
+      }
+
       if (dropzone && fileInput) {
-        dropzone.addEventListener("click", () => fileInput.click());
+        // clicking the label triggers the hidden input
+        dropzone.addEventListener("click", (e) => {
+          e.preventDefault();
+          fileInput.click();
+        });
+
+        dropzone.addEventListener("dragenter", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.add("lf-dz-over");
+        });
         dropzone.addEventListener("dragover", (e) => {
           e.preventDefault();
-          dropzone.style.borderColor = "#3b82f6";
+          e.stopPropagation();
+          dropzone.classList.add("lf-dz-over");
         });
-        dropzone.addEventListener("dragleave", () => {
-          dropzone.style.borderColor = "";
-        });
-        dropzone.addEventListener("drop", (e) => {
+        dropzone.addEventListener("dragleave", (e) => {
           e.preventDefault();
-          dropzone.style.borderColor = "";
-          if (e.dataTransfer.files.length > 0) {
-            this._handleCSVFile(e.dataTransfer.files[0]);
-          }
+          e.stopPropagation();
+          dropzone.classList.remove("lf-dz-over");
         });
-        fileInput.addEventListener("change", (e) => {
-          if (e.target.files.length > 0) {
-            this._handleCSVFile(e.target.files[0]);
-          }
+        dropzone.addEventListener("drop", async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.remove("lf-dz-over");
+          const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+          if (!file) return;
+          await this._handleCSVFile(file);
+        });
+      }
+
+      if (clearBtn) {
+        clearBtn.addEventListener("click", () => {
+          this.lead.monthlyVolume       = "";
+          this.lead.avgTransactionValue = "";
+          this.lead.transactionCount    = "";
+          this.lead.csvFileName         = "";
+          this.lead.csvDateRange        = "";
+          this.lead.csvParseError       = null;
+          this.lead.volumeTab           = "csv";
+          this._render();
         });
       }
     }
@@ -1547,170 +1597,195 @@
       this.lead.csvParseError = null;
       this._render();
 
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        try {
-          const result = this._parseCSV(e.target.result);
-          if (result.error) throw new Error(result.error);
+      try {
+        const text   = await file.text();
+        const result = this._parseCSV(text);
 
-          this.lead.monthlyVolume       = result.monthlyVolume;
-          this.lead.avgTransactionValue = result.avgTx;
-          this.lead.transactionCount    = result.txCount;
-          this.lead.csvDateRange        = result.dateRange || "";
-          this.lead.csvLoading          = false;
-          this.lead.csvParseError       = null;
-          this.lead.volumeTab           = "csv";
-          await this._saveNow();
-          this._render();
-        } catch (err) {
-          console.error("CSV parse error:", err);
-          this.lead.csvLoading    = false;
-          this.lead.csvParseError = err.message || "Could not parse CSV. Please check the format.";
-          this._render();
-        }
-      };
-      reader.onerror = () => {
-        this.lead.csvLoading    = false;
-        this.lead.csvParseError = "Could not read the file. Please try again.";
+        this.lead.monthlyVolume       = result.summary.totalVolume;
+        this.lead.avgTransactionValue = result.summary.averageTransaction > 0
+                                          ? result.summary.averageTransaction : "";
+        this.lead.transactionCount    = result.summary.transactionCount || "";
+        this.lead.csvFileName         = file.name;
+        this.lead.csvDateRange        = "";
+        this.lead.csvLoading          = false;
+        this.lead.csvParseError       = null;
+        this.lead.volumeTab           = "csv";
+        await this._saveNow();
         this._render();
-      };
-      reader.readAsText(file);
+      } catch (err) {
+        console.error("CSV parse error:", err);
+        this.lead.csvLoading    = false;
+        this.lead.csvParseError = err.message || "Could not parse CSV. Please check the format.";
+        this._render();
+      }
     }
 
-    // ── RFC-4180 CSV parser + volume extractor ─────────────
-    _parseCSV(text) {
-      // ── 1. Parse CSV into rows/cols (handles quoted fields, CRLF) ──
-      const parseRows = (raw) => {
-        const rows = [];
-        let row = [], field = "", inQuote = false;
-        for (let i = 0; i < raw.length; i++) {
-          const ch  = raw[i];
-          const nxt = raw[i + 1];
-          if (inQuote) {
-            if (ch === '"' && nxt === '"') { field += '"'; i++; }
-            else if (ch === '"')           { inQuote = false; }
-            else                           { field += ch; }
+    // ── CSV parser (robust, RFC-4180, handles Stripe + generic formats) ──
+    _parseCSV(csvText) {
+      if (!csvText || !String(csvText).trim()) {
+        throw new Error("CSV file is empty");
+      }
+
+      // ── Helpers ────────────────────────────────────────────
+      const normalizeHeader = (str = "") =>
+        String(str).trim().toLowerCase().replace(/[\s_\-./()]+/g, "");
+
+      const parseLooseNumber = (value) => {
+        if (value === null || value === undefined) return null;
+        const raw = String(value).trim();
+        if (!raw) return null;
+        let cleaned = raw.replace(/[^\d,.\-]/g, "");
+        const hasComma = cleaned.includes(",");
+        const hasDot   = cleaned.includes(".");
+        if (hasComma && hasDot) {
+          if (cleaned.lastIndexOf(",") > cleaned.lastIndexOf(".")) {
+            cleaned = cleaned.replace(/\./g, "").replace(",", ".");
           } else {
-            if      (ch === '"')                   { inQuote = true; }
-            else if (ch === ',')                   { row.push(field.trim()); field = ""; }
-            else if (ch === '\n' || ch === '\r') {
-              if (ch === '\r' && nxt === '\n') i++;
-              row.push(field.trim()); field = "";
-              if (row.some(c => c !== "")) rows.push(row);
-              row = [];
-            } else { field += ch; }
+            cleaned = cleaned.replace(/,/g, "");
+          }
+        } else if (hasComma && !hasDot) {
+          const parts = cleaned.split(",");
+          if (parts.length === 2 && parts[1].length <= 2) {
+            cleaned = cleaned.replace(",", ".");
+          } else {
+            cleaned = cleaned.replace(/,/g, "");
           }
         }
-        if (field !== "" || row.length) { row.push(field.trim()); if (row.some(c => c !== "")) rows.push(row); }
-        return rows;
+        const num = Number(cleaned);
+        return Number.isFinite(num) ? num : null;
       };
 
-      const rows = parseRows(text);
-      if (rows.length < 2) return { error: "CSV must have at least a header row and one data row." };
-
-      const header = rows[0].map(h => h.toLowerCase().replace(/[^a-z0-9_]/g, "_"));
-      const data   = rows.slice(1);
-
-      // ── 2. Strip currency/formatting from a value string ──
-      const num = (v) => {
-        if (v == null || v === "") return NaN;
-        return parseFloat(String(v).replace(/[£$€,\s\u00a0]/g, "").replace(/[()]/g, ""));
-      };
-
-      // ── 3. Flexible column finder ─────────────────────────
-      const col = (...names) => {
-        for (const n of names) {
-          const idx = header.findIndex(h => h === n || h.includes(n.replace(/ /g, "_")));
-          if (idx >= 0) return idx;
+      const splitLine = (line) => {
+        const out = [];
+        let cur = "", inQ = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i], nx = line[i + 1];
+          if (ch === '"') {
+            if (inQ && nx === '"') { cur += '"'; i++; }
+            else inQ = !inQ;
+          } else if (ch === "," && !inQ) {
+            out.push(cur); cur = "";
+          } else {
+            cur += ch;
+          }
         }
-        return -1;
+        out.push(cur);
+        return out.map(v => v.trim());
       };
 
-      // Stripe / generic column name variants
-      const amountIdx  = col("amount", "net", "converted_amount", "value", "gross", "total", "fee");
-      const typeIdx    = col("type", "transaction_type", "description");
-      const currIdx    = col("currency", "ccy");
-      const dateIdx    = col("created", "date", "created_date", "transaction_date", "created_utc");
-      const countIdx   = col("count", "transaction_count", "transactions", "cnt");
-      const volIdx     = col("monthly_volume", "monthlyvolume", "volume", "vol");
-      const avgIdx     = col("avg_transaction_value", "avgtransactionvalue", "avg_tx", "average_value");
+      // ── Parse lines ────────────────────────────────────────
+      const lines = String(csvText)
+        .replace(/\r\n/g, "\n").replace(/\r/g, "\n")
+        .split("\n").filter(l => l.trim().length > 0);
 
-      // ── 4. Detect if this is a Stripe-style statement ─────
-      //    Stripe exports rows per-transaction; we need to sum GBP CHARGEs
-      const isStripeLike = typeIdx >= 0;
-
-      let totalVolume = 0;
-      let txCount     = 0;
-      let minDate     = null;
-      let maxDate     = null;
-
-      if (volIdx >= 0) {
-        // Pre-aggregated format: first row has the total
-        const firstRow = data[0];
-        totalVolume = num(firstRow[volIdx]) || 0;
-        txCount     = countIdx >= 0 ? (num(firstRow[countIdx]) || 0) : 0;
-        const avgVal = avgIdx >= 0 ? num(firstRow[avgIdx]) : NaN;
-        const avgTx  = !isNaN(avgVal) && avgVal > 0 ? avgVal
-                     : txCount > 0 ? Math.round((totalVolume / txCount) * 100) / 100 : 0;
-        return { monthlyVolume: totalVolume, avgTx, txCount, dateRange: "" };
+      if (lines.length < 2) {
+        throw new Error("CSV must include a header row and at least one data row");
       }
 
-      if (amountIdx < 0) {
-        return { error: "Could not find an amount/value column in this CSV. Supported column names: amount, net, value, gross, total." };
+      const rawHeaders = splitLine(lines[0]);
+      const headers    = rawHeaders.map(normalizeHeader);
+
+      // ── Column index lookup ────────────────────────────────
+      const findCol = (aliases) =>
+        headers.findIndex(h => aliases.includes(h));
+
+      const idxAmount = findCol([
+        "amount","transactionamount","grossamount","paymentamount","value",
+        "net","convertedamount","total","gross",
+      ]);
+      const idxVolume = findCol([
+        "volume","monthlyvolume","grossvolume","processedvolume","totalvolume",
+      ]);
+      const idxCount  = findCol([
+        "count","transactioncount","transactions","txncount","numberoftransactions",
+      ]);
+      const idxCurr   = findCol(["currency","curr","ccy"]);
+      const idxType   = findCol(["type","transactiontype","description"]);
+
+      if (idxAmount === -1 && idxVolume === -1 && idxCount === -1) {
+        throw new Error(
+          "CSV must contain at least one usable column: Amount, Volume, or Count"
+        );
       }
 
-      // ── 5. Sum rows (filter to GBP charges for Stripe-like CSVs) ──
-      for (const row of data) {
-        const rawType = typeIdx >= 0 ? (row[typeIdx] || "").toLowerCase() : "";
-        const rawCurr = currIdx >= 0 ? (row[currIdx] || "").toLowerCase() : "";
+      // ── Parse data rows ────────────────────────────────────
+      const rows = lines.slice(1).map(l => {
+        const cols = splitLine(l);
+        return {
+          amount:   idxAmount > -1 ? parseLooseNumber(cols[idxAmount]) : null,
+          volume:   idxVolume > -1 ? parseLooseNumber(cols[idxVolume]) : null,
+          count:    idxCount  > -1 ? parseLooseNumber(cols[idxCount])  : null,
+          currency: idxCurr   > -1 ? String(cols[idxCurr] || "").trim() : "",
+          type:     idxType   > -1 ? String(cols[idxType]  || "").trim().toLowerCase() : "",
+        };
+      });
 
-        // For Stripe statements: only count charge rows in GBP
+      // ── Detect Stripe-style (has type column) → filter charges only ──
+      const isStripeLike = idxType > -1;
+
+      const validAmountRows = rows.filter(r => {
+        if (r.amount === null || r.amount <= 0) return false;
         if (isStripeLike) {
-          const isCharge    = rawType === "charge" || rawType === "payment" || rawType === "";
-          const isValidCurr = !rawCurr || rawCurr === "gbp" || rawCurr === "£";
-          if (!isCharge || !isValidCurr) continue;
+          const isCharge = r.type === "charge" || r.type === "payment" || r.type === "";
+          const isGBP    = !r.currency || r.currency.toLowerCase() === "gbp";
+          if (!isCharge || !isGBP) return false;
         }
+        return true;
+      });
 
-        const amt = num(row[amountIdx]);
-        if (isNaN(amt) || amt <= 0) continue;
+      const validVolumeRows = rows.filter(r => r.volume !== null && r.volume > 0);
+      const validCountRows  = rows.filter(r => r.count  !== null && r.count  > 0);
 
-        totalVolume += amt;
-        txCount++;
+      let totalVolume = 0, transactionCount = 0, averageTransaction = 0;
 
-        if (dateIdx >= 0 && row[dateIdx]) {
-          const d = new Date(row[dateIdx]);
-          if (!isNaN(d)) {
-            if (!minDate || d < minDate) minDate = d;
-            if (!maxDate || d > maxDate) maxDate = d;
-          }
-        }
+      // Priority 1 — sum per-row amount values
+      if (validAmountRows.length > 0) {
+        totalVolume      = validAmountRows.reduce((s, r) => s + r.amount, 0);
+        transactionCount = validCountRows.length > 0
+          ? validCountRows.reduce((s, r) => s + r.count, 0)
+          : validAmountRows.length;
+      }
+      // Priority 2 — use aggregate volume column
+      else if (validVolumeRows.length > 0) {
+        totalVolume      = validVolumeRows.reduce((s, r) => s + r.volume, 0);
+        transactionCount = validCountRows.length > 0
+          ? validCountRows.reduce((s, r) => s + r.count, 0)
+          : 0;
       }
 
-      if (totalVolume <= 0 || txCount === 0) {
-        return { error: "No valid transaction amounts found. Check that the file contains GBP charge transactions." };
-      }
-
-      // ── 6. Extrapolate to monthly if date range spans multiple months ──
-      let monthlyVolume = totalVolume;
-      let dateRange     = "";
-      if (minDate && maxDate && minDate.getTime() !== maxDate.getTime()) {
-        const msRange  = maxDate - minDate;
-        const days     = Math.max(1, Math.round(msRange / 86400000));
-        if (days > 10) {
-          const months = days / 30.4375;
-          monthlyVolume = Math.round((totalVolume / months) * 100) / 100;
-          const fmt = d => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-          dateRange = `${fmt(minDate)} – ${fmt(maxDate)}`;
+      // Fallback: if Stripe-like but nothing matched, try all positive amounts
+      if (totalVolume <= 0 && isStripeLike) {
+        const fallback = rows.filter(r => r.amount !== null && r.amount > 0);
+        if (fallback.length > 0) {
+          totalVolume      = fallback.reduce((s, r) => s + r.amount, 0);
+          transactionCount = fallback.length;
         }
       }
 
-      const avgTx = Math.round((totalVolume / txCount) * 100) / 100;
+      if (!totalVolume || totalVolume <= 0) {
+        throw new Error("No valid amounts found in CSV. Check the file contains positive numeric values.");
+      }
+
+      if (transactionCount > 0) {
+        averageTransaction = totalVolume / transactionCount;
+      } else if (validAmountRows.length > 0) {
+        averageTransaction = totalVolume / validAmountRows.length;
+        transactionCount   = validAmountRows.length;
+      }
 
       return {
-        monthlyVolume: Math.round(monthlyVolume * 100) / 100,
-        avgTx,
-        txCount,
-        dateRange,
+        headers: rawHeaders,
+        rows,
+        summary: {
+          totalVolume:        Number(totalVolume.toFixed(2)),
+          transactionCount:   transactionCount ? Math.round(transactionCount) : 0,
+          averageTransaction: averageTransaction ? Number(averageTransaction.toFixed(2)) : 0,
+          currency:           rows.find(r => r.currency)?.currency || "GBP",
+          rowCount:           rows.length,
+          validAmountRows:    validAmountRows.length,
+          validVolumeRows:    validVolumeRows.length,
+          validCountRows:     validCountRows.length,
+        },
       };
     }
 
