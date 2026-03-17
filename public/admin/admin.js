@@ -173,27 +173,112 @@
     }
   };
 
-  // ── Public: delete lead ────────────────────────────────────
-  window.adminDeleteLead = async function (id) {
-    const confirmDelete = confirm("Archive this lead? Click OK to archive, or Cancel to dismiss.");
-    if (!confirmDelete) return;
+  // ── Delete confirmation modal ─────────────────────────────
+  function showDeleteModal(id) {
+    const existing = document.getElementById("mp-delete-modal");
+    if (existing) existing.remove();
 
-    const permanent = confirm("Permanently delete? Click OK to permanently delete, or Cancel to just archive.");
+    const overlay = document.createElement("div");
+    overlay.id = "mp-delete-modal";
+    overlay.style.cssText = [
+      "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.45);",
+      "display:flex;align-items:center;justify-content:center;"
+    ].join("");
 
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:10px;padding:28px 32px;max-width:420px;width:90%;
+                  box-shadow:0 20px 60px rgba(0,0,0,.2);font-family:'Inter',sans-serif;">
+        <div style="font-size:32px;text-align:center;margin-bottom:12px;">🗑️</div>
+        <h3 style="font-size:16px;font-weight:700;color:#0a0a0a;margin-bottom:8px;text-align:center;">
+          Remove this lead?
+        </h3>
+        <p style="font-size:13px;color:#6b6b6b;text-align:center;margin-bottom:20px;line-height:1.5;">
+          Choose how to remove it.<br>
+          <strong style="color:#dc2626">Permanent deletion cannot be undone.</strong>
+        </p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button id="del-archive" style="padding:10px 16px;border-radius:6px;font-size:13px;font-weight:600;
+                  cursor:pointer;border:1px solid #d4d4d4;background:#f5f5f5;color:#1a1a1a;">
+            📦 Archive — hide from list, keep data
+          </button>
+          <button id="del-permanent" style="padding:10px 16px;border-radius:6px;font-size:13px;font-weight:600;
+                  cursor:pointer;border:1px solid #fca5a5;background:#fff0f0;color:#dc2626;">
+            🗑 Permanently delete — removes all data
+          </button>
+          <button id="del-cancel" style="padding:9px 16px;border-radius:6px;font-size:12px;font-weight:600;
+                  cursor:pointer;border:none;background:none;color:#6b6b6b;">
+            Cancel
+          </button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    const close = () => overlay.remove();
+    document.getElementById("del-cancel").addEventListener("click", close);
+    overlay.addEventListener("click", e => { if (e.target === overlay) close(); });
+
+    document.getElementById("del-archive").addEventListener("click", async () => {
+      close();
+      await _performDelete(id, false);
+    });
+
+    document.getElementById("del-permanent").addEventListener("click", () => {
+      close();
+      // Second-stage confirmation for destructive action
+      const conf = document.createElement("div");
+      conf.id = "mp-delete-modal";
+      conf.style.cssText = [
+        "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);",
+        "display:flex;align-items:center;justify-content:center;"
+      ].join("");
+      conf.innerHTML = `
+        <div style="background:#fff;border-radius:10px;padding:28px 32px;max-width:400px;width:90%;
+                    box-shadow:0 20px 60px rgba(0,0,0,.2);font-family:'Inter',sans-serif;
+                    border:2px solid #fca5a5;">
+          <div style="font-size:32px;text-align:center;margin-bottom:12px;">⚠️</div>
+          <h3 style="font-size:16px;font-weight:700;color:#dc2626;margin-bottom:8px;text-align:center;">
+            Permanently delete this lead?
+          </h3>
+          <p style="font-size:13px;color:#6b6b6b;text-align:center;margin-bottom:20px;line-height:1.5;">
+            All data for this lead will be <strong>permanently removed</strong> from the database.
+            This <strong>cannot be reversed</strong>.
+          </p>
+          <div style="display:flex;gap:10px;">
+            <button id="del-perm-cancel" style="flex:1;padding:10px;border-radius:6px;font-size:13px;
+                    font-weight:600;cursor:pointer;border:1px solid #d4d4d4;background:#f5f5f5;color:#1a1a1a;">
+              Cancel
+            </button>
+            <button id="del-perm-confirm" style="flex:1;padding:10px;border-radius:6px;font-size:13px;
+                    font-weight:600;cursor:pointer;border:none;background:#dc2626;color:#fff;">
+              Yes, Delete Permanently
+            </button>
+          </div>
+        </div>`;
+      document.body.appendChild(conf);
+      document.getElementById("del-perm-cancel").addEventListener("click", () => conf.remove());
+      document.getElementById("del-perm-confirm").addEventListener("click", async () => {
+        conf.remove();
+        await _performDelete(id, true);
+      });
+    });
+  }
+
+  async function _performDelete(id, permanent) {
     try {
       const url = permanent ? `/api/leads/${id}?permanent=true` : `/api/leads/${id}`;
       const resp = await fetch(url, { method: "DELETE" });
-
-      if (!resp.ok) {
-        alert("Error deleting lead. Please try again.");
-        return;
-      }
-
+      if (!resp.ok) { alert("Error deleting lead. Please try again."); return; }
       loadLeads();
     } catch (e) {
       alert("Could not delete lead. Please try again.");
       console.error("Error deleting lead:", e);
     }
+  }
+
+  // ── Public: delete lead ────────────────────────────────────
+  window.adminDeleteLead = function (id) {
+    showDeleteModal(id);
   };
 
   // ── Init on DOM ready ─────────────────────────────────────
