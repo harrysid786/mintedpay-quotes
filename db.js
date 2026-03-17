@@ -54,5 +54,10 @@ if (!cols.includes("addons"))    db.exec("ALTER TABLE quotes ADD COLUMN addons  
 const leadCols = db.pragma("table_info(leads)").map(c => c.name);
 if (!leadCols.includes("risk_level")) db.exec("ALTER TABLE leads ADD COLUMN risk_level TEXT DEFAULT ''");
 if (!leadCols.includes("decision"))   db.exec("ALTER TABLE leads ADD COLUMN decision   TEXT DEFAULT ''");
+if (!leadCols.includes("zoho_pushed")) db.exec("ALTER TABLE leads ADD COLUMN zoho_pushed INTEGER DEFAULT 0");
+if (!leadCols.includes("notes"))       db.exec("ALTER TABLE leads ADD COLUMN notes       TEXT DEFAULT '[]'");
+if (!leadCols.includes("assigned_to")) db.exec("ALTER TABLE leads ADD COLUMN assigned_to TEXT DEFAULT ''");
+if (!leadCols.includes("activity"))    db.exec("ALTER TABLE leads ADD COLUMN activity    TEXT DEFAULT '[]'");
+if (!leadCols.includes("brand"))       db.exec("ALTER TABLE leads ADD COLUMN brand       TEXT DEFAULT 'minted'");
 
 module.exports = db;
