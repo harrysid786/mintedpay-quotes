@@ -56,7 +56,7 @@
       fields: [
         { name: "businessName", label: "Business Name", type: "text", required: true, placeholder: "Acme Ltd" },
         { name: "country",      label: "Country of Operation", type: "datalist", required: true, options: COUNTRIES, placeholder: "Start typing a country..." },
-        { name: "industry",     label: "Industry / Business Type", type: "select", required: true, options: window.RiskEngine?.INDUSTRY_CATEGORIES || [], placeholder: "Select an industry..." },
+        { name: "industry",     label: "Industry / Business Type", type: "industry-autocomplete", required: true, placeholder: "Type to search, e.g. E-commerce, SaaS, Retail…" },
         { name: "industryDetail", label: "Industry Details (optional)", type: "text", placeholder: "e.g. B2B SaaS, Fashion E-commerce, Medical Devices..." },
       ],
     },
@@ -592,14 +592,17 @@
                       ${hasQuote ? "✓ Quote Generated" : "📄 Generate Quote"}
                     </button>
                     ${hasQuote ? `
-                    <a class="ov-action-btn ov-action-link" href="/quote.html?quote=${lead.quote_id}" target="_blank">
-                      📤 View Quote
+                    <a class="ov-action-btn ov-action-link" href="/quote.html?quote=${lead.quote_id}&admin=1" target="_blank">
+                      👁 View Quote (Admin)
                     </a>
                     <button class="ov-action-btn ov-action-secondary" id="lf-send-quote-email">
-                      📧 Send via Email
+                      📧 Send Quote to Merchant
                     </button>
                     <button class="ov-action-btn ov-action-secondary" id="lf-copy-quote-link">
-                      📋 Copy Quote Link
+                      📋 Copy Merchant Link
+                    </button>
+                    <button class="ov-action-btn ov-action-secondary" id="lf-download-quote-pdf">
+                      ⬇️ Download PDF
                     </button>` : ""}
                     <button class="ov-action-btn ov-action-secondary" id="lf-ov-push-zoho" ${!lead.zohoPushed ? "" : "disabled"}>
                       ${lead.zohoPushed ? "✓ Pushed to Zoho" : "☁️ Push to Zoho"}
@@ -832,9 +835,10 @@
 
             ${this.lead.monthlyVolume && this.lead.volumeTab === "csv" && !isLoading ? `
             <div class="lf-csv-result">
-              ✓ Auto-filled: Volume £${parseFloat(this.lead.monthlyVolume).toLocaleString("en-GB")}
-              ${this.lead.avgTransactionValue ? ` · Avg Tx £${this.lead.avgTransactionValue}` : ""}
-              ${this.lead.transactionCount ? ` · ${this.lead.transactionCount} transactions` : ""}
+              ✓ <strong>Volume: £${parseFloat(this.lead.monthlyVolume).toLocaleString("en-GB", {minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong>
+              ${this.lead.avgTransactionValue ? ` · Avg Tx: £${parseFloat(this.lead.avgTransactionValue).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}` : ""}
+              ${this.lead.transactionCount ? ` · ${Number(this.lead.transactionCount).toLocaleString("en-GB")} transactions` : ""}
+              ${this.lead.csvDateRange ? `<div style="font-size:11px;color:#6b6b6b;margin-top:4px;">📅 Date range: ${this.lead.csvDateRange} (extrapolated to monthly)</div>` : ""}
             </div>` : ""}
           </div>
         </div>
@@ -860,14 +864,36 @@
                     `<option value="${o.value}" ${val === o.value ? "selected" : ""}>${o.label}</option>`
                   ).join("")}
                 </select>`;
-      } else if (f.type === "datalist") {
-        const dlId = `dl-${f.name}`;
+      } else if (f.type === "industry-autocomplete") {
+        // Industry typeahead — text input with filtered suggestions
+        const cats = (window.RiskEngine?.INDUSTRY_CATEGORIES || []).map(c => c.label);
+        const restricted = (window.RiskEngine?.RESTRICTED_INDUSTRIES || []);
+        const prohibited = (window.RiskEngine?.PROHIBITED_INDUSTRIES || []);
+        const valLower = val.toLowerCase();
+        const isProhibited = prohibited.some(p => valLower && valLower.includes(p));
+        const isRestricted = !isProhibited && restricted.some(r => valLower && valLower.includes(r));
+        const warnClass = isProhibited ? "lf-industry-prohibited" : isRestricted ? "lf-industry-restricted" : "";
         ctrl = `
-          <input class="lf-ctrl" id="lf-${f.name}" name="${f.name}" type="text"
-                 value="${val}" placeholder="${f.placeholder || ""}" list="${dlId}" autocomplete="off">
-          <datalist id="${dlId}">
-            ${(f.options || []).map(o => `<option value="${o}"></option>`).join("")}
-          </datalist>`;
+          <div class="lf-industry-wrap" id="lf-industry-wrap">
+            <input class="lf-ctrl lf-industry-input ${warnClass}" id="lf-${f.name}" name="${f.name}"
+                   type="text" value="${val}" placeholder="${f.placeholder || ""}"
+                   autocomplete="off">
+            ${isProhibited ? `<div class="lf-industry-status lf-industry-status-red">🚫 Prohibited industry — this lead cannot proceed</div>` :
+              isRestricted ? `<div class="lf-industry-status lf-industry-status-amber">⚠️ Restricted industry — additional review required</div>` : ""}
+            <div class="lf-industry-dropdown" id="lf-industry-dropdown" style="display:none">
+              ${cats.map(c => {
+                const cLower = c.toLowerCase();
+                const iP = prohibited.some(p => cLower.includes(p));
+                const iR = !iP && restricted.some(r => cLower.includes(r));
+                const tag = iP ? `<span class="lf-industry-tag lf-tag-prohibited">Prohibited</span>` :
+                            iR ? `<span class="lf-industry-tag lf-tag-restricted">Restricted</span>` : "";
+                return `<div class="lf-industry-opt ${iP ? "lf-opt-prohibited" : iR ? "lf-opt-restricted" : ""}"
+                             data-value="${c}">${c}${tag}</div>`;
+              }).join("")}
+            </div>
+          </div>`;
+      } else if (false) {
+        // placeholder — never reached, keeps else chain valid
       } else {
         const minA = f.min !== undefined ? `min="${f.min}"` : "";
         const maxA = f.max !== undefined ? `max="${f.max}"` : "";
@@ -928,8 +954,22 @@
       const vol    = parseFloat(this.lead.monthlyVolume)       || 0;
       const avgTx  = parseFloat(this.lead.avgTransactionValue) || 55;
       const txCnt  = avgTx > 0 ? Math.round(vol / avgTx) : Math.round(vol / 55);
-      const estRev = ((vol * p.rate / 100) + (txCnt * p.fixed_fee / 100));
+
+      // Enforce fixed fee floor at display time
+      if (p.fixed_fee < 10) p.fixed_fee = 10;
+
+      const estRev = ((vol * p.rate / 100) + (txCnt * (p.fixed_fee / 100)));
       const estMrg = (p.rate - 0.46).toFixed(2);
+
+      // Effective rate = total monthly cost / volume * 100
+      const effectiveRate = vol > 0 ? ((estRev / vol) * 100).toFixed(2) : null;
+
+      // Current provider comparison
+      const currentRate    = p.current_rate || null;
+      const currentFees    = parseFloat(this.lead.currentMonthlyFees) || 0;
+      const currentPaying  = currentFees > 0 ? currentFees
+                           : (currentRate && vol > 0 ? ((currentRate / 100) * vol) : null);
+      const monthlySaving  = p.monthly_saving || 0;
 
       const rBadge = r.riskLevel === "low"  ? "lf-badge-green"
                    : r.riskLevel === "medium" ? "lf-badge-amber"
@@ -978,18 +1018,40 @@
                 <div class="lf-rec-value">${p.fixed_fee}p</div>
               </div>
               <div class="lf-rec-item">
-                <div class="lf-rec-label">Est. Monthly Revenue</div>
+                <div class="lf-rec-label">Est. Monthly Cost</div>
                 <div class="lf-rec-value lf-rec-sm">£${estRev.toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
               </div>
               <div class="lf-rec-item">
+                <div class="lf-rec-label">Effective Rate</div>
+                <div class="lf-rec-value lf-rec-sm">${effectiveRate !== null ? effectiveRate + "%" : "—"}</div>
+              </div>
+            </div>
+            ${currentPaying !== null ? `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+              <div class="lf-rec-item">
+                <div class="lf-rec-label">Currently Paying</div>
+                <div class="lf-rec-value lf-rec-sm" style="color:#6b6b6b">£${Number(currentPaying).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</div>
+              </div>
+              ${monthlySaving > 0 ? `
+              <div class="lf-rec-item" style="background:#e6f7f2;border:1px solid #a7f3d0">
+                <div class="lf-rec-label" style="color:#00916e">Monthly Saving</div>
+                <div class="lf-rec-value lf-rec-sm" style="color:#00916e">£${Number(monthlySaving).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+              </div>` : `
+              <div class="lf-rec-item">
+                <div class="lf-rec-label">Est. Gross Margin</div>
+                <div class="lf-rec-value lf-rec-sm">~${estMrg}% pts</div>
+              </div>`}
+            </div>` : `
+            <div style="margin-top:12px;">
+              <div class="lf-rec-item" style="background:var(--g7)">
                 <div class="lf-rec-label">Est. Gross Margin</div>
                 <div class="lf-rec-value lf-rec-sm">~${estMrg}% pts</div>
               </div>
-            </div>
-            ${p.monthly_saving > 0 ? `
+            </div>`}
+            ${monthlySaving > 0 ? `
             <div class="lf-savings-banner">
               <span>Saving vs Current Provider</span>
-              <strong>£${p.monthly_saving.toLocaleString("en-GB")}/mo</strong>
+              <strong>£${Number(monthlySaving).toLocaleString("en-GB")}/mo · £${Number(monthlySaving * 12).toLocaleString("en-GB")}/yr</strong>
             </div>` : ""}
           </div>
 
@@ -1200,18 +1262,22 @@
       q("lf-ov-push-zoho")?.addEventListener("click", () => this._pushZoho());
       q("lf-ov-mark-kyb")?.addEventListener("click", () => this._markKYB());
       q("lf-send-quote-email")?.addEventListener("click", () => {
-        const quoteUrl = `/quote.html?quote=${this.lead.quote_id}`;
-        const subject = encodeURIComponent("Your MintedPay Quote");
-        const body = encodeURIComponent(`View your quote:\n${quoteUrl}`);
-        window.location.href = `mailto:${this.lead.email}?subject=${subject}&body=${body}`;
+        const merchantUrl = `${window.location.origin}/quote.html?quote=${this.lead.quote_id}`;
+        const brand = this.lead.brand === "ummah" ? "Ummah Pay" : "MintedPay";
+        const subject = encodeURIComponent(`Your ${brand} Payment Processing Quote`);
+        const body = encodeURIComponent(`Dear ${this.lead.contactName || ""},\n\nPlease find your payment processing quote below:\n\n${merchantUrl}\n\nThis quote is valid for 30 days.\n\nKind regards,\n${brand} Team`);
+        window.open(`mailto:${this.lead.email}?subject=${subject}&body=${body}`, "_self");
       });
       q("lf-copy-quote-link")?.addEventListener("click", () => {
-        const quoteUrl = `${window.location.origin}/quote.html?quote=${this.lead.quote_id}`;
-        navigator.clipboard.writeText(quoteUrl).then(() => {
-          alert("Quote link copied to clipboard!");
-        }).catch(() => {
-          alert("Failed to copy. Please try again.");
-        });
+        const merchantUrl = `${window.location.origin}/quote.html?quote=${this.lead.quote_id}`;
+        navigator.clipboard.writeText(merchantUrl).then(() => {
+          const btn = q("lf-copy-quote-link");
+          if (btn) { btn.textContent = "✓ Copied!"; setTimeout(() => { btn.textContent = "📋 Copy Merchant Link"; }, 2000); }
+        }).catch(() => alert("Failed to copy. Please try again."));
+      });
+      q("lf-download-quote-pdf")?.addEventListener("click", () => {
+        // Open the admin PDF view — the quote.html page handles PDF export
+        window.open(`/quote.html?quote=${this.lead.quote_id}&admin=1&autoprint=1`, "_blank");
       });
       q("lf-ov-add-note")?.addEventListener("click", async () => {
         const input = q("lf-ov-note-input");
@@ -1270,8 +1336,110 @@
         });
       });
 
-      // Input autosave + qualification warnings for Step 1
-      this.overlay.querySelectorAll(".lf-ctrl").forEach(el => {
+      // Real-time email / website validation (Step 8)
+      const emailEl   = q("lf-email");
+      const websiteEl = q("lf-website");
+
+      const showFieldHint = (el, msg) => {
+        let hint = el?.parentElement?.querySelector(".lf-field-hint");
+        if (!hint) {
+          hint = document.createElement("div");
+          hint.className = "lf-field-hint";
+          el.parentElement.appendChild(hint);
+        }
+        hint.textContent = msg;
+        hint.style.color = msg ? "#dc2626" : "";
+        if (msg) el.style.borderColor = "#dc2626";
+        else     el.style.borderColor = "";
+      };
+
+      emailEl?.addEventListener("input", (e) => {
+        const v = e.target.value.trim();
+        if (!v) { showFieldHint(emailEl, ""); return; }
+        const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+        showFieldHint(emailEl, ok ? "" : "Enter a valid email address");
+      });
+
+      websiteEl?.addEventListener("input", (e) => {
+        const v = e.target.value.trim();
+        if (!v) { showFieldHint(websiteEl, ""); return; }
+        const test = /^https?:\/\//.test(v) ? v : "https://" + v;
+        const ok   = /^https?:\/\/[^\s@]+\.[^\s@]+$/.test(test);
+        showFieldHint(websiteEl, ok ? "" : "Enter a valid URL (e.g. https://example.com)");
+      });
+
+      // Industry autocomplete logic
+      const industryInput = q("lf-industry");
+      const industryDropdown = q("lf-industry-dropdown");
+      if (industryInput && industryDropdown) {
+        const allCats = (window.RiskEngine?.INDUSTRY_CATEGORIES || []).map(c => c.label);
+        const prohibited = window.RiskEngine?.PROHIBITED_INDUSTRIES || [];
+        const restrictedList = window.RiskEngine?.RESTRICTED_INDUSTRIES || [];
+
+        const filterDropdown = (query) => {
+          const q2 = query.toLowerCase();
+          const opts = industryDropdown.querySelectorAll(".lf-industry-opt");
+          let anyVisible = false;
+          opts.forEach(opt => {
+            const match = !q2 || opt.dataset.value.toLowerCase().includes(q2);
+            opt.style.display = match ? "" : "none";
+            if (match) anyVisible = true;
+          });
+          industryDropdown.style.display = anyVisible ? "" : "none";
+        };
+
+        const updateIndustryWarning = (val) => {
+          const wrap = q("lf-industry-wrap");
+          if (!wrap) return;
+          // Remove old status
+          wrap.querySelectorAll(".lf-industry-status").forEach(el => el.remove());
+          industryInput.classList.remove("lf-industry-prohibited", "lf-industry-restricted");
+
+          const vl = val.toLowerCase();
+          const isP = prohibited.some(p => vl.includes(p));
+          const isR = !isP && restrictedList.some(r => vl.includes(r));
+
+          if (isP) {
+            industryInput.classList.add("lf-industry-prohibited");
+            const div = document.createElement("div");
+            div.className = "lf-industry-status lf-industry-status-red";
+            div.textContent = "🚫 Prohibited industry — this lead cannot proceed";
+            industryInput.insertAdjacentElement("afterend", div);
+          } else if (isR) {
+            industryInput.classList.add("lf-industry-restricted");
+            const div = document.createElement("div");
+            div.className = "lf-industry-status lf-industry-status-amber";
+            div.textContent = "⚠️ Restricted industry — additional review may be required";
+            industryInput.insertAdjacentElement("afterend", div);
+          }
+        };
+
+        industryInput.addEventListener("focus", () => filterDropdown(industryInput.value));
+        industryInput.addEventListener("input", (e) => {
+          filterDropdown(e.target.value);
+          this.lead.industry = e.target.value;
+          updateIndustryWarning(e.target.value);
+          this._updateQualificationWarning();
+          this._scheduleSave();
+        });
+        industryDropdown.querySelectorAll(".lf-industry-opt").forEach(opt => {
+          opt.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+            const chosen = opt.dataset.value;
+            industryInput.value = chosen;
+            this.lead.industry = chosen;
+            industryDropdown.style.display = "none";
+            updateIndustryWarning(chosen);
+            this._updateQualificationWarning();
+            this._scheduleSave();
+          });
+        });
+        document.addEventListener("click", (e) => {
+          if (!industryInput.contains(e.target) && !industryDropdown.contains(e.target)) {
+            industryDropdown.style.display = "none";
+          }
+        }, { capture: true });
+      }
         const evt = el.tagName === "SELECT" ? "change" : "input";
         el.addEventListener(evt, e => {
           this.lead[e.target.name] = e.target.value;
@@ -1320,32 +1488,41 @@
 
       if (this.currentStep !== 1) return;
 
-      const check = window.RiskEngine.checkQualification(this.lead.country, this.lead.industryDetail || this.lead.industry);
+      const country  = this.lead.country || "";
+      const industry = this.lead.industryDetail || this.lead.industry || "";
+      const check    = window.RiskEngine.checkQualification(country, industry);
 
       if (!check.allowed) {
-        // RED banner: PROHIBITED
         const banner = document.createElement("div");
         banner.className = "lf-qual-warning lf-qual-prohibited";
-        banner.innerHTML = `
-          <span class="lf-qual-icon">🚫</span>
-          <span class="lf-qual-text">This country/industry is prohibited. This lead cannot proceed.</span>
-        `;
-        const fieldsContainer = this.overlay.querySelector(".lf-fields");
-        if (fieldsContainer) {
-          fieldsContainer.parentElement.insertBefore(banner, fieldsContainer);
+        // Determine whether country or industry triggered the block
+        const countryCheck  = window.RiskEngine.checkQualification(country, "");
+        const industryCheck = window.RiskEngine.checkQualification("United Kingdom", industry);
+        let msg;
+        if (!countryCheck.allowed) {
+          msg = `🚫 We do not accept merchants operating from <strong>${country}</strong>. This lead cannot proceed.`;
+        } else if (!industryCheck.allowed) {
+          msg = `🚫 We do not accept merchants in the <strong>${industry}</strong> industry. This lead cannot proceed.`;
+        } else {
+          msg = `🚫 ${check.reason || "This combination is not supported. This lead cannot proceed."}`;
         }
+        banner.innerHTML = `<span class="lf-qual-icon">🚫</span><span class="lf-qual-text">${msg}</span>`;
+        const fieldsContainer = this.overlay.querySelector(".lf-fields");
+        if (fieldsContainer) fieldsContainer.parentElement.insertBefore(banner, fieldsContainer);
       } else if (check.restricted) {
-        // AMBER banner: RESTRICTED
         const banner = document.createElement("div");
         banner.className = "lf-qual-warning lf-qual-restricted";
-        banner.innerHTML = `
-          <span class="lf-qual-icon">⚠️</span>
-          <span class="lf-qual-text">Warning: This country/industry is restricted. Additional review may be required.</span>
-        `;
-        const fieldsContainer = this.overlay.querySelector(".lf-fields");
-        if (fieldsContainer) {
-          fieldsContainer.parentElement.insertBefore(banner, fieldsContainer);
+        // Differentiate restricted country vs restricted industry message
+        const countryRestrictedCheck = window.RiskEngine.checkQualification(country, "");
+        let msg;
+        if (countryRestrictedCheck.restricted) {
+          msg = `⚠️ <strong>${country}</strong> is a higher-risk jurisdiction. This lead can proceed but will require additional compliance review.`;
+        } else {
+          msg = `⚠️ ${check.reason || "This country/industry is restricted. Additional review may be required."}`;
         }
+        banner.innerHTML = `<span class="lf-qual-icon">⚠️</span><span class="lf-qual-text">${msg}</span>`;
+        const fieldsContainer = this.overlay.querySelector(".lf-fields");
+        if (fieldsContainer) fieldsContainer.parentElement.insertBefore(banner, fieldsContainer);
       }
     }
 
@@ -1370,119 +1547,213 @@
 
     // ── Handle CSV File Upload ──────────────────────────────
     async _handleCSVFile(file) {
-      this.lead.csvLoading = true;
+      this.lead.csvLoading    = true;
       this.lead.csvParseError = null;
       this._render();
 
       const reader = new FileReader();
       reader.onload = async (e) => {
-        const csv = e.target.result;
         try {
-          // Strip currency symbols helper
-          const stripCurrency = (val) => {
-            if (!val) return 0;
-            return parseFloat(String(val).replace(/[£$€,\s]/g, "")) || 0;
-          };
+          const result = this._parseCSV(e.target.result);
+          if (result.error) throw new Error(result.error);
 
-          const lines = csv.split("\n").filter(l => l.trim());
-          if (lines.length < 2) {
-            throw new Error("CSV must have at least a header row and one data row");
-          }
-
-          const header = lines[0].toLowerCase().split(",").map(h => h.trim());
-
-          // Flexible header matching
-          const findCol = (names) => {
-            for (const name of names) {
-              const idx = header.indexOf(name);
-              if (idx >= 0) return idx;
-            }
-            return -1;
-          };
-
-          const volIdx   = findCol(["monthlyvolume", "monthly_volume", "volume", "vol", "total_volume", "totalvolume"]);
-          const avgIdx   = findCol(["avgtransactionvalue", "avg_transaction_value", "avgtx", "avg_tx", "average_value", "averagevalue"]);
-          const cntIdx   = findCol(["transactioncount", "transaction_count", "count", "cnt", "transactions"]);
-          const amountIdx = findCol(["amount", "value", "total"]);
-
-          // Parse all data rows to compute aggregates
-          let totalVolume = 0;
-          let totalCount  = 0;
-          let totalAmount = 0;
-
-          for (let i = 1; i < lines.length; i++) {
-            const row = lines[i].split(",").map(v => v.trim());
-            if (row.length < 2 && !row[0]) continue; // skip empty rows
-
-            if (volIdx >= 0) totalVolume += stripCurrency(row[volIdx]);
-            if (cntIdx >= 0) totalCount  += stripCurrency(row[cntIdx]);
-            if (amountIdx >= 0) totalAmount += stripCurrency(row[amountIdx]);
-          }
-
-          // If explicit monthlyVolume column found, use first row value
-          if (volIdx >= 0) {
-            const firstRow = lines[1].split(",").map(v => v.trim());
-            this.lead.monthlyVolume = stripCurrency(firstRow[volIdx]);
-          } else if (totalAmount > 0) {
-            // Fallback: sum all amounts as total volume
-            this.lead.monthlyVolume = totalAmount;
-          }
-
-          if (avgIdx >= 0) {
-            const firstRow = lines[1].split(",").map(v => v.trim());
-            this.lead.avgTransactionValue = stripCurrency(firstRow[avgIdx]);
-          } else if (totalAmount > 0 && (lines.length - 1) > 0) {
-            // Derive avg from total / row count
-            this.lead.avgTransactionValue = Math.round((totalAmount / (lines.length - 1)) * 100) / 100;
-          }
-
-          if (cntIdx >= 0) {
-            this.lead.transactionCount = totalCount;
-          } else if (this.lead.monthlyVolume && this.lead.avgTransactionValue) {
-            this.lead.transactionCount = Math.round(this.lead.monthlyVolume / this.lead.avgTransactionValue);
-          }
-
-          this.lead.csvLoading = false;
-          this.lead.csvParseError = null;
+          this.lead.monthlyVolume       = result.monthlyVolume;
+          this.lead.avgTransactionValue = result.avgTx;
+          this.lead.transactionCount    = result.txCount;
+          this.lead.csvDateRange        = result.dateRange || "";
+          this.lead.csvLoading          = false;
+          this.lead.csvParseError       = null;
+          this.lead.volumeTab           = "csv";
           await this._saveNow();
           this._render();
         } catch (err) {
           console.error("CSV parse error:", err);
-          this.lead.csvLoading = false;
-          this.lead.csvParseError = err.message || "Could not parse CSV file. Please check the format.";
+          this.lead.csvLoading    = false;
+          this.lead.csvParseError = err.message || "Could not parse CSV. Please check the format.";
           this._render();
         }
+      };
+      reader.onerror = () => {
+        this.lead.csvLoading    = false;
+        this.lead.csvParseError = "Could not read the file. Please try again.";
+        this._render();
       };
       reader.readAsText(file);
     }
 
+    // ── RFC-4180 CSV parser + volume extractor ─────────────
+    _parseCSV(text) {
+      // ── 1. Parse CSV into rows/cols (handles quoted fields, CRLF) ──
+      const parseRows = (raw) => {
+        const rows = [];
+        let row = [], field = "", inQuote = false;
+        for (let i = 0; i < raw.length; i++) {
+          const ch  = raw[i];
+          const nxt = raw[i + 1];
+          if (inQuote) {
+            if (ch === '"' && nxt === '"') { field += '"'; i++; }
+            else if (ch === '"')           { inQuote = false; }
+            else                           { field += ch; }
+          } else {
+            if      (ch === '"')                   { inQuote = true; }
+            else if (ch === ',')                   { row.push(field.trim()); field = ""; }
+            else if (ch === '\n' || ch === '\r') {
+              if (ch === '\r' && nxt === '\n') i++;
+              row.push(field.trim()); field = "";
+              if (row.some(c => c !== "")) rows.push(row);
+              row = [];
+            } else { field += ch; }
+          }
+        }
+        if (field !== "" || row.length) { row.push(field.trim()); if (row.some(c => c !== "")) rows.push(row); }
+        return rows;
+      };
+
+      const rows = parseRows(text);
+      if (rows.length < 2) return { error: "CSV must have at least a header row and one data row." };
+
+      const header = rows[0].map(h => h.toLowerCase().replace(/[^a-z0-9_]/g, "_"));
+      const data   = rows.slice(1);
+
+      // ── 2. Strip currency/formatting from a value string ──
+      const num = (v) => {
+        if (v == null || v === "") return NaN;
+        return parseFloat(String(v).replace(/[£$€,\s\u00a0]/g, "").replace(/[()]/g, ""));
+      };
+
+      // ── 3. Flexible column finder ─────────────────────────
+      const col = (...names) => {
+        for (const n of names) {
+          const idx = header.findIndex(h => h === n || h.includes(n.replace(/ /g, "_")));
+          if (idx >= 0) return idx;
+        }
+        return -1;
+      };
+
+      // Stripe / generic column name variants
+      const amountIdx  = col("amount", "net", "converted_amount", "value", "gross", "total", "fee");
+      const typeIdx    = col("type", "transaction_type", "description");
+      const currIdx    = col("currency", "ccy");
+      const dateIdx    = col("created", "date", "created_date", "transaction_date", "created_utc");
+      const countIdx   = col("count", "transaction_count", "transactions", "cnt");
+      const volIdx     = col("monthly_volume", "monthlyvolume", "volume", "vol");
+      const avgIdx     = col("avg_transaction_value", "avgtransactionvalue", "avg_tx", "average_value");
+
+      // ── 4. Detect if this is a Stripe-style statement ─────
+      //    Stripe exports rows per-transaction; we need to sum GBP CHARGEs
+      const isStripeLike = typeIdx >= 0;
+
+      let totalVolume = 0;
+      let txCount     = 0;
+      let minDate     = null;
+      let maxDate     = null;
+
+      if (volIdx >= 0) {
+        // Pre-aggregated format: first row has the total
+        const firstRow = data[0];
+        totalVolume = num(firstRow[volIdx]) || 0;
+        txCount     = countIdx >= 0 ? (num(firstRow[countIdx]) || 0) : 0;
+        const avgVal = avgIdx >= 0 ? num(firstRow[avgIdx]) : NaN;
+        const avgTx  = !isNaN(avgVal) && avgVal > 0 ? avgVal
+                     : txCount > 0 ? Math.round((totalVolume / txCount) * 100) / 100 : 0;
+        return { monthlyVolume: totalVolume, avgTx, txCount, dateRange: "" };
+      }
+
+      if (amountIdx < 0) {
+        return { error: "Could not find an amount/value column in this CSV. Supported column names: amount, net, value, gross, total." };
+      }
+
+      // ── 5. Sum rows (filter to GBP charges for Stripe-like CSVs) ──
+      for (const row of data) {
+        const rawType = typeIdx >= 0 ? (row[typeIdx] || "").toLowerCase() : "";
+        const rawCurr = currIdx >= 0 ? (row[currIdx] || "").toLowerCase() : "";
+
+        // For Stripe statements: only count charge rows in GBP
+        if (isStripeLike) {
+          const isCharge    = rawType === "charge" || rawType === "payment" || rawType === "";
+          const isValidCurr = !rawCurr || rawCurr === "gbp" || rawCurr === "£";
+          if (!isCharge || !isValidCurr) continue;
+        }
+
+        const amt = num(row[amountIdx]);
+        if (isNaN(amt) || amt <= 0) continue;
+
+        totalVolume += amt;
+        txCount++;
+
+        if (dateIdx >= 0 && row[dateIdx]) {
+          const d = new Date(row[dateIdx]);
+          if (!isNaN(d)) {
+            if (!minDate || d < minDate) minDate = d;
+            if (!maxDate || d > maxDate) maxDate = d;
+          }
+        }
+      }
+
+      if (totalVolume <= 0 || txCount === 0) {
+        return { error: "No valid transaction amounts found. Check that the file contains GBP charge transactions." };
+      }
+
+      // ── 6. Extrapolate to monthly if date range spans multiple months ──
+      let monthlyVolume = totalVolume;
+      let dateRange     = "";
+      if (minDate && maxDate && minDate.getTime() !== maxDate.getTime()) {
+        const msRange  = maxDate - minDate;
+        const days     = Math.max(1, Math.round(msRange / 86400000));
+        if (days > 10) {
+          const months = days / 30.4375;
+          monthlyVolume = Math.round((totalVolume / months) * 100) / 100;
+          const fmt = d => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+          dateRange = `${fmt(minDate)} – ${fmt(maxDate)}`;
+        }
+      }
+
+      const avgTx = Math.round((totalVolume / txCount) * 100) / 100;
+
+      return {
+        monthlyVolume: Math.round(monthlyVolume * 100) / 100,
+        avgTx,
+        txCount,
+        dateRange,
+      };
+    }
+
     // ── Apply Pricing Override ──────────────────────────────
     _applyPricingOverride() {
-      const rateEl = document.getElementById("lf-override-rate");
+      const rateEl  = document.getElementById("lf-override-rate");
       const fixedEl = document.getElementById("lf-override-fixed");
       if (!rateEl || !fixedEl) return;
 
-      const newRate = parseFloat(rateEl.value) || this.pricingResult.rate;
-      const newFixed = parseFloat(fixedEl.value) || this.pricingResult.fixed_fee;
+      let newRate  = parseFloat(rateEl.value);
+      let newFixed = parseFloat(fixedEl.value);
 
-      // Validation
-      const minFixed = 10; // pence
-      const minRate = 0.76; // 0.46 cost + 0.30 margin
-      let warnings = [];
+      const MIN_FIXED = 10;   // pence — hard floor
+      const MIN_RATE  = 0.76; // 0.46 cost + 0.30 min margin
 
-      if (newFixed < minFixed) warnings.push(`Fixed fee must be at least ${minFixed}p`);
-      if (newRate < minRate) warnings.push(`Rate must be at least ${minRate}% (cost 0.46 + margin 0.30)`);
+      // Hard-clamp — never let values below minimums save
+      if (isNaN(newRate)  || newRate  < MIN_RATE)  newRate  = MIN_RATE;
+      if (isNaN(newFixed) || newFixed < MIN_FIXED)  newFixed = MIN_FIXED;
 
-      if (warnings.length > 0) {
-        alert("Pricing validation failed:\n" + warnings.join("\n"));
-        return;
-      }
+      // Sync inputs back to clamped values so UI matches
+      rateEl.value  = newRate;
+      fixedEl.value = newFixed;
 
-      // Apply
-      this.pricingResult.rate = newRate;
+      // Remove any old override feedback
+      const old = document.getElementById("lf-override-feedback");
+      if (old) old.remove();
+
+      // Show success feedback inline
+      const fb = document.createElement("div");
+      fb.id = "lf-override-feedback";
+      fb.style.cssText = "font-size:11px;color:#00916e;font-weight:600;margin-top:6px;";
+      fb.textContent = `✓ Pricing updated — Rate: ${newRate}%  Fixed: ${newFixed}p`;
+      document.getElementById("lf-apply-override")?.insertAdjacentElement("afterend", fb);
+      setTimeout(() => fb?.remove(), 3000);
+
+      this.pricingResult.rate      = newRate;
       this.pricingResult.fixed_fee = newFixed;
-      this.lead.processingRate = newRate;
-      this.lead.fixedFee = newFixed;
+      this.lead.processingRate     = newRate;
+      this.lead.fixedFee           = newFixed;
       this._scheduleSave();
       this._render();
     }
@@ -1527,10 +1798,28 @@
         }
       }
 
-      // Step 4: intlPercentage, businessAge, deliveryTime required
+      // Step 2: website URL format validation
+      if (this.currentStep === 2) {
+        if (this.lead.website && String(this.lead.website).trim()) {
+          const w = this.lead.website.trim();
+          const testUrl = /^https?:\/\//.test(w) ? w : "https://" + w;
+          if (!/^https?:\/\/[^\s@]+\.[^\s@]+$/.test(testUrl)) {
+            this._fieldError("lf-website", "Enter a valid website URL (e.g. https://example.com)");
+            return false;
+          }
+        }
+      }
+
+      // Step 4: intlPercentage required (must be a number 0-100), plus businessAge + deliveryTime
       if (this.currentStep === 4) {
-        if (this.lead.intlPercentage === undefined || this.lead.intlPercentage === null || this.lead.intlPercentage === "") {
-          this._fieldError("lf-intlPercentage", "International transactions percentage is required");
+        const intlVal = this.lead.intlPercentage;
+        if (intlVal === undefined || intlVal === null || String(intlVal).trim() === "") {
+          this._fieldError("lf-intlPercentage", "International transactions % is required — enter 0 if none");
+          return false;
+        }
+        const intlNum = parseFloat(intlVal);
+        if (isNaN(intlNum) || intlNum < 0 || intlNum > 100) {
+          this._fieldError("lf-intlPercentage", "Enter a percentage between 0 and 100");
           return false;
         }
         if (!this.lead.businessAge || !String(this.lead.businessAge).trim()) {
