@@ -124,8 +124,10 @@
       title: "Current Setup",
       subtitle: "Who do they process with today?",
       fields: [
-        { name: "currentProvider", label: "Current Payment Provider", type: "text", placeholder: "e.g. Stripe, Worldpay, PayPal, Adyen..." },
-        { name: "painPoints",      label: "Pain Points / Reason for Switching — optional", type: "textarea", placeholder: "What issues are they facing with their current provider?" },
+        { name: "currentProvider",     label: "Current Payment Provider", type: "text", placeholder: "e.g. Stripe, Worldpay, PayPal, Adyen..." },
+        { name: "currentMonthlyFees",  label: "Current Monthly Processing Fees (£) — optional", type: "number", placeholder: "e.g. 850", min: 0,
+          hint: "If known, enter what the merchant pays per month. Used to calculate savings." },
+        { name: "painPoints",          label: "Pain Points / Reason for Switching — optional", type: "textarea", placeholder: "What issues are they facing with their current provider?" },
       ],
     },
     {
@@ -562,6 +564,7 @@
                     ${row("Avg Transaction",   avgTx > 0 ? fmtCurrency(avgTx) : "")}
                     ${row("Est. Transactions", txCnt > 0 ? txCnt.toLocaleString("en-GB") + " / mo" : "", { hideEmpty: true })}
                     ${row("Current Provider",  lead.currentProvider)}
+                    ${row("Current Monthly Fees", lead.currentMonthlyFees ? "£" + parseFloat(lead.currentMonthlyFees).toLocaleString("en-GB", {minimumFractionDigits:2,maximumFractionDigits:2}) : null, { hideEmpty: true })}
                     ${row("Platform",          fmtPlatform(lead.platform))}
                     ${row("Accounting",        lead.accountingSoftware, { hideEmpty: true })}
                     ${row("Integrations",      lead.integrations, { hideEmpty: true })}
@@ -939,6 +942,7 @@
         <div class="lf-field" data-field="${f.name}">
           <label class="lf-lbl" for="lf-${f.name}">${f.label}${req}</label>
           ${ctrl}
+          ${f.hint ? `<div class="lf-field-hint-text">${f.hint}</div>` : ""}
         </div>
       `;
     }
@@ -992,20 +996,36 @@
       // Enforce fixed fee floor
       if (p.fixed_fee < 10) p.fixed_fee = 10;
 
+      // ── Current fee data — derive from all possible sources ──
+      // Priority: lead.currentMonthlyFees (Step 5 field)
+      //         → lead.pricing.currentMonthlyFees (stored from previous calculation)
+      //         → p.current_rate already set (from API or previous derivation)
+      const curFeesRaw = parseFloat(this.lead.currentMonthlyFees)
+                      || parseFloat(this.lead.pricing?.currentMonthlyFees)
+                      || 0;
+
+      // Derive current effective rate from fees if we have it; otherwise use API value
+      let curRate = null;
+      if (curFeesRaw > 0 && vol > 0) {
+        curRate = Math.round((curFeesRaw / vol * 100) * 100) / 100;
+        // Also keep pricingResult in sync
+        p.current_rate = curRate;
+      } else if (p.current_rate && p.current_rate > 0) {
+        curRate = parseFloat(p.current_rate);
+      }
+
+      const curPaying = curFeesRaw > 0 ? curFeesRaw
+                      : (curRate && vol > 0 ? (curRate / 100) * vol : null);
+
       // Store sim state on pricingResult for re-renders
       const simRate  = p._simRate  !== undefined ? p._simRate  : p.rate;
       const simFixed = p._simFixed !== undefined ? p._simFixed : p.fixed_fee;
 
       // Cost calculations using simulator values
-      const simRev       = vol > 0 ? ((vol * simRate / 100) + (txCnt * simFixed / 100)) : 0;
+      const simRev        = vol > 0 ? ((vol * simRate / 100) + (txCnt * simFixed / 100)) : 0;
       const effectiveRate = vol > 0 ? ((simRev / vol) * 100).toFixed(2) : null;
       const estMrg        = Math.max(0, simRate - 0.46).toFixed(2);
-
-      // Current provider
-      const curRate     = p.current_rate || null;
-      const curFees     = parseFloat(this.lead.currentMonthlyFees) || 0;
-      const curPaying   = curFees > 0 ? curFees : (curRate && vol > 0 ? (curRate / 100) * vol : null);
-      const mSave       = curPaying !== null ? Math.max(0, curPaying - simRev) : 0;
+      const mSave         = curPaying !== null ? Math.max(0, curPaying - simRev) : 0;
 
       // Risk badges
       const rBadge = r.riskLevel === "low" ? "lf-badge-green" : r.riskLevel === "medium" ? "lf-badge-amber" : "lf-badge-red";
@@ -1466,9 +1486,12 @@
         const rev    = vol > 0 ? ((vol * sr / 100) + (txCnt * sf / 100)) : 0;
         const effR   = vol > 0 ? ((rev / vol) * 100).toFixed(2) + "%" : "—";
         const mrg    = Math.max(0, sr - 0.46).toFixed(2);
-        const curFees = parseFloat(this.lead.currentMonthlyFees) || 0;
-        const curRate = this.pricingResult.current_rate;
-        const curPay  = curFees > 0 ? curFees : (curRate && vol > 0 ? (curRate / 100) * vol : null);
+        const curFeesRaw = parseFloat(this.lead.currentMonthlyFees)
+                         || parseFloat(this.lead.pricing?.currentMonthlyFees)
+                         || 0;
+        const curRate = this.pricingResult.current_rate || null;
+        const curPay  = curFeesRaw > 0 ? curFeesRaw
+                      : (curRate && vol > 0 ? (curRate / 100) * vol : null);
         const save    = curPay !== null ? Math.max(0, curPay - rev) : 0;
 
         const fmt2 = (n) => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -2370,9 +2393,15 @@
             <p>Calculating pricing &amp; risk assessment…</p></div>
         </div>`;
 
-      const vol   = parseFloat(this.lead.monthlyVolume)       || 0;
-      const avgTx = parseFloat(this.lead.avgTransactionValue) || 55;
-      const txCnt = avgTx > 0 ? Math.round(vol / avgTx) : Math.round(vol / 55);
+      const vol        = parseFloat(this.lead.monthlyVolume)       || 0;
+      const avgTx      = parseFloat(this.lead.avgTransactionValue) || 55;
+      const txCnt      = avgTx > 0 ? Math.round(vol / avgTx) : Math.round(vol / 55);
+      const curFees    = parseFloat(this.lead.currentMonthlyFees)  || 0;
+
+      // Derive current effective rate locally (used as fallback regardless of API response)
+      const derivedCurRate = (curFees > 0 && vol > 0)
+        ? Math.round((curFees / vol * 100) * 100) / 100
+        : null;
 
       try {
         const resp = await fetch("/api/calculate_quote", {
@@ -2383,28 +2412,42 @@
             merchant_email:    this.lead.email        || "admin@mintedpay.com",
             monthly_volume:    vol,
             transaction_count: txCnt,
-            current_fees:      0,
+            current_fees:      curFees,   // ← pass real current fees
             debit_frac:        0.70,
           }),
         });
         const data = await resp.json();
         if (data.success) {
           this.pricingResult = data;
-          this.lead.quote_id = data.quote_id;
+          // Prefer locally derived current_rate (more accurate) over API value
+          // API calculates current_rate from current_fees/vol too, but we make sure
+          // it's always set here for consistency
+          if (derivedCurRate !== null) {
+            this.pricingResult.current_rate = derivedCurRate;
+          }
+          this.lead.quote_id       = data.quote_id;
           this.lead.processingRate = data.rate;
-          this.lead.fixedFee = data.fixed_fee;
-          this.lead.pricing  = {
-            rate:                data.rate,
-            fixedFee:            data.fixed_fee,
+          this.lead.fixedFee       = data.fixed_fee;
+          this.lead.pricing = {
+            rate:                 data.rate,
+            fixedFee:             data.fixed_fee,
+            currentRate:          derivedCurRate,
+            currentMonthlyFees:   curFees || null,
             estimatedMonthlyCost: ((vol * data.rate / 100) + (txCnt * data.fixed_fee / 100)).toFixed(2),
             margin:               (data.rate - 0.46).toFixed(2),
           };
         } else {
           this.pricingResult = { rate: 0, fixed_fee: 0, success: false, _error: data.error };
+          if (derivedCurRate !== null) {
+            this.pricingResult.current_rate = derivedCurRate;
+          }
         }
       } catch (e) {
         console.error("Pricing error:", e);
         this.pricingResult = { rate: 0, fixed_fee: 0, success: false, _error: String(e) };
+        if (derivedCurRate !== null) {
+          this.pricingResult.current_rate = derivedCurRate;
+        }
       }
 
       // Risk evaluation
