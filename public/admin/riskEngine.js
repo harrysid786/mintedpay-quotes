@@ -88,9 +88,12 @@
    * @param {string} industry
    * @returns {{ allowed: boolean, restricted?: boolean, reason?: string }}
    */
-  function checkQualification(country, industry) {
-    const c = (country  || "").trim().toLowerCase();
-    const i = (industry || "").trim().toLowerCase();
+  function checkQualification(country, industry, industryDetail) {
+    const c = (country       || "").trim().toLowerCase();
+    // Combine industryDetail + industry so both are checked
+    const iBase   = (industry       || "").trim().toLowerCase();
+    const iDetail = (industryDetail || "").trim().toLowerCase();
+    const i = iDetail ? iDetail + " " + iBase : iBase;
 
     // Check prohibited countries (hard reject)
     for (const pc of PROHIBITED_COUNTRIES) {
@@ -113,12 +116,12 @@
       }
     }
 
-    // Check prohibited industries (hard reject)
+    // Check prohibited industries (hard reject) — checked against combined string
     for (const pi of PROHIBITED_INDUSTRIES) {
       if (matchesKeyword(i, pi)) {
         return {
           allowed: false,
-          reason: `The ${industry} industry is not supported by MintedPay at this time.`,
+          reason: `The ${industry || industryDetail} industry is not supported by MintedPay at this time.`,
         };
       }
     }
@@ -127,68 +130,106 @@
   }
 
   /**
-   * Full risk evaluation — call on Step 9 (output).
+   * Full risk evaluation — called at Step 10 after all steps complete.
    * @param {Object} lead  – full lead object
    * @returns {{ riskLevel: "low"|"medium"|"high", decision: "accept"|"review"|"reject" }}
    */
   function evaluateRisk(lead) {
     const c = (lead.country  || "").toLowerCase();
-    const i = (lead.industry || "").toLowerCase();
 
-    // Hard-reject prohibited entries
+    // ── Industry: combine industry + industryDetail for matching ────────────
+    // industryDetail is a free-text refinement field (e.g. "Medical Cannabis Retail").
+    // We check both so that prohibited/restricted terms entered in either field are caught.
+    const industryBase   = (lead.industry       || "").toLowerCase();
+    const industryDetail = (lead.industryDetail || "").toLowerCase();
+    // Combined string used for all industry matching — checked as a whole
+    const i = industryDetail ? industryDetail + " " + industryBase : industryBase;
+
+    // ── HARD REJECTS — bypass scoring, return immediately ───────────────────
+    // Prohibited country → always reject
     for (const pc of PROHIBITED_COUNTRIES) {
-      if (c.includes(pc.toLowerCase())) return { riskLevel: "high", decision: "reject" };
+      if (c.includes(pc.toLowerCase())) {
+        return { riskLevel: "high", decision: "reject" };
+      }
     }
+    // Prohibited industry (checked against combined industry string) → always reject
     for (const pi of PROHIBITED_INDUSTRIES) {
-      if (matchesKeyword(i, pi)) return { riskLevel: "high", decision: "reject" };
+      if (matchesKeyword(i, pi)) {
+        return { riskLevel: "high", decision: "reject" };
+      }
     }
 
-    // ── Scoring ──────────────────────────────────────────────
+    // ── POINT SCORING ────────────────────────────────────────────────────────
     let score = 0;
 
-    // Restricted industry — word-based to avoid false positives
+    // ── Industry: restricted → +3 ────────────────────────────────────────────
+    // Checked against combined industry string (industryDetail + industry)
     const isRestricted = RESTRICTED_INDUSTRIES.some(ri => matchesKeyword(i, ri));
     if (isRestricted) score += 3;
 
-    // Restricted country
+    // ── Country: restricted → +2 ─────────────────────────────────────────────
     const isRestrictedCountry = RESTRICTED_COUNTRIES.some(rc => c.includes(rc.toLowerCase()));
     if (isRestrictedCountry) score += 2;
 
-    // International transaction percentage
+    // ── International transactions % ─────────────────────────────────────────
+    // >70% = high cross-border exposure → +3
+    // >40% = elevated cross-border exposure → +1
     const intl = parseFloat(lead.intlPercentage) || 0;
     if      (intl > 70) score += 3;
     else if (intl > 40) score += 1;
 
-    // Chargeback rate
+    // ── Chargeback rate % ────────────────────────────────────────────────────
+    // >2.0% = critical (above card scheme thresholds) → +3
+    // >1.0% = elevated → +2
+    // >0.5% = marginal → +1
     const cb = parseFloat(lead.chargebackRate) || 0;
     if      (cb > 2.0) score += 3;
     else if (cb > 1.0) score += 2;
     else if (cb > 0.5) score += 1;
 
-    // Refund rate
+    // ── Refund rate % ────────────────────────────────────────────────────────
+    // >10% = high refund risk → +2
+    // >5%  = moderate refund risk → +1
     const refund = parseFloat(lead.refundRate) || 0;
     if      (refund > 10) score += 2;
     else if (refund >  5) score += 1;
 
-    // Holds customer funds
+    // ── Holds customer funds ─────────────────────────────────────────────────
+    // Funds-holding increases settlement risk → +2
     if (lead.holdsFunds === "yes") score += 2;
 
-    // Subscription model
+    // ── Subscription / recurring billing ─────────────────────────────────────
+    // Subscription models have higher chargeback potential → +1
     if (lead.paymentTypes === "subscription" || lead.paymentTypes === "both") score += 1;
 
-    // High volume adds marginal risk
+    // ── High monthly volume ──────────────────────────────────────────────────
+    // >£500k/mo = large exposure → +1
     const vol = parseFloat(lead.monthlyVolume) || 0;
     if (vol > 500_000) score += 1;
 
-    // Business age
-    const businessAge = parseFloat(lead.businessAge) || 0;
-    if      (businessAge < 6)  score += 2;
-    else if (businessAge < 12) score += 1;
+    // ── Business age ─────────────────────────────────────────────────────────
+    // FIX: businessAge is stored as an enum string, NOT a number.
+    // Do NOT use parseFloat — map each value explicitly.
+    // less_than_6  → startup, highest risk → +2
+    // 6_to_12      → early stage → +1
+    // 1_to_2       → established enough → +0
+    // 2_plus       → established → +0
+    const businessAge = lead.businessAge || "";
+    if      (businessAge === "less_than_6") score += 2;
+    else if (businessAge === "6_to_12")     score += 1;
+    // "1_to_2" and "2_plus" → no points added
 
-    // Delivery time
+    // ── Delivery time ────────────────────────────────────────────────────────
+    // Delayed delivery (days/weeks after payment) = higher chargeback risk → +1
     if (lead.deliveryTime === "delayed") score += 1;
 
-    // ── Map score → risk level / decision ────────────────────
+    // ── MAP SCORE → RISK LEVEL AND DECISION ──────────────────────────────────
+    // score 0–2   → LOW    → ACCEPT
+    // score 3–5   → MEDIUM → ACCEPT (or REVIEW if restricted industry)
+    // score 6+    → HIGH   → REJECT (or REVIEW if restricted industry)
+    //
+    // Restricted industries are never auto-rejected by score — they go to REVIEW.
+    // Only prohibited industries and countries trigger an automatic REJECT.
     let riskLevel, decision;
 
     if (score >= 6) {
