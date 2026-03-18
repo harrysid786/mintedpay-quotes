@@ -830,22 +830,29 @@
             <div class="lf-csv-success-top">
               <span class="lf-csv-success-icon">✓</span>
               <div class="lf-csv-success-body">
-                <div class="lf-csv-success-title">${fileName || "CSV uploaded successfully"}</div>
+                <div class="lf-csv-success-title">
+                  ${fileName || "Statement analysed"}
+                  ${this.lead.csvTierLabel ? `<span style="display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;margin-left:8px;vertical-align:middle">${this.lead.csvTierLabel}</span>` : ""}
+                  ${this.lead.csvProcessor ? `<span style="display:inline-block;font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;background:var(--g6);color:var(--g3);margin-left:4px;vertical-align:middle">${this.lead.csvProcessor}</span>` : ""}
+                </div>
                 <div class="lf-csv-success-vals">
                   <span>Volume: <strong>£${parseFloat(this.lead.monthlyVolume).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong></span>
-                  ${this.lead.avgTransactionValue ? `<span>Avg Tx: <strong>£${parseFloat(this.lead.avgTransactionValue).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></span>` : ""}
                   ${this.lead.transactionCount ? `<span>${Number(this.lead.transactionCount).toLocaleString("en-GB")} transactions</span>` : ""}
+                  ${this.lead.avgTransactionValue ? `<span>Avg: <strong>£${parseFloat(this.lead.avgTransactionValue).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></span>` : ""}
+                  ${this.lead.currentMonthlyFees ? `<span>Current fees: <strong>£${parseFloat(this.lead.currentMonthlyFees).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong></span>` : ""}
+                  ${this.lead.csvCurrentRate ? `<span>Current rate: <strong style="color:${parseFloat(this.lead.csvCurrentRate)<1?"var(--green)":parseFloat(this.lead.csvCurrentRate)<2.2?"var(--amber)":"var(--red)"}">${parseFloat(this.lead.csvCurrentRate).toFixed(2)}%</strong></span>` : ""}
+                  ${this.lead.csvDebitFrac ? `<span>${Math.round(parseFloat(this.lead.csvDebitFrac)*100)}% debit / ${Math.round((1-parseFloat(this.lead.csvDebitFrac))*100)}% credit</span>` : ""}
                 </div>
-                ${this.lead.csvDateRange ? `<div class="lf-csv-date-range">📅 ${this.lead.csvDateRange} — extrapolated to monthly</div>` : ""}
               </div>
-              <button class="lf-csv-clear-btn" id="lf-csv-clear">Replace file</button>
+              <button class="lf-csv-clear-btn" id="lf-csv-clear">Replace</button>
             </div>
           </div>` : `
 
           <label class="lf-dropzone" id="lf-csv-dropzone" for="lf-csv-file-input">
             <span class="lf-dz-icon">📂</span>
-            <span class="lf-dz-title">Drag & drop your CSV here, or <u>click to browse</u></span>
-            <span class="lf-dz-hint">Supports: Amount, Volume, Count columns · Stripe exports welcome</span>
+            <span class="lf-dz-title">Drag & drop your statement here, or <u>click to browse</u></span>
+            <span class="lf-dz-hint">Stripe · Worldpay · Barclaycard · any card processor export</span>
+            <span class="lf-dz-hint" style="margin-top:2px;font-size:10px">Extracts: volume · fees · effective rate · card mix · debit fraction</span>
           </label>
           <input type="file" id="lf-csv-file-input" accept=".csv"
                  style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;">
@@ -1017,19 +1024,23 @@
       // Enforce fixed fee floor
       if (p.fixed_fee < 10) p.fixed_fee = 10;
 
-      // ── Current fee data — derive from all possible sources ──
-      // Priority: lead.currentMonthlyFees (Step 5 field)
-      //         → lead.pricing.currentMonthlyFees (stored from previous calculation)
-      //         → p.current_rate already set (from API or previous derivation)
-      const curFeesRaw = parseFloat(this.lead.currentMonthlyFees)
-                      || parseFloat(this.lead.pricing?.currentMonthlyFees)
-                      || 0;
+      // ── Current fee data — all sources ───────────────────────────────────
+      const rawFeeManual   = parseFloat(this.lead.currentMonthlyFees)           || 0;
+      const rawFeePricing  = parseFloat(this.lead.pricing?.currentMonthlyFees)  || 0;
+      const csvCurRate     = parseFloat(this.lead.csvCurrentRate)               || 0;
 
-      // Derive current effective rate from fees if we have it; otherwise use API value
+      let curFeesRaw = 0;
+      if (rawFeeManual > 0)                    curFeesRaw = rawFeeManual;
+      else if (rawFeePricing > 0)              curFeesRaw = rawFeePricing;
+      else if (csvCurRate > 0 && vol > 0)      curFeesRaw = (csvCurRate / 100) * vol;
+
+      // Derive current effective rate
       let curRate = null;
       if (curFeesRaw > 0 && vol > 0) {
         curRate = Math.round((curFeesRaw / vol * 100) * 100) / 100;
-        // Also keep pricingResult in sync
+        p.current_rate = curRate;
+      } else if (csvCurRate > 0) {
+        curRate = Math.round(csvCurRate * 100) / 100;
         p.current_rate = curRate;
       } else if (p.current_rate && p.current_rate > 0) {
         curRate = parseFloat(p.current_rate);
@@ -1507,12 +1518,15 @@
         const rev    = vol > 0 ? ((vol * sr / 100) + (txCnt * sf / 100)) : 0;
         const effR   = vol > 0 ? ((rev / vol) * 100).toFixed(2) + "%" : "—";
         const mrg    = Math.max(0, sr - 0.46).toFixed(2);
-        const curFeesRaw = parseFloat(this.lead.currentMonthlyFees)
-                         || parseFloat(this.lead.pricing?.currentMonthlyFees)
-                         || 0;
-        const curRate = this.pricingResult.current_rate || null;
-        const curPay  = curFeesRaw > 0 ? curFeesRaw
-                      : (curRate && vol > 0 ? (curRate / 100) * vol : null);
+        const rawFeeManual  = parseFloat(this.lead.currentMonthlyFees)          || 0;
+        const rawFeePricing = parseFloat(this.lead.pricing?.currentMonthlyFees) || 0;
+        const csvCurRateSim = parseFloat(this.lead.csvCurrentRate)              || 0;
+        let simCurFees = 0;
+        if (rawFeeManual > 0)               simCurFees = rawFeeManual;
+        else if (rawFeePricing > 0)         simCurFees = rawFeePricing;
+        else if (csvCurRateSim > 0 && vol > 0) simCurFees = (csvCurRateSim / 100) * vol;
+        const curRate = this.pricingResult.current_rate || (simCurFees > 0 && vol > 0 ? (simCurFees / vol * 100) : null);
+        const curPay  = simCurFees > 0 ? simCurFees : (curRate && vol > 0 ? (curRate / 100) * vol : null);
         const save    = curPay !== null ? Math.max(0, curPay - rev) : 0;
 
         const fmt2 = (n) => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1874,10 +1888,18 @@
           this.lead.monthlyVolume       = "";
           this.lead.avgTransactionValue = "";
           this.lead.transactionCount    = "";
+          this.lead.currentMonthlyFees  = "";
+          this.lead.csvDebitFrac        = "";
+          this.lead.csvCurrentRate      = "";
+          this.lead.csvCardMix          = "";
+          this.lead.csvTierLabel        = "";
+          this.lead.csvProcessor        = "";
           this.lead.csvFileName         = "";
           this.lead.csvDateRange        = "";
           this.lead.csvParseError       = null;
           this.lead.volumeTab           = "csv";
+          // Clear cached result so Step 10 recalculates with fresh data
+          this.pricingResult            = null;
           this._render();
         });
       }
@@ -1951,6 +1973,10 @@
     }
 
     // ── Handle CSV File Upload ──────────────────────────────
+    // ── Handle CSV File Upload ─────────────────────────────────────────────
+    // Full statement analysis — same logic as the public quote builder.
+    // Extracts: volume, fees, current effective rate, card mix, debit fraction,
+    // merchant tier, processor detection. All values persisted onto lead.
     async _handleCSVFile(file) {
       this.lead.csvLoading    = true;
       this.lead.csvParseError = null;
@@ -1958,17 +1984,29 @@
 
       try {
         const text   = await file.text();
-        const result = this._parseCSV(text);
+        const result = this._analyseStatement(text, file.name);
+        const s      = result.summary;
 
-        this.lead.monthlyVolume       = result.summary.totalVolume;
-        this.lead.avgTransactionValue = result.summary.averageTransaction > 0
-                                          ? result.summary.averageTransaction : "";
-        this.lead.transactionCount    = result.summary.transactionCount || "";
+        // ── Persist ALL statement-derived fields ──────────────────────────
+        this.lead.monthlyVolume       = s.vol;
+        this.lead.avgTransactionValue = s.cnt > 0 ? Number((s.vol / s.cnt).toFixed(2)) : "";
+        this.lead.transactionCount    = s.cnt || "";
+        // currentMonthlyFees → feeds "Currently Paying" and pricing engine
+        this.lead.currentMonthlyFees  = s.totalFees > 0 ? Number(s.totalFees.toFixed(2)) : "";
+        // csvDebitFrac → actual card mix, replaces hardcoded 0.70 in pricing call
+        this.lead.csvDebitFrac        = s.debitFrac;
+        // csvCurrentRate → pre-calculated effective rate for Step 10 display fallback
+        this.lead.csvCurrentRate      = s.currentRate > 0 ? Number(s.currentRate.toFixed(4)) : "";
+        this.lead.csvCardMix          = s.cardMix ? JSON.stringify(s.cardMix) : "";
+        this.lead.csvTierLabel        = s.tierLabel || "";
+        this.lead.csvProcessor        = s.processor || "";
         this.lead.csvFileName         = file.name;
-        this.lead.csvDateRange        = "";
         this.lead.csvLoading          = false;
         this.lead.csvParseError       = null;
         this.lead.volumeTab           = "csv";
+        // Clear stale pricingResult so Step 10 recalculates with fresh data
+        this.pricingResult            = null;
+
         await this._saveNow();
         this._render();
       } catch (err) {
@@ -1979,171 +2017,155 @@
       }
     }
 
-    // ── CSV parser (robust, RFC-4180, handles Stripe + generic formats) ──
-    _parseCSV(csvText) {
+    // ── Statement analyser — identical logic to processCSV() in public quote builder ──
+    _analyseStatement(csvText, fileName) {
       if (!csvText || !String(csvText).trim()) {
         throw new Error("CSV file is empty");
       }
 
-      // ── Helpers ────────────────────────────────────────────
-      const normalizeHeader = (str = "") =>
-        String(str).trim().toLowerCase().replace(/[\s_\-./()]+/g, "");
-
-      const parseLooseNumber = (value) => {
-        if (value === null || value === undefined) return null;
-        const raw = String(value).trim();
-        if (!raw) return null;
-        let cleaned = raw.replace(/[^\d,.\-]/g, "");
-        const hasComma = cleaned.includes(",");
-        const hasDot   = cleaned.includes(".");
-        if (hasComma && hasDot) {
-          if (cleaned.lastIndexOf(",") > cleaned.lastIndexOf(".")) {
-            cleaned = cleaned.replace(/\./g, "").replace(",", ".");
-          } else {
-            cleaned = cleaned.replace(/,/g, "");
-          }
-        } else if (hasComma && !hasDot) {
-          const parts = cleaned.split(",");
-          if (parts.length === 2 && parts[1].length <= 2) {
-            cleaned = cleaned.replace(",", ".");
-          } else {
-            cleaned = cleaned.replace(/,/g, "");
-          }
-        }
-        const num = Number(cleaned);
-        return Number.isFinite(num) ? num : null;
-      };
-
+      // RFC-4180 line splitter
       const splitLine = (line) => {
-        const out = [];
-        let cur = "", inQ = false;
+        const out = []; let cur = "", inQ = false;
         for (let i = 0; i < line.length; i++) {
           const ch = line[i], nx = line[i + 1];
           if (ch === '"') {
-            if (inQ && nx === '"') { cur += '"'; i++; }
-            else inQ = !inQ;
-          } else if (ch === "," && !inQ) {
-            out.push(cur); cur = "";
-          } else {
-            cur += ch;
-          }
+            if (inQ && nx === '"') { cur += '"'; i++; } else inQ = !inQ;
+          } else if (ch === "," && !inQ) { out.push(cur); cur = ""; }
+          else { cur += ch; }
         }
         out.push(cur);
         return out.map(v => v.trim());
       };
 
-      // ── Parse lines ────────────────────────────────────────
       const lines = String(csvText)
         .replace(/\r\n/g, "\n").replace(/\r/g, "\n")
         .split("\n").filter(l => l.trim().length > 0);
 
-      if (lines.length < 2) {
-        throw new Error("CSV must include a header row and at least one data row");
-      }
+      if (lines.length < 2) throw new Error("CSV must have a header row and at least one data row");
 
-      const rawHeaders = splitLine(lines[0]);
-      const headers    = rawHeaders.map(normalizeHeader);
+      const rawHeaders   = splitLine(lines[0]);
+      const lowerHeaders = rawHeaders.map(h => h.toLowerCase());
 
-      // ── Column index lookup ────────────────────────────────
-      const findCol = (aliases) =>
-        headers.findIndex(h => aliases.includes(h));
-
-      const idxAmount = findCol([
-        "amount","transactionamount","grossamount","paymentamount","value",
-        "net","convertedamount","total","gross",
-      ]);
-      const idxVolume = findCol([
-        "volume","monthlyvolume","grossvolume","processedvolume","totalvolume",
-      ]);
-      const idxCount  = findCol([
-        "count","transactioncount","transactions","txncount","numberoftransactions",
-      ]);
-      const idxCurr   = findCol(["currency","curr","ccy"]);
-      const idxType   = findCol(["type","transactiontype","description"]);
-
-      if (idxAmount === -1 && idxVolume === -1 && idxCount === -1) {
-        throw new Error(
-          "CSV must contain at least one usable column: Amount, Volume, or Count"
-        );
-      }
-
-      // ── Parse data rows ────────────────────────────────────
+      // Convert to row objects (same as Papa.parse header:true)
       const rows = lines.slice(1).map(l => {
         const cols = splitLine(l);
-        return {
-          amount:   idxAmount > -1 ? parseLooseNumber(cols[idxAmount]) : null,
-          volume:   idxVolume > -1 ? parseLooseNumber(cols[idxVolume]) : null,
-          count:    idxCount  > -1 ? parseLooseNumber(cols[idxCount])  : null,
-          currency: idxCurr   > -1 ? String(cols[idxCurr] || "").trim() : "",
-          type:     idxType   > -1 ? String(cols[idxType]  || "").trim().toLowerCase() : "",
-        };
-      });
+        const obj  = {};
+        rawHeaders.forEach((h, i) => { obj[h] = (cols[i] || "").trim(); });
+        return obj;
+      }).filter(r => Object.values(r).some(v => v !== ""));
 
-      // ── Detect Stripe-style (has type column) → filter charges only ──
-      const isStripeLike = idxType > -1;
+      if (!rows.length) throw new Error("No data rows found in CSV");
 
-      const validAmountRows = rows.filter(r => {
-        if (r.amount === null || r.amount <= 0) return false;
-        if (isStripeLike) {
-          const isCharge = r.type === "charge" || r.type === "payment" || r.type === "";
-          const isGBP    = !r.currency || r.currency.toLowerCase() === "gbp";
-          if (!isCharge || !isGBP) return false;
-        }
-        return true;
-      });
-
-      const validVolumeRows = rows.filter(r => r.volume !== null && r.volume > 0);
-      const validCountRows  = rows.filter(r => r.count  !== null && r.count  > 0);
-
-      let totalVolume = 0, transactionCount = 0, averageTransaction = 0;
-
-      // Priority 1 — sum per-row amount values
-      if (validAmountRows.length > 0) {
-        totalVolume      = validAmountRows.reduce((s, r) => s + r.amount, 0);
-        transactionCount = validCountRows.length > 0
-          ? validCountRows.reduce((s, r) => s + r.count, 0)
-          : validAmountRows.length;
-      }
-      // Priority 2 — use aggregate volume column
-      else if (validVolumeRows.length > 0) {
-        totalVolume      = validVolumeRows.reduce((s, r) => s + r.volume, 0);
-        transactionCount = validCountRows.length > 0
-          ? validCountRows.reduce((s, r) => s + r.count, 0)
-          : 0;
-      }
-
-      // Fallback: if Stripe-like but nothing matched, try all positive amounts
-      if (totalVolume <= 0 && isStripeLike) {
-        const fallback = rows.filter(r => r.amount !== null && r.amount > 0);
-        if (fallback.length > 0) {
-          totalVolume      = fallback.reduce((s, r) => s + r.amount, 0);
-          transactionCount = fallback.length;
+      // ── Column detection — same HINTS as public quote builder ─────────────
+      const HINTS = {
+        amount:   ["amount","gross","total","value","sale","payment","charge","net"],
+        fee:      ["fee","fees","processing","commission","cost","charge_amount"],
+        cardType: ["card","brand","scheme","network","card_brand"],
+        rowType:  ["type","transaction_type","entry_type","record_type"],
+      };
+      const colMap = {};
+      for (const [field, hints] of Object.entries(HINTS)) {
+        colMap[field] = "";
+        for (const hint of hints) {
+          const match = rawHeaders.find((_, i) => lowerHeaders[i].includes(hint));
+          if (match) { colMap[field] = match; break; }
         }
       }
 
-      if (!totalVolume || totalVolume <= 0) {
-        throw new Error("No valid amounts found in CSV. Check the file contains positive numeric values.");
+      if (!colMap.amount) {
+        throw new Error("Could not find an amount column. Supported names: amount, gross, total, value, sale, payment, charge, net");
       }
 
-      if (transactionCount > 0) {
-        averageTransaction = totalVolume / transactionCount;
-      } else if (validAmountRows.length > 0) {
-        averageTransaction = totalVolume / validAmountRows.length;
-        transactionCount   = validAmountRows.length;
+      // Strip currency symbols — same as pAmt() in public quote builder
+      const pAmt = (v) => {
+        const n = parseFloat(String(v || "").replace(/[£$€,\s]/g, ""));
+        return isNaN(n) || n <= 0 ? null : n;
+      };
+
+      // Card type classifier — identical to classCard() in public quote builder
+      const classCard = (s) => {
+        s = (s || "").toLowerCase();
+        if (s.includes("amex") || s.includes("american express")) return "amex";
+        if (s.includes("visa") && (s.includes("debit") || s.includes(" db "))) return "visa_debit";
+        if (s.includes("visa"))   return "visa_credit";
+        if ((s.includes("master") || s.includes("mc")) && s.includes("debit")) return "mc_debit";
+        if (s.includes("maestro")) return "maestro";
+        if (s.includes("master") || s.includes("mc")) return "mc_credit";
+        if (s.includes("debit"))  return "visa_debit";
+        if (s.includes("credit")) return "visa_credit";
+        return "mixed";
+      };
+      const isDebitCard = (k) => ["visa_debit","mc_debit","maestro"].includes(k);
+
+      // Processor detection — same keywords as public quote builder
+      const PROCESSORS = {
+        Stripe:       ["stripe","balance_transaction","charge_id","payout"],
+        Worldpay:     ["worldpay","authcode","merchantnumber"],
+        Barclaycard:  ["barclaycard","merchant service charge","bcs"],
+        Square:       ["square","tender_type"],
+        Adyen:        ["adyen","pspreference","shopper"],
+        SumUp:        ["sumup","sum up"],
+        Zettle:       ["zettle","izettle","paypal here"],
+        Takepayments: ["takepayments","take payments"],
+      };
+      let processor = null;
+      const haystack = ((fileName || "") + " " + lowerHeaders.join(" ")).toLowerCase();
+      for (const [name, keywords] of Object.entries(PROCESSORS)) {
+        if (keywords.some(kw => haystack.includes(kw))) { processor = name; break; }
       }
+
+      // ── Main aggregation — identical to processCSV() in public quote builder ──
+      let vol = 0, cnt = 0, totalFees = 0;
+      const cardData = {};
+
+      rows.forEach(r => {
+        // Row type filter: skip non-charge rows (fees, refunds, payouts)
+        if (colMap.rowType) {
+          const rowT = (r[colMap.rowType] || "").toUpperCase().trim();
+          if (rowT && !["CHARGE","PAYMENT","SALE","TRANSACTION","DEBIT",""].includes(rowT)) return;
+        }
+        const a = pAmt(r[colMap.amount]);
+        if (!a) return;
+
+        cnt++; vol += a;
+
+        // Fee column — total fees paid to current processor
+        const fv = colMap.fee ? (pAmt(r[colMap.fee]) || 0) : 0;
+        if (fv) totalFees += fv;
+
+        // Card type for debit/credit mix
+        const k = colMap.cardType ? classCard(r[colMap.cardType]) : "mixed";
+        if (!cardData[k]) cardData[k] = { vol: 0, cnt: 0 };
+        cardData[k].vol += a;
+        cardData[k].cnt++;
+      });
+
+      if (vol <= 0) throw new Error("No valid transaction amounts found in this CSV.");
+      if (cnt < 2)  throw new Error("Not enough transactions found. Please upload a fuller statement or use Manual Entry.");
+
+      // Debit fraction from actual card mix — same as public quote builder
+      let debitVol = 0;
+      Object.entries(cardData).forEach(([k, v]) => { if (isDebitCard(k)) debitVol += v.vol; });
+      const debitFrac = vol > 0 ? debitVol / vol : 0.70;
+
+      // Current effective rate — fees / volume * 100
+      const currentRate = (totalFees > 0 && vol > 0) ? (totalFees / vol) * 100 : 0;
+
+      // Merchant tier
+      let tierLabel = "Small merchant";
+      if      (vol >= 200000) tierLabel = "Large merchant";
+      else if (vol >= 50000)  tierLabel = "Medium merchant";
 
       return {
-        headers: rawHeaders,
-        rows,
         summary: {
-          totalVolume:        Number(totalVolume.toFixed(2)),
-          transactionCount:   transactionCount ? Math.round(transactionCount) : 0,
-          averageTransaction: averageTransaction ? Number(averageTransaction.toFixed(2)) : 0,
-          currency:           rows.find(r => r.currency)?.currency || "GBP",
-          rowCount:           rows.length,
-          validAmountRows:    validAmountRows.length,
-          validVolumeRows:    validVolumeRows.length,
-          validCountRows:     validCountRows.length,
+          vol:         Number(vol.toFixed(2)),
+          cnt,
+          totalFees:   Number(totalFees.toFixed(2)),
+          debitFrac:   Number(debitFrac.toFixed(4)),
+          currentRate: Number(currentRate.toFixed(4)),
+          cardMix:     cardData,
+          tierLabel,
+          processor,
         },
       };
     }
@@ -2420,21 +2442,25 @@
       const txCnt      = avgTx > 0 ? Math.round(vol / avgTx) : Math.round(vol / 55);
       const curFees    = parseFloat(this.lead.currentMonthlyFees)  || 0;
 
-      // ── Derive debit fraction from available lead data ──────────────────
-      // The public CSV tool detects actual card mix; admin doesn't have that data.
-      // Best proxy: high international % → more credit card usage → lower debit fraction.
-      // >50% intl: assume 50/50 debit/credit (0.50)
-      // >20% intl: assume 60/40 (0.60)
-      // default:   assume 70/30 debit/credit (0.70) — UK average
-      const intlPct   = parseFloat(this.lead.intlPercentage) || 0;
-      const debitFrac = intlPct > 50 ? 0.50
-                      : intlPct > 20 ? 0.60
-                      : 0.70;
+      // Debit fraction — priority: CSV card mix → intl% proxy → UK default 0.70
+      const csvDebitFrac = parseFloat(this.lead.csvDebitFrac);
+      const intlPct      = parseFloat(this.lead.intlPercentage) || 0;
+      const debitFrac    = (csvDebitFrac > 0 && csvDebitFrac <= 1) ? csvDebitFrac
+                         : intlPct > 50 ? 0.50
+                         : intlPct > 20 ? 0.60
+                         : 0.70;
 
-      // Derive current effective rate locally (used as fallback regardless of API response)
-      const derivedCurRate = (curFees > 0 && vol > 0)
-        ? Math.round((curFees / vol * 100) * 100) / 100
-        : null;
+      // Current fees — priority: manual entry → back-calculated from CSV effective rate
+      const csvCurrentRate   = parseFloat(this.lead.csvCurrentRate) || 0;
+      const effectiveCurFees = curFees > 0 ? curFees
+                             : (csvCurrentRate > 0 && vol > 0) ? (csvCurrentRate / 100) * vol
+                             : 0;
+
+      // Derive current effective rate for Step 10 display
+      const derivedCurRate =
+        effectiveCurFees > 0 && vol > 0 ? Math.round((effectiveCurFees / vol * 100) * 100) / 100 :
+        csvCurrentRate > 0              ? Math.round(csvCurrentRate * 100) / 100 :
+        null;
 
       try {
         const resp = await fetch("/api/calculate_quote", {
@@ -2445,7 +2471,7 @@
             merchant_email:    this.lead.email        || "admin@mintedpay.com",
             monthly_volume:    vol,
             transaction_count: txCnt,
-            current_fees:      curFees,
+            current_fees:      effectiveCurFees,
             debit_frac:        debitFrac,
           }),
         });
@@ -2465,7 +2491,7 @@
             rate:                 data.rate,
             fixedFee:             data.fixed_fee,
             currentRate:          derivedCurRate,
-            currentMonthlyFees:   curFees || null,
+            currentMonthlyFees:   effectiveCurFees || null,
             estimatedMonthlyCost: ((vol * data.rate / 100) + (txCnt * data.fixed_fee / 100)).toFixed(2),
             margin:               (data.rate - 0.46).toFixed(2),
           };
