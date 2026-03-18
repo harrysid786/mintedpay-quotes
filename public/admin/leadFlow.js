@@ -982,259 +982,362 @@
           </div>`;
       }
 
-      const p   = this.pricingResult;
-      const r   = this.riskResult || { riskLevel: "low", decision: "accept" };
+      const p      = this.pricingResult;
+      const r      = this.riskResult || { riskLevel: "low", decision: "accept" };
       const vol    = parseFloat(this.lead.monthlyVolume)       || 0;
-      const avgTx  = parseFloat(this.lead.avgTransactionValue) || 55;
-      const txCnt  = avgTx > 0 ? Math.round(vol / avgTx) : Math.round(vol / 55);
+      const avgTx  = parseFloat(this.lead.avgTransactionValue) || 0;
+      const txCnt  = avgTx > 0 ? Math.round(vol / avgTx) : (vol > 0 ? Math.round(vol / 55) : 0);
+      const isKYB  = this.lead.status === "kyb_pending";
 
-      // Enforce fixed fee floor at display time
+      // Enforce fixed fee floor
       if (p.fixed_fee < 10) p.fixed_fee = 10;
 
-      const estRev = ((vol * p.rate / 100) + (txCnt * (p.fixed_fee / 100)));
-      const estMrg = (p.rate - 0.46).toFixed(2);
+      // Store sim state on pricingResult for re-renders
+      const simRate  = p._simRate  !== undefined ? p._simRate  : p.rate;
+      const simFixed = p._simFixed !== undefined ? p._simFixed : p.fixed_fee;
 
-      // Effective rate = total monthly cost / volume * 100
-      const effectiveRate = vol > 0 ? ((estRev / vol) * 100).toFixed(2) : null;
+      // Cost calculations using simulator values
+      const simRev       = vol > 0 ? ((vol * simRate / 100) + (txCnt * simFixed / 100)) : 0;
+      const effectiveRate = vol > 0 ? ((simRev / vol) * 100).toFixed(2) : null;
+      const estMrg        = Math.max(0, simRate - 0.46).toFixed(2);
 
-      // Current provider comparison
-      const currentRate    = p.current_rate || null;
-      const currentFees    = parseFloat(this.lead.currentMonthlyFees) || 0;
-      const currentPaying  = currentFees > 0 ? currentFees
-                           : (currentRate && vol > 0 ? ((currentRate / 100) * vol) : null);
-      const monthlySaving  = p.monthly_saving || 0;
+      // Current provider
+      const curRate     = p.current_rate || null;
+      const curFees     = parseFloat(this.lead.currentMonthlyFees) || 0;
+      const curPaying   = curFees > 0 ? curFees : (curRate && vol > 0 ? (curRate / 100) * vol : null);
+      const mSave       = curPaying !== null ? Math.max(0, curPaying - simRev) : 0;
 
-      const rBadge = r.riskLevel === "low"  ? "lf-badge-green"
-                   : r.riskLevel === "medium" ? "lf-badge-amber"
-                   : "lf-badge-red";
-      const dBadge = r.decision  === "accept" ? "lf-badge-green"
-                   : r.decision  === "review"  ? "lf-badge-amber"
-                   : "lf-badge-red";
+      // Risk badges
+      const rBadge = r.riskLevel === "low" ? "lf-badge-green" : r.riskLevel === "medium" ? "lf-badge-amber" : "lf-badge-red";
+      const dBadge = r.decision  === "accept" ? "lf-badge-green" : r.decision === "review" ? "lf-badge-amber" : "lf-badge-red";
 
-      const isKYB       = this.lead.status === "kyb_pending";
+      // Confidence
+      const dataPoints = [vol > 0, avgTx > 0, !!r.riskLevel, !!this.lead.country, !!this.lead.industry].filter(Boolean).length;
+      const confidence = dataPoints >= 4 ? "HIGH" : dataPoints >= 2 ? "MEDIUM" : "LOW";
+      const confCls    = confidence === "HIGH" ? "lf-conf-high" : confidence === "MEDIUM" ? "lf-conf-med" : "lf-conf-low";
 
-      // Confidence badge logic
-      const hasVolume   = vol > 0;
-      const hasAvgTx    = avgTx > 0 && avgTx !== 55;
-      const hasRisk     = !!r.riskLevel;
-      const hasCountry  = !!this.lead.country;
-      const hasIndustry = !!this.lead.industry;
-      const dataPoints  = [hasVolume, hasAvgTx, hasRisk, hasCountry, hasIndustry].filter(Boolean).length;
-      const confidence  = dataPoints >= 4 ? "HIGH" : dataPoints >= 2 ? "MEDIUM" : "LOW";
-      const confClass   = confidence === "HIGH" ? "lf-conf-high" : confidence === "MEDIUM" ? "lf-conf-med" : "lf-conf-low";
+      // Merchant tier
+      let tierLabel = "", tierColor = "var(--g3)", tierBg = "var(--g6)";
+      if      (vol >= 200000) { tierLabel = "Large Merchant";  tierColor = "#059669"; tierBg = "#ecfdf5"; }
+      else if (vol >= 50000)  { tierLabel = "Medium Merchant"; tierColor = "#2563eb"; tierBg = "#eff6ff"; }
+      else if (vol > 0)       { tierLabel = "Small Merchant";  tierColor = "#94a3b8"; tierBg = "#f8fafc"; }
+
+      // Simulator zone colour
+      const minRate  = 0.76, maxRate  = 4.0;
+      const minFixed = 10,   maxFixed = 50;
+      const rPct     = Math.round(((simRate  - minRate)  / (maxRate  - minRate))  * 100);
+      const fPct     = Math.round(((simFixed - minFixed) / (maxFixed - minFixed)) * 100);
+      const rZone    = simRate < 1.5 ? "var(--green)" : simRate < 2.5 ? "var(--amber)" : "var(--red)";
+
+      const fmt2 = (n) => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const fmtK = (n) => { const a = Math.abs(n); if (a >= 1e6) return "£" + (a / 1e6).toFixed(2) + "m"; if (a >= 1e3) return "£" + (a / 1e3).toFixed(1) + "k"; return "£" + a.toFixed(2); };
 
       return `
-        <div class="lf-step-wrap lf-output">
-          <div class="lf-step-head">
-            <div class="lf-step-num">Step 10</div>
-            <h2 class="lf-step-title">Pricing &amp; Output</h2>
-            <p class="lf-step-sub">
-              Recommendation for <strong>${this.lead.businessName || "this lead"}</strong>
-              ${this.lead.country ? "· " + this.lead.country : ""}
-            </p>
+        <div class="lf-output-page">
+
+          <!-- ══ HEADER ══ -->
+          <div class="lf-op-head">
+            <div>
+              <h2 class="lf-op-title">${this.lead.businessName || "Pricing Output"}</h2>
+              <div class="lf-op-sub">
+                ${this.lead.country ? `<span>${this.lead.country}</span>` : ""}
+                ${this.lead.industry ? `<span>${this.lead.industry}</span>` : ""}
+                ${tierLabel ? `<span class="lf-op-tier" style="color:${tierColor};background:${tierBg}">${tierLabel}</span>` : ""}
+                <span class="lf-conf-badge ${confCls}">Confidence: ${confidence}</span>
+              </div>
+            </div>
+            <div class="lf-op-head-badges">
+              <span class="lf-badge ${rBadge}">${r.riskLevel.toUpperCase()} RISK</span>
+              <span class="lf-badge ${dBadge}">${r.decision.toUpperCase()}</span>
+            </div>
           </div>
 
-          <!-- ═══ SECTION 1: System Recommendation (read-only) ═══ -->
-          <div class="lf-section-card lf-section-recommendation">
-            <div class="lf-section-hdr">
-              <span class="lf-section-icon">💰</span>
-              <span class="lf-section-title">System Recommendation</span>
-              <span class="lf-conf-badge ${confClass}">Confidence: ${confidence}</span>
-            </div>
-            <div class="lf-rec-grid">
-              <div class="lf-rec-item lf-rec-primary">
-                <div class="lf-rec-label">Processing Rate</div>
-                <div class="lf-rec-value">${p.rate}%</div>
+          <!-- ══ A: CUSTOMER OVERVIEW ══ -->
+          <div class="lf-op-section">
+            <div class="lf-op-section-title">Customer Overview</div>
+            <div class="lf-op-metrics">
+              <div class="lf-op-metric">
+                <div class="lf-op-metric-lbl">Monthly Volume</div>
+                <div class="lf-op-metric-val">${vol > 0 ? fmtK(vol) : "—"}</div>
               </div>
-              <div class="lf-rec-item lf-rec-primary">
-                <div class="lf-rec-label">Fixed Fee</div>
-                <div class="lf-rec-value">${p.fixed_fee}p</div>
+              <div class="lf-op-metric">
+                <div class="lf-op-metric-lbl">Transactions / mo</div>
+                <div class="lf-op-metric-val">${txCnt > 0 ? txCnt.toLocaleString("en-GB") : "—"}</div>
               </div>
-              <div class="lf-rec-item">
-                <div class="lf-rec-label">Est. Monthly Cost</div>
-                <div class="lf-rec-value lf-rec-sm">£${estRev.toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+              <div class="lf-op-metric">
+                <div class="lf-op-metric-lbl">Avg Transaction</div>
+                <div class="lf-op-metric-val">${avgTx > 0 ? fmt2(avgTx) : "—"}</div>
               </div>
-              <div class="lf-rec-item">
-                <div class="lf-rec-label">Effective Rate</div>
-                <div class="lf-rec-value lf-rec-sm">${effectiveRate !== null ? effectiveRate + "%" : "—"}</div>
+              <div class="lf-op-metric">
+                <div class="lf-op-metric-lbl">Current Effective Rate</div>
+                <div class="lf-op-metric-val" style="color:${curRate !== null ? (curRate < 1 ? "var(--green)" : curRate < 2.2 ? "var(--amber)" : "var(--red)") : "var(--g4)"}">
+                  ${curRate !== null ? curRate.toFixed(2) + "%" : "—"}
+                </div>
               </div>
             </div>
-            ${currentPaying !== null ? `
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
-              <div class="lf-rec-item">
-                <div class="lf-rec-label">Currently Paying</div>
-                <div class="lf-rec-value lf-rec-sm" style="color:#6b6b6b">£${Number(currentPaying).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</div>
+
+            <!-- Rate comparison (mirrors quote.html) -->
+            <div class="lf-op-rate-compare">
+              ${curRate !== null ? `
+              <div class="lf-op-rate-block lf-op-rate-current">
+                <div class="lf-op-rate-lbl">Currently paying</div>
+                <div class="lf-op-rate-big" style="color:var(--red)">${curRate.toFixed(2)}<span class="lf-op-rate-pct">%</span></div>
+                <div class="lf-op-rate-sub">effective rate on submitted data</div>
               </div>
-              ${monthlySaving > 0 ? `
-              <div class="lf-rec-item" style="background:#e6f7f2;border:1px solid #a7f3d0">
-                <div class="lf-rec-label" style="color:#00916e">Monthly Saving</div>
-                <div class="lf-rec-value lf-rec-sm" style="color:#00916e">£${Number(monthlySaving).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-              </div>` : `
-              <div class="lf-rec-item">
-                <div class="lf-rec-label">Est. Gross Margin</div>
-                <div class="lf-rec-value lf-rec-sm">~${estMrg}% pts</div>
-              </div>`}
-            </div>` : `
-            <div style="margin-top:12px;">
-              <div class="lf-rec-item" style="background:var(--g7)">
-                <div class="lf-rec-label">Est. Gross Margin</div>
-                <div class="lf-rec-value lf-rec-sm">~${estMrg}% pts</div>
+              <div class="lf-op-rate-arrow">→</div>` : ""}
+              <div class="lf-op-rate-block lf-op-rate-mp${curRate === null ? " lf-op-rate-solo" : ""}">
+                <div class="lf-op-rate-lbl">MintedPay rate</div>
+                <div class="lf-op-rate-big" style="color:var(--brand)">${simRate.toFixed(2)}<span class="lf-op-rate-pct">%</span></div>
+                <div class="lf-op-rate-sub">+ <strong>${simFixed}p</strong> fixed fee per transaction</div>
               </div>
-            </div>`}
-            ${monthlySaving > 0 ? `
-            <div class="lf-savings-banner">
-              <span>Saving vs Current Provider</span>
-              <strong>£${Number(monthlySaving).toLocaleString("en-GB")}/mo · £${Number(monthlySaving * 12).toLocaleString("en-GB")}/yr</strong>
+            </div>
+
+            ${mSave > 0 ? `
+            <div class="lf-op-save-banner">
+              <span class="lf-op-save-lbl">Estimated Monthly Saving</span>
+              <div class="lf-op-save-vals">
+                <strong>${fmt2(mSave)} / month</strong>
+                <strong>${fmt2(mSave * 12)} / year</strong>
+              </div>
             </div>` : ""}
           </div>
 
-          <div class="lf-output-cols">
-            <!-- ═══ LEFT COLUMN ═══ -->
-            <div class="lf-output-left">
-
-              <!-- ═══ SECTION 2: Manual Overrides ═══ -->
-              <div class="lf-section-card lf-section-overrides">
-                <div class="lf-section-hdr">
-                  <span class="lf-section-icon">✏️</span>
-                  <span class="lf-section-title">Manual Overrides</span>
-                </div>
-                <div class="lf-adj-grid">
-                  <div class="lf-adj-field">
-                    <label class="lf-adj-label">Processing Rate (%)</label>
-                    <input type="number" class="lf-adj-input" id="lf-override-rate" value="${p.rate}" min="0" step="0.01">
-                  </div>
-                  <div class="lf-adj-field">
-                    <label class="lf-adj-label">Fixed Fee (pence)</label>
-                    <input type="number" class="lf-adj-input" id="lf-override-fixed" value="${p.fixed_fee}" min="10" step="1">
-                  </div>
-                </div>
-                <button class="lf-update-btn" id="lf-apply-override">Update Pricing</button>
+          <!-- ══ B: PAYMENT ANALYTICS ══ -->
+          <div class="lf-op-section">
+            <div class="lf-op-section-title">Payment Analytics</div>
+            <div class="lf-op-analytics-grid">
+              <div class="lf-op-analytic">
+                <div class="lf-op-analytic-lbl">Est. Monthly Processing Cost</div>
+                <div class="lf-op-analytic-val">${simRev > 0 ? fmt2(simRev) : "—"}</div>
+                <div class="lf-op-analytic-sub">at ${simRate}% + ${simFixed}p/tx</div>
               </div>
-
-              <!-- ═══ SECTION 3: Additional Fees ═══ -->
-              <div class="lf-section-card lf-section-fees">
-                <div class="lf-section-hdr">
-                  <span class="lf-section-icon">⚙️</span>
-                  <span class="lf-section-title">Additional Fees</span>
+              <div class="lf-op-analytic">
+                <div class="lf-op-analytic-lbl">Effective Rate</div>
+                <div class="lf-op-analytic-val">${effectiveRate !== null ? effectiveRate + "%" : "—"}</div>
+                <div class="lf-op-analytic-sub">all-in blended rate</div>
+              </div>
+              <div class="lf-op-analytic">
+                <div class="lf-op-analytic-lbl">Est. Gross Margin</div>
+                <div class="lf-op-analytic-val">~${estMrg}%</div>
+                <div class="lf-op-analytic-sub">above cost (0.46% base)</div>
+              </div>
+              <div class="lf-op-analytic">
+                <div class="lf-op-analytic-lbl">Intl Transactions</div>
+                <div class="lf-op-analytic-val">${this.lead.intlPercentage !== undefined && this.lead.intlPercentage !== "" ? this.lead.intlPercentage + "%" : "—"}</div>
+                <div class="lf-op-analytic-sub">of volume</div>
+              </div>
+              <div class="lf-op-analytic">
+                <div class="lf-op-analytic-lbl">Chargeback Rate</div>
+                <div class="lf-op-analytic-val" style="color:${parseFloat(this.lead.chargebackRate) > 1 ? "var(--red)" : "var(--green)"}">
+                  ${this.lead.chargebackRate ? this.lead.chargebackRate + "%" : "—"}
                 </div>
-                <div class="lf-fee-cards">
-                  <div class="lf-fee-card">
-                    <label class="lf-fee-left">
-                      <input type="checkbox" id="lf-toggle-amex" checked>
-                      <span class="lf-fee-name">Amex Fee</span>
-                    </label>
-                    <div class="lf-fee-right">
-                      <input type="number" class="lf-fee-input" id="lf-amex-input" value="3.5" min="0" step="0.1">
-                      <span class="lf-fee-unit">%</span>
-                    </div>
-                    <span class="lf-fee-hidden-val" id="lf-amex-val" style="display:none">3.5</span>
-                  </div>
-                  <div class="lf-fee-card">
-                    <label class="lf-fee-left">
-                      <input type="checkbox" id="lf-toggle-fx" checked>
-                      <span class="lf-fee-name">FX Fee</span>
-                    </label>
-                    <div class="lf-fee-right">
-                      <input type="number" class="lf-fee-input" id="lf-fx-input" value="1.5" min="0" step="0.1">
-                      <span class="lf-fee-unit">%</span>
-                    </div>
-                    <span class="lf-fee-hidden-val" id="lf-fx-val" style="display:none">1.5</span>
-                  </div>
-                  <div class="lf-fee-card">
-                    <label class="lf-fee-left">
-                      <input type="checkbox" id="lf-toggle-chargeback" checked>
-                      <span class="lf-fee-name">Chargeback Fee</span>
-                    </label>
-                    <div class="lf-fee-right">
-                      <span class="lf-fee-unit">£</span>
-                      <input type="number" class="lf-fee-input" id="lf-chargeback-input" value="15" min="0" step="1">
-                    </div>
-                    <span class="lf-fee-hidden-val" id="lf-chargeback-val" style="display:none">15</span>
-                  </div>
-                  <div class="lf-fee-card">
-                    <label class="lf-fee-left">
-                      <input type="checkbox" id="lf-toggle-refund" checked>
-                      <span class="lf-fee-name">Refund Fee</span>
-                    </label>
-                    <div class="lf-fee-right">
-                      <span class="lf-fee-unit">£</span>
-                      <input type="number" class="lf-fee-input" id="lf-refund-input" value="1" min="0" step="1">
-                    </div>
-                    <span class="lf-fee-hidden-val" id="lf-refund-val" style="display:none">1</span>
-                  </div>
+                <div class="lf-op-analytic-sub">${parseFloat(this.lead.chargebackRate) > 1 ? "⚠️ elevated" : "within threshold"}</div>
+              </div>
+              <div class="lf-op-analytic">
+                <div class="lf-op-analytic-lbl">Risk Level</div>
+                <div class="lf-op-analytic-val">
+                  <span class="lf-badge ${rBadge}" style="font-size:13px">${r.riskLevel.toUpperCase()}</span>
                 </div>
+                <div class="lf-op-analytic-sub">${this._getRiskReasonText(r.riskLevel, this.lead)}</div>
               </div>
             </div>
 
-            <!-- ═══ RIGHT COLUMN ═══ -->
-            <div class="lf-output-right">
-
-              <!-- ═══ SECTION 4: Risk Assessment ═══ -->
-              <div class="lf-section-card lf-section-risk">
-                <div class="lf-section-hdr">
-                  <span class="lf-section-icon">🔍</span>
-                  <span class="lf-section-title">Risk Assessment</span>
-                </div>
-                <div class="lf-risk-rows">
-                  <div class="lf-rr"><span class="lf-rr-lbl">Risk Level</span>
-                    <span class="lf-badge ${rBadge}">${r.riskLevel.toUpperCase()}</span></div>
-                  <div class="lf-rr"><span class="lf-rr-lbl">Decision</span>
-                    <span class="lf-badge ${dBadge}">${r.decision.toUpperCase()}</span></div>
-                  <div style="border-top: 1px solid #e5e7eb; margin: 8px -20px 8px -20px; padding-top: 8px;">
-                    <div class="lf-rr"><span class="lf-rr-lbl">Industry</span>
-                      <span class="lf-rr-val">${this.lead.industry || "—"}</span></div>
-                    <div class="lf-rr"><span class="lf-rr-lbl">Intl Transactions</span>
-                      <span class="lf-rr-val">${this.lead.intlPercentage || 0}%</span></div>
-                    <div class="lf-rr"><span class="lf-rr-lbl">Business Age</span>
-                      <span class="lf-rr-val">${this.lead.businessAge || "—"}</span></div>
-                    <div class="lf-rr"><span class="lf-rr-lbl">Delivery Time</span>
-                      <span class="lf-rr-val">${this.lead.deliveryTime || "—"}</span></div>
-                  </div>
-                  <div style="border-top: 1px solid #e5e7eb; margin: 8px -20px 8px -20px; padding-top: 8px;">
-                    <div class="lf-risk-reason">
-                      <span class="lf-risk-reason-label">Why this risk?</span>
-                      <span class="lf-risk-reason-text">
-                        ${this._getRiskReasonText(r.riskLevel, this.lead)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+            <!-- Additional fees summary -->
+            <div class="lf-op-fees-row">
+              <div class="lf-op-fee-chip" id="lf-chip-amex">
+                <input type="checkbox" id="lf-toggle-amex" checked>
+                <label for="lf-toggle-amex">Amex</label>
+                <input type="number" class="lf-op-fee-inp" id="lf-amex-input" value="3.5" min="0" step="0.1">
+                <span>%</span>
               </div>
-
-              <!-- ═══ SECTION 5: Actions ═══ -->
-              <div class="lf-section-card lf-section-actions">
-                <div class="lf-section-hdr">
-                  <span class="lf-section-icon">🚀</span>
-                  <span class="lf-section-title">Actions</span>
-                </div>
-                <div class="lf-action-stack">
-                  <button class="lf-action-btn ${this.lead.quote_id ? "lf-action-done" : "lf-action-primary"}" id="lf-gen-quote" ${this.pricingResult && !this.quoteGenerated ? "" : "disabled"}>
-                    ${this.lead.quote_id ? "✓ Quote Generated" : "📄 Generate Quote"}
-                  </button>
-                  <button class="lf-action-btn lf-action-secondary" id="lf-push-zoho" ${!this.lead.zohoPushed ? "" : "disabled"}>
-                    ${this.lead.zohoPushed ? "✓ Pushed to Zoho" : "☁️ Push to Zoho"}
-                  </button>
-                  <button class="lf-action-btn ${isKYB ? "lf-action-done" : "lf-action-kyb"}" id="lf-mark-kyb"
-                          ${isKYB ? "disabled" : ""}>
-                    ${isKYB ? "✓ KYB Pending" : "🔐 Mark as KYB Ready"}
-                  </button>
-                </div>
+              <div class="lf-op-fee-chip">
+                <input type="checkbox" id="lf-toggle-fx" checked>
+                <label for="lf-toggle-fx">FX / Intl</label>
+                <input type="number" class="lf-op-fee-inp" id="lf-fx-input" value="1.5" min="0" step="0.1">
+                <span>%</span>
+              </div>
+              <div class="lf-op-fee-chip">
+                <input type="checkbox" id="lf-toggle-chargeback" checked>
+                <label for="lf-toggle-chargeback">Chargeback</label>
+                <span>£</span>
+                <input type="number" class="lf-op-fee-inp" id="lf-chargeback-input" value="15" min="0" step="1">
+              </div>
+              <div class="lf-op-fee-chip">
+                <input type="checkbox" id="lf-toggle-refund" checked>
+                <label for="lf-toggle-refund">Refund</label>
+                <span>£</span>
+                <input type="number" class="lf-op-fee-inp" id="lf-refund-input" value="1" min="0" step="1">
               </div>
             </div>
           </div>
 
-          ${this.lead.quote_id ? `
-            <div class="lf-notice lf-notice-green">
+          <!-- ══ C: RATE SIMULATOR ══ -->
+          <div class="lf-op-section">
+            <div class="lf-op-section-title">Rate Simulator</div>
+            <div class="lf-op-sim">
+              <div class="lf-op-sim-top">
+                <div class="lf-op-sim-ctrl">
+                  <div class="lf-op-sim-ctrl-lbl">Processing Rate</div>
+                  <div class="lf-op-sim-spin-wrap lf-op-sim-spin-brand">
+                    <button class="lf-op-sim-btn" id="lf-sim-rate-up">▲</button>
+                    <input type="number" class="lf-op-sim-box" id="lf-sim-rate"
+                           value="${simRate}" min="${minRate}" max="${maxRate}" step="0.01">
+                    <button class="lf-op-sim-btn" id="lf-sim-rate-dn">▼</button>
+                  </div>
+                  <span class="lf-op-sim-pct">%</span>
+                </div>
+                <div class="lf-op-sim-sep">+</div>
+                <div class="lf-op-sim-ctrl">
+                  <div class="lf-op-sim-ctrl-lbl">Fixed Fee</div>
+                  <div class="lf-op-sim-spin-wrap lf-op-sim-spin-green">
+                    <button class="lf-op-sim-btn" id="lf-sim-fixed-up">▲</button>
+                    <input type="number" class="lf-op-sim-box lf-op-sim-box-green" id="lf-sim-fixed"
+                           value="${simFixed}" min="${minFixed}" max="${maxFixed}" step="1">
+                    <button class="lf-op-sim-btn" id="lf-sim-fixed-dn">▼</button>
+                  </div>
+                  <span class="lf-op-sim-pct" style="color:var(--green)">p</span>
+                </div>
+              </div>
+
+              <!-- Rate zone slider -->
+              <div class="lf-op-sim-track-wrap">
+                <div class="lf-op-sim-track-bg"></div>
+                <input type="range" class="lf-op-sim-range" id="lf-sim-rate-range"
+                       min="${minRate}" max="${maxRate}" step="0.01" value="${simRate}">
+                <div class="lf-op-sim-ticks">
+                  <span style="color:var(--green)">▼ Floor</span>
+                  <span style="color:var(--amber);text-align:center">Market</span>
+                  <span style="color:var(--red);text-align:right">Premium ▲</span>
+                </div>
+              </div>
+
+              <!-- Simulator output strip -->
+              <div class="lf-op-sim-strip">
+                <div class="lf-op-sim-cell">
+                  <div class="lf-op-sim-cell-lbl">Monthly Cost</div>
+                  <div class="lf-op-sim-cell-val" id="lf-sim-out-cost">${vol > 0 ? fmt2(simRev) : "—"}</div>
+                </div>
+                <div class="lf-op-sim-cell">
+                  <div class="lf-op-sim-cell-lbl">Effective Rate</div>
+                  <div class="lf-op-sim-cell-val" id="lf-sim-out-eff">${effectiveRate !== null ? effectiveRate + "%" : "—"}</div>
+                </div>
+                <div class="lf-op-sim-cell">
+                  <div class="lf-op-sim-cell-lbl">Est. Margin</div>
+                  <div class="lf-op-sim-cell-val" id="lf-sim-out-mrg">~${estMrg}%</div>
+                </div>
+                <div class="lf-op-sim-cell">
+                  <div class="lf-op-sim-cell-lbl">Monthly Saving</div>
+                  <div class="lf-op-sim-cell-val" id="lf-sim-out-save" style="color:${mSave > 0 ? "var(--green)" : "var(--g3)"}">
+                    ${mSave > 0 ? fmt2(mSave) : "—"}
+                  </div>
+                </div>
+              </div>
+
+              <div class="lf-op-sim-actions">
+                <button class="lf-op-sim-apply" id="lf-apply-override">✓ Apply This Rate to Quote</button>
+                <button class="lf-op-sim-reset" id="lf-sim-reset">↺ Reset to System Rate</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ══ D: QUOTE PREVIEW ══ -->
+          <div class="lf-op-section">
+            <div class="lf-op-section-title" style="display:flex;align-items:center;justify-content:space-between">
+              Quote Preview
+              ${this.lead.quote_id ? `<span style="font-size:11px;font-weight:600;color:var(--g3)">ID: ${this.lead.quote_id}</span>` : ""}
+            </div>
+
+            <!-- Quote header (mirrors qp-hdr) -->
+            <div class="lf-op-qp-hdr">
+              <div>
+                <div class="lf-op-qp-brand">Minted<em>Pay</em></div>
+                <div style="font-size:10px;color:var(--g3)">Payment Processing Proposal</div>
+              </div>
+              <div style="text-align:right;font-size:11px;color:var(--g3)">
+                <strong style="color:var(--black)">${this.lead.businessName || this.lead.contactName || "—"}</strong><br>
+                ${new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"long",year:"numeric"})}<br>
+                Valid for 30 days
+              </div>
+            </div>
+
+            <!-- Snapshot (mirrors qp-snapshot) -->
+            ${vol > 0 ? `
+            <div class="lf-op-snapshot">
+              <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Volume Analysed</div><div class="lf-op-snap-val">${fmtK(vol)}</div></div>
+              <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Transactions</div><div class="lf-op-snap-val">${txCnt > 0 ? txCnt.toLocaleString("en-GB") : "—"}</div></div>
+              <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Avg Transaction</div><div class="lf-op-snap-val">${avgTx > 0 ? fmt2(avgTx) : "—"}</div></div>
+              <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Current Rate</div><div class="lf-op-snap-val" style="color:${curRate !== null ? (curRate < 1 ? "var(--green)" : curRate < 2.2 ? "var(--amber)" : "var(--red)") : "var(--g4)"}">${curRate !== null ? curRate.toFixed(2) + "%" : "—"}</div></div>
+            </div>` : ""}
+
+            <!-- Pricing table -->
+            <div class="lf-op-ptable-wrap">
+              <table class="lf-op-ptable">
+                <thead><tr><th>Transaction Type</th><th>Rate</th><th>Notes</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td>All Cards (Blended)</td>
+                    <td class="lf-op-ptable-rate">${simRate.toFixed(2)}% + ${simFixed}p per transaction</td>
+                    <td class="lf-op-ptable-note">Single blended rate, Visa &amp; Mastercard debit and credit</td>
+                  </tr>
+                  <tr id="lf-qp-amex-row">
+                    <td>American Express</td>
+                    <td class="lf-op-ptable-rate" style="color:var(--red)" id="lf-qp-amex-val">3.50% + 20p per transaction</td>
+                    <td class="lf-op-ptable-note">Applied to all Amex transactions</td>
+                  </tr>
+                  <tr id="lf-qp-fx-row">
+                    <td>International / FX</td>
+                    <td class="lf-op-ptable-rate" id="lf-qp-fx-val">1.50%</td>
+                    <td class="lf-op-ptable-note">Applied when card currency differs from settlement</td>
+                  </tr>
+                  <tr id="lf-qp-cb-row">
+                    <td>Chargebacks</td>
+                    <td class="lf-op-ptable-rate" style="color:var(--red)" id="lf-qp-cb-val">£15.00 per chargeback</td>
+                    <td class="lf-op-ptable-note">Fee applied when a dispute is received</td>
+                  </tr>
+                  <tr id="lf-qp-ref-row">
+                    <td>Refunds</td>
+                    <td class="lf-op-ptable-rate" id="lf-qp-ref-val">£1.00 per refund</td>
+                    <td class="lf-op-ptable-note">Fee applied when processing refunds</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ══ E: ADMIN ACTIONS ══ -->
+          <div class="lf-op-section lf-op-actions-section">
+            <div class="lf-op-section-title">Admin Actions</div>
+            <div class="lf-op-action-row">
+              <button class="lf-op-act-btn lf-op-act-primary" id="lf-gen-quote"
+                      ${this.pricingResult && !this.quoteGenerated ? "" : "disabled"}>
+                ${this.lead.quote_id ? "✓ Quote Generated" : "📄 Generate Quote Link"}
+              </button>
+              <button class="lf-op-act-btn lf-op-act-secondary" id="lf-push-zoho"
+                      ${!this.lead.zohoPushed ? "" : "disabled"}>
+                ${this.lead.zohoPushed ? "✓ Pushed to Zoho" : "☁️ Push to Zoho"}
+              </button>
+              <button class="lf-op-act-btn ${isKYB ? "lf-op-act-done" : "lf-op-act-kyb"}" id="lf-mark-kyb"
+                      ${isKYB ? "disabled" : ""}>
+                ${isKYB ? "✓ KYB Pending" : "🔐 Mark KYB Ready"}
+              </button>
+            </div>
+            ${this.lead.quote_id ? `
+            <div class="lf-op-quote-notice">
               ✓ Quote <strong>${this.lead.quote_id}</strong> generated.
-              <a href="/quote.html?quote=${this.lead.quote_id}" target="_blank">View Quote →</a>
+              <a href="/quote.html?quote=${this.lead.quote_id}&admin=1" target="_blank">View (Admin) →</a>
+              &nbsp;·&nbsp;
+              <a href="/quote.html?quote=${this.lead.quote_id}" target="_blank">View (Merchant) →</a>
             </div>` : ""}
-          ${isKYB ? `
-            <div class="lf-notice lf-notice-blue">
+            ${isKYB ? `
+            <div class="lf-op-kyb-notice">
               🔐 This lead is marked KYB Ready and added to the onboarding pipeline.
             </div>` : ""}
+          </div>
+
         </div>
       `;
     }
+
 
     // ── Rejection screen ───────────────────────────────────
     _buildRejected() {
@@ -1349,15 +1452,121 @@
 
       q("lf-apply-override")?.addEventListener("click", () => this._applyPricingOverride());
 
-      // Fee toggle listeners
-      ["amex", "fx", "chargeback", "refund"].forEach(fee => {
-        q(`lf-toggle-${fee}`)?.addEventListener("change", (e) => {
-          q(`lf-${fee}-input`).disabled = !e.target.checked;
+      // ── Rate Simulator live updates ────────────────────────
+      const simRateEl  = q("lf-sim-rate");
+      const simFixedEl = q("lf-sim-fixed");
+      const simRange   = q("lf-sim-rate-range");
+
+      const updateSimOutputs = () => {
+        const sr = parseFloat(simRateEl?.value) || this.pricingResult.rate;
+        const sf = parseFloat(simFixedEl?.value) || this.pricingResult.fixed_fee;
+        const vol    = parseFloat(this.lead.monthlyVolume) || 0;
+        const avgTx  = parseFloat(this.lead.avgTransactionValue) || 55;
+        const txCnt  = avgTx > 0 ? Math.round(vol / avgTx) : 0;
+        const rev    = vol > 0 ? ((vol * sr / 100) + (txCnt * sf / 100)) : 0;
+        const effR   = vol > 0 ? ((rev / vol) * 100).toFixed(2) + "%" : "—";
+        const mrg    = Math.max(0, sr - 0.46).toFixed(2);
+        const curFees = parseFloat(this.lead.currentMonthlyFees) || 0;
+        const curRate = this.pricingResult.current_rate;
+        const curPay  = curFees > 0 ? curFees : (curRate && vol > 0 ? (curRate / 100) * vol : null);
+        const save    = curPay !== null ? Math.max(0, curPay - rev) : 0;
+
+        const fmt2 = (n) => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        if (q("lf-sim-out-cost"))  q("lf-sim-out-cost").textContent  = vol > 0 ? fmt2(rev)  : "—";
+        if (q("lf-sim-out-eff"))   q("lf-sim-out-eff").textContent   = effR;
+        if (q("lf-sim-out-mrg"))   q("lf-sim-out-mrg").textContent   = "~" + mrg + "%";
+        if (q("lf-sim-out-save")) {
+          q("lf-sim-out-save").textContent  = save > 0 ? fmt2(save) : "—";
+          q("lf-sim-out-save").style.color  = save > 0 ? "var(--green)" : "var(--g3)";
+        }
+        // Keep range in sync with number input
+        if (simRange) simRange.value = sr;
+
+        // Update quote preview rate
+        const ptRow = document.querySelector(".lf-op-ptable tbody tr:first-child td:nth-child(2)");
+        if (ptRow) ptRow.textContent = sr.toFixed(2) + "% + " + sf + "p per transaction";
+
+        // Update rate comparison block
+        const mpBig = document.querySelector(".lf-op-rate-mp .lf-op-rate-big");
+        if (mpBig) mpBig.innerHTML = sr.toFixed(2) + '<span class="lf-op-rate-pct">%</span>';
+        const mpSub = document.querySelector(".lf-op-rate-mp .lf-op-rate-sub");
+        if (mpSub) mpSub.innerHTML = '+ <strong>' + sf + 'p</strong> fixed fee per transaction';
+
+        // Store sim state so re-renders preserve it
+        this.pricingResult._simRate  = sr;
+        this.pricingResult._simFixed = sf;
+      };
+
+      if (simRateEl) {
+        simRateEl.addEventListener("input", updateSimOutputs);
+        q("lf-sim-rate-up")?.addEventListener("click", () => {
+          simRateEl.value = Math.min(4.0, (parseFloat(simRateEl.value) || 0) + 0.01).toFixed(2);
+          updateSimOutputs();
         });
-        q(`lf-${fee}-input`)?.addEventListener("change", (e) => {
-          q(`lf-${fee}-val`).textContent = e.target.value;
+        q("lf-sim-rate-dn")?.addEventListener("click", () => {
+          simRateEl.value = Math.max(0.76, (parseFloat(simRateEl.value) || 0) - 0.01).toFixed(2);
+          updateSimOutputs();
         });
+      }
+      if (simFixedEl) {
+        simFixedEl.addEventListener("input", updateSimOutputs);
+        q("lf-sim-fixed-up")?.addEventListener("click", () => {
+          simFixedEl.value = Math.min(50, (parseInt(simFixedEl.value) || 10) + 1);
+          updateSimOutputs();
+        });
+        q("lf-sim-fixed-dn")?.addEventListener("click", () => {
+          simFixedEl.value = Math.max(10, (parseInt(simFixedEl.value) || 10) - 1);
+          updateSimOutputs();
+        });
+      }
+      if (simRange) {
+        simRange.addEventListener("input", () => {
+          if (simRateEl) simRateEl.value = parseFloat(simRange.value).toFixed(2);
+          updateSimOutputs();
+        });
+      }
+      q("lf-sim-reset")?.addEventListener("click", () => {
+        if (simRateEl)  simRateEl.value  = this.pricingResult.rate;
+        if (simFixedEl) simFixedEl.value = this.pricingResult.fixed_fee;
+        if (simRange)   simRange.value   = this.pricingResult.rate;
+        this.pricingResult._simRate  = undefined;
+        this.pricingResult._simFixed = undefined;
+        updateSimOutputs();
       });
+
+      // ── Fee toggles + optional fee row visibility ──────────
+      const updateFeeRows = () => {
+        const amexOn = q("lf-toggle-amex")?.checked;
+        const fxOn   = q("lf-toggle-fx")?.checked;
+        const cbOn   = q("lf-toggle-chargeback")?.checked;
+        const refOn  = q("lf-toggle-refund")?.checked;
+        const amexPct = parseFloat(q("lf-amex-input")?.value) || 3.5;
+        const fxPct   = parseFloat(q("lf-fx-input")?.value)   || 1.5;
+        const cbAmt   = parseFloat(q("lf-chargeback-input")?.value) || 15;
+        const refAmt  = parseFloat(q("lf-refund-input")?.value)     || 1;
+
+        const amexRow = q("lf-qp-amex-row"), fxRow = q("lf-qp-fx-row"),
+              cbRow   = q("lf-qp-cb-row"),   refRow = q("lf-qp-ref-row");
+
+        if (amexRow) amexRow.style.display = amexOn ? "" : "none";
+        if (fxRow)   fxRow.style.display   = fxOn   ? "" : "none";
+        if (cbRow)   cbRow.style.display   = cbOn   ? "" : "none";
+        if (refRow)  refRow.style.display  = refOn  ? "" : "none";
+
+        if (q("lf-qp-amex-val")) q("lf-qp-amex-val").textContent = amexPct.toFixed(2) + "% + " + (q("lf-amex-input")?.dataset?.fixed || "20") + "p per transaction";
+        if (q("lf-qp-fx-val"))   q("lf-qp-fx-val").textContent   = fxPct.toFixed(2) + "%";
+        if (q("lf-qp-cb-val"))   q("lf-qp-cb-val").textContent   = "£" + cbAmt.toFixed(2) + " per chargeback";
+        if (q("lf-qp-ref-val"))  q("lf-qp-ref-val").textContent  = "£" + refAmt.toFixed(2) + " per refund";
+      };
+
+      ["amex", "fx", "chargeback", "refund"].forEach(fee => {
+        q(`lf-toggle-${fee}`)?.addEventListener("change", updateFeeRows);
+        q(`lf-${fee}-input`)?.addEventListener("input",  updateFeeRows);
+      });
+
+      // Run once on load to set initial state
+      updateFeeRows();
 
       // Tab switching for Step 7
       this.overlay.querySelectorAll(".lf-tab-btn").forEach(btn => {
