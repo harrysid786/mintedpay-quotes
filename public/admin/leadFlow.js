@@ -950,28 +950,49 @@
     // ── Get risk reason explanation ────────────────────────
     _getRiskReasonText(riskLevel, lead) {
       const factors = [];
-      const intl = parseFloat(lead.intlPercentage) || 0;
-      const cb = parseFloat(lead.chargebackRate) || 0;
-      const refund = parseFloat(lead.refundRate) || 0;
-      const businessAge = lead.businessAge;
+      const intl      = parseFloat(lead.intlPercentage) || 0;
+      const cb        = parseFloat(lead.chargebackRate)  || 0;
+      const refund    = parseFloat(lead.refundRate)      || 0;
+      const ageEnum   = lead.businessAge || "";
 
-      if (intl > 70) factors.push("High intl % (>70%)");
-      else if (intl > 40) factors.push("Elevated intl %");
+      // International transactions
+      if      (intl > 70) factors.push("High international volume (>70%)");
+      else if (intl > 40) factors.push("Elevated international transactions");
 
-      if (cb > 2.0) factors.push("High chargeback rate");
-      else if (cb > 1.0) factors.push("Moderate chargeback");
+      // Chargeback rate
+      if      (cb > 2.0) factors.push("Critical chargeback rate (>2%)");
+      else if (cb > 1.0) factors.push("Elevated chargeback rate (>1%)");
+      else if (cb > 0.5) factors.push("Marginal chargeback rate (>0.5%)");
 
-      if (refund > 10) factors.push("High refund rate");
+      // Refund rate
+      if      (refund > 10) factors.push("High refund rate (>10%)");
+      else if (refund >  5) factors.push("Moderate refund rate (>5%)");
 
-      if (lead.holdsFunds === "yes") factors.push("Holds customer funds");
+      // Holds funds
+      if (lead.holdsFunds === "yes") factors.push("Holds customer funds before disbursing");
 
-      if (businessAge === "less_than_6") factors.push("Startup (<6mo)");
-      else if (businessAge === "6_to_12") factors.push("Early stage (6-12mo)");
+      // Business age — use enum string labels, never parseFloat
+      if      (ageEnum === "less_than_6") factors.push("Business is less than 6 months old");
+      else if (ageEnum === "6_to_12")     factors.push("Business is 6–12 months old (early stage)");
+      // "1_to_2" and "2_plus" → no risk factor added
 
-      if (lead.deliveryTime === "delayed") factors.push("Delayed delivery");
+      // Delivery time
+      if (lead.deliveryTime === "delayed") factors.push("Delayed delivery model");
 
-      if (factors.length === 0) return "Low-risk profile with stable metrics.";
-      return factors.slice(0, 3).join(" · ");
+      // Subscription
+      if (lead.paymentTypes === "subscription" || lead.paymentTypes === "both") {
+        factors.push("Subscription / recurring billing");
+      }
+
+      if (factors.length === 0) {
+        // Provide a positive confirmation when no risk factors found
+        const ageLabel = ageEnum === "2_plus"  ? "Established business (2+ years), "
+                       : ageEnum === "1_to_2"  ? "Established business (1–2 years), "
+                       : "";
+        return ageLabel + "low-risk profile based on submitted data.";
+      }
+
+      return factors.slice(0, 4).join(" · ");
     }
 
     // ── Output step (Step 10) ───────────────────────────────
@@ -1871,21 +1892,23 @@
 
       const rawCountry = this.lead.country || "";
       const matchedC   = COUNTRIES.find(c => c.toLowerCase() === rawCountry.toLowerCase()) || rawCountry;
-      const country  = matchedC;
-      const industry = this.lead.industryDetail || this.lead.industry || "";
-      const check    = window.RiskEngine.checkQualification(country, industry);
+      const country     = matchedC;
+      const industry    = this.lead.industry       || "";
+      const indDetail   = this.lead.industryDetail || "";
+      const check = window.RiskEngine.checkQualification(country, industry, indDetail);
 
       if (!check.allowed) {
         const banner = document.createElement("div");
         banner.className = "lf-qual-warning lf-qual-prohibited";
         // Determine whether country or industry triggered the block
         const countryCheck  = window.RiskEngine.checkQualification(country, "");
-        const industryCheck = window.RiskEngine.checkQualification("United Kingdom", industry);
+        const industryCheck = window.RiskEngine.checkQualification("United Kingdom", industry, indDetail);
         let msg;
         if (!countryCheck.allowed) {
           msg = `🚫 We do not accept merchants operating from <strong>${country}</strong>. This lead cannot proceed.`;
         } else if (!industryCheck.allowed) {
-          msg = `🚫 We do not accept merchants in the <strong>${industry}</strong> industry. This lead cannot proceed.`;
+          const industryLabel = indDetail || industry;
+          msg = `🚫 We do not accept merchants in the <strong>${industryLabel}</strong> industry. This lead cannot proceed.`;
         } else {
           msg = `🚫 ${check.reason || "This combination is not supported. This lead cannot proceed."}`;
         }
@@ -1895,7 +1918,6 @@
       } else if (check.restricted) {
         const banner = document.createElement("div");
         banner.className = "lf-qual-warning lf-qual-restricted";
-        // Differentiate restricted country vs restricted industry message
         const countryRestrictedCheck = window.RiskEngine.checkQualification(country, "");
         let msg;
         if (countryRestrictedCheck.restricted) {
@@ -2300,7 +2322,7 @@
 
       // Step 1 → qualification gate (after validation passes)
       if (this.currentStep === 1) {
-        const check = window.RiskEngine.checkQualification(this.lead.country, this.lead.industryDetail || this.lead.industry);
+        const check = window.RiskEngine.checkQualification(this.lead.country, this.lead.industry, this.lead.industryDetail);
         if (!check.allowed) {
           this._rejectReason = check.reason;
           this.isRejected    = true;
@@ -2398,6 +2420,17 @@
       const txCnt      = avgTx > 0 ? Math.round(vol / avgTx) : Math.round(vol / 55);
       const curFees    = parseFloat(this.lead.currentMonthlyFees)  || 0;
 
+      // ── Derive debit fraction from available lead data ──────────────────
+      // The public CSV tool detects actual card mix; admin doesn't have that data.
+      // Best proxy: high international % → more credit card usage → lower debit fraction.
+      // >50% intl: assume 50/50 debit/credit (0.50)
+      // >20% intl: assume 60/40 (0.60)
+      // default:   assume 70/30 debit/credit (0.70) — UK average
+      const intlPct   = parseFloat(this.lead.intlPercentage) || 0;
+      const debitFrac = intlPct > 50 ? 0.50
+                      : intlPct > 20 ? 0.60
+                      : 0.70;
+
       // Derive current effective rate locally (used as fallback regardless of API response)
       const derivedCurRate = (curFees > 0 && vol > 0)
         ? Math.round((curFees / vol * 100) * 100) / 100
@@ -2412,8 +2445,8 @@
             merchant_email:    this.lead.email        || "admin@mintedpay.com",
             monthly_volume:    vol,
             transaction_count: txCnt,
-            current_fees:      curFees,   // ← pass real current fees
-            debit_frac:        0.70,
+            current_fees:      curFees,
+            debit_frac:        debitFrac,
           }),
         });
         const data = await resp.json();
