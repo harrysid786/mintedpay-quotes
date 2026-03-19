@@ -477,6 +477,13 @@ function renderQuote(data){
       </div>
  
       <div class="qp-intro">This payment processing proposal has been prepared for <strong>${name}</strong> based on the transaction data provided.</div>
+      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:10px 14px;margin-bottom:18px;display:flex;align-items:flex-start;gap:10px">
+        <span style="font-size:14px;flex-shrink:0">⚠️</span>
+        <div style="font-size:11px;color:#92400e;line-height:1.6">
+          <strong>Indicative pricing based on the data provided.</strong> All rates and savings figures are estimates only.
+          Final pricing is subject to underwriting, business and sector review, statement validation, and confirmation of your transaction mix.
+        </div>
+      </div>
 
       ${mSave > 0 ? `
       <div style="background:var(--green);border-radius:8px;padding:20px 24px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
@@ -551,6 +558,22 @@ function renderQuote(data){
         <div class="qp-rate-arrow">→</div>` : ''}
         <div class="qp-rate-block qp-rate-mp${curRate===null?' qp-rate-solo':''}">
           <div class="qp-rate-block-lbl">${brand.name} — ${isIndicative ? 'Indicative Pricing' : 'Estimated Pricing'}</div>
+          ${blendedRate !== null ? `
+          <div style="text-align:center;margin:10px 0 6px">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);margin-bottom:4px">Estimated Blended Rate</div>
+            <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--brand);letter-spacing:-1px;line-height:1">${blendedRate.toFixed(2)}<span style="font-size:16px;font-weight:600">%</span> <span style="font-size:13px;font-weight:600;color:var(--g3)">+ ${ftx}p</span></div>
+            <div style="font-size:10px;color:var(--g3);margin-top:4px">per transaction, all-in</div>
+          </div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--g6);display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <span style="font-size:11px;color:var(--g3)">UK Cards</span>
+              <span style="font-size:13px;font-weight:700;color:var(--brand)">${displayUkRate.toFixed(2)}% + ${ftx}p</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <span style="font-size:11px;color:var(--g3)">International Cards</span>
+              <span style="font-size:13px;font-weight:700;color:var(--brand)">${displayIntlRate.toFixed(2)}% + ${ftx}p</span>
+            </div>
+          </div>` : `
           <div style="display:flex;flex-direction:column;gap:10px;margin:10px 0 6px">
             <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
               <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3)">UK Cards</span>
@@ -561,23 +584,21 @@ function renderQuote(data){
               <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3)">International Cards</span>
               <span style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--brand);letter-spacing:-1px;line-height:1">${displayIntlRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> <span style="font-size:12px;font-weight:600;color:var(--g3)">+ ${ftx}p</span></span>
             </div>
-          </div>
-          ${!isIndicative && blendedRate !== null ? `
-          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--g6)">
-            <span style="font-size:10px;color:var(--g3)">Estimated blended rate based on provided data: </span>
-            <strong style="font-size:11px;color:var(--g3)">${blendedRate.toFixed(2)}%</strong>
-          </div>` : ''}
-          ${isIndicative ? `
+          </div>`}
           <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--g6);font-size:10px;color:var(--g3);line-height:1.5">
-            Indicative rates based on standard pricing. Final rates are confirmed on your personalised quote.
-          </div>` : ''}
-          <div class="qp-rate-block-sub" style="margin-top:8px">International cards include non-UK issued cards and are typically more expensive due to bank and card network fees.</div>
+            ${isIndicative
+              ? 'Indicative pricing based on the data provided. Final rates subject to underwriting and business review.'
+              : 'Estimated pricing based on the data provided. Final rates subject to underwriting and business review.'}
+          </div>
         </div>
       </div>
  
       ${!isManual && cur > 0 && mSave > 0 ? `
       <div class="qp-save-banner">
-        <div class="qp-save-l">You could save up to</div>
+        <div>
+          <div class="qp-save-l">You could save up to</div>
+          <div style="font-size:10px;color:var(--green);opacity:.8;margin-top:2px">Estimated savings based on current provider fees supplied</div>
+        </div>
         <div style="display:flex;gap:20px;align-items:baseline;flex-wrap:wrap">
           <div class="qp-save-v">+${fmtK(mSave * 12)}<span style="font-size:12px;font-weight:400;color:var(--green);margin-left:4px">/ year</span></div>
           <div class="qp-save-v">+${fmtK(mSave)}<span style="font-size:12px;font-weight:400;color:var(--green);margin-left:4px">/ month</span></div>
@@ -727,8 +748,9 @@ function renderQuote(data){
           <li>Full integration and technical support</li>
         </ul>
         <div style="margin:16px 0 12px;padding:14px 18px;background:var(--brand-lt);border:1.5px solid var(--brand-bd);border-radius:var(--r)">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--brand);margin-bottom:4px">Your pricing starts from</div>
-          <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--brand);letter-spacing:-0.5px;line-height:1">${displayUkRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> + ${ftx}<span style="font-size:14px;font-weight:600">p</span> <span style="font-size:12px;font-weight:400;color:var(--g3)">per transaction</span></div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--brand);margin-bottom:4px">${blendedRate !== null ? 'Estimated blended rate' : 'Your pricing starts from'}</div>
+          <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--brand);letter-spacing:-0.5px;line-height:1">${(blendedRate !== null ? blendedRate : displayUkRate).toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> + ${ftx}<span style="font-size:14px;font-weight:600">p</span> <span style="font-size:12px;font-weight:400;color:var(--g3)">per transaction</span></div>
+          ${blendedRate !== null ? `<div style="font-size:10px;color:var(--g3);margin-top:4px">Based on your submitted card mix. UK: ${displayUkRate.toFixed(2)}% · International: ${displayIntlRate.toFixed(2)}%</div>` : ''}
         </div>
         <table class="pricing-breakdown">
           <thead><tr><th>Transaction Type</th><th>Rate</th><th>Notes</th></tr></thead>
@@ -891,7 +913,14 @@ function renderQuote(data){
         </div>
       </div>
 
-      <div class="qp-footer">${brand.legal||''}</div>
+      <div class="qp-footer">
+        <div style="margin-bottom:6px;font-size:9px;color:var(--g3);line-height:1.6">
+          This quote contains indicative pricing based on the data provided. All rates, savings, and cost estimates are subject to change.
+          Final pricing is confirmed subject to underwriting, business and sector review, risk assessment, statement validation, and confirmation of your card and transaction mix.
+          This document does not constitute a binding offer.
+        </div>
+        ${brand.legal||''}
+      </div>
     </div>`;
 }
  
