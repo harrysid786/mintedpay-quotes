@@ -1543,8 +1543,9 @@
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--g6)">
               <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);white-space:nowrap">Pricing Profile</label>
               <select id="lf-pricing-profile" style="border:1px solid var(--g5);border-radius:var(--r);padding:6px 10px;font-size:12px;font-family:'Inter',sans-serif;background:var(--white);color:var(--black);cursor:pointer;outline:none">
-                <option value="aggressive" ${(this.lead.pricingProfile || "standard") === "aggressive" ? "selected" : ""}>Aggressive</option>
-                <option value="standard"   ${(this.lead.pricingProfile || "standard") === "standard"   ? "selected" : ""}>Standard</option>
+                <option value="acquisition"  ${(this.lead.pricingProfile || "standard") === "acquisition"  ? "selected" : ""}>Acquisition (Indicative)</option>
+                <option value="aggressive"   ${(this.lead.pricingProfile || "standard") === "aggressive"   ? "selected" : ""}>Aggressive</option>
+                <option value="standard"     ${(this.lead.pricingProfile || "standard") === "standard"     ? "selected" : ""}>Standard</option>
                 <option value="conservative" ${(this.lead.pricingProfile || "standard") === "conservative" ? "selected" : ""}>Conservative</option>
               </select>
               <span style="font-size:10px;color:var(--g3)">Changes pricing on recalculate</span>
