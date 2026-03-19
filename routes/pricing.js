@@ -313,8 +313,10 @@ function calculateBlendedRate(sellUkRate, sellInternationalRate, intlFrac, csvDe
   }
 
   // Case 2: debitFrac came from real CSV card-mix detection
-  // Proxy: non-debit cards are predominantly international-issued
-  if (csvDebitFracIsReal && debitFrac >= 0 && debitFrac <= 1) {
+  // Proxy: non-debit cards are predominantly international-issued.
+  // Require debitFrac > 0 — a value of exactly 0 means no debit cards detected,
+  // not that all volume is international, so it is not a reliable mix signal.
+  if (csvDebitFracIsReal && debitFrac > 0 && debitFrac <= 1) {
     const proxyIntlFrac = 1 - debitFrac;
     const ukFrac = debitFrac;
     const blended = (ukFrac * sellUkRate) + (proxyIntlFrac * sellInternationalRate);
