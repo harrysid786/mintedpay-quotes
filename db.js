@@ -39,12 +39,6 @@ db.exec(`
     created_at  TEXT,
     updated_at  TEXT
   );
-
-  CREATE TABLE IF NOT EXISTS settings (
-    key        TEXT PRIMARY KEY,
-    value      TEXT NOT NULL,
-    updated_at TEXT
-  );
 `);
 
 // ── Migration: add columns if upgrading from older schema ─────
@@ -54,8 +48,7 @@ if (!cols.includes("cnt"))       db.exec("ALTER TABLE quotes ADD COLUMN cnt     
 if (!cols.includes("avgTx"))     db.exec("ALTER TABLE quotes ADD COLUMN avgTx     REAL DEFAULT 0");
 if (!cols.includes("cur"))       db.exec("ALTER TABLE quotes ADD COLUMN cur       REAL DEFAULT 0");
 if (!cols.includes("debitFrac")) db.exec("ALTER TABLE quotes ADD COLUMN debitFrac REAL DEFAULT 0.70");
-if (!cols.includes("intlFrac"))  db.exec("ALTER TABLE quotes ADD COLUMN intlFrac  REAL");
-if (!cols.includes("addons"))    db.exec("ALTER TABLE quotes ADD COLUMN addons    TEXT DEFAULT '{}'");;
+if (!cols.includes("addons"))    db.exec("ALTER TABLE quotes ADD COLUMN addons    TEXT DEFAULT '{}'");
 
 // ── Migration: leads table columns (safe additive) ───────────
 const leadCols = db.pragma("table_info(leads)").map(c => c.name);
