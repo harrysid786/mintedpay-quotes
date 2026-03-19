@@ -156,6 +156,64 @@ function getPricingSettings() {
   };
 }
 
+// ── getPricingSettings._getDefaults ──────────────────────────
+// Returns the hardcoded fallback values only — no DB read.
+// Used by GET /api/settings?mode=defaults so the admin UI can
+// fetch canonical defaults from a single backend source.
+getPricingSettings._getDefaults = function () {
+  return {
+    baseCosts: {
+      uk:            REGIONAL_BASE_COST.uk,
+      eea:           REGIONAL_BASE_COST.eea,
+      international: REGIONAL_BASE_COST.international,
+      wespell:       0.0435,
+    },
+    profiles: {
+      aggressive: {
+        targetMargin:     PRICING_PROFILES.aggressive.targetMargin,
+        minDomestic:      PRICING_PROFILES.aggressive.minDomestic,
+        minInternational: PRICING_PROFILES.aggressive.minInternational,
+        splitThreshold:   PRICING_PROFILES.aggressive.forceSplitThreshold,
+      },
+      standard: {
+        targetMargin:     PRICING_PROFILES.standard.targetMargin,
+        minDomestic:      PRICING_PROFILES.standard.minDomestic,
+        minInternational: PRICING_PROFILES.standard.minInternational,
+        splitThreshold:   PRICING_PROFILES.standard.forceSplitThreshold,
+      },
+      conservative: {
+        targetMargin:     PRICING_PROFILES.conservative.targetMargin,
+        minDomestic:      PRICING_PROFILES.conservative.minDomestic,
+        minInternational: PRICING_PROFILES.conservative.minInternational,
+        splitThreshold:   PRICING_PROFILES.conservative.forceSplitThreshold,
+      },
+    },
+    globalRules: {
+      minMargin:          0.30,
+      undercutMultiplier: 0.80,
+      rateFloor:          1.30,
+      gatewayFeeTiers: [
+        { maxVol: 100000,   fee: 0.10 },
+        { maxVol: 200000,   fee: 0.08 },
+        { maxVol: Infinity, fee: 0.05 },
+      ],
+      fixedFeeMinimum: 10,
+      volumeMargins: [
+        { maxVol: 50000,    margin: 0.60 },
+        { maxVol: 200000,   margin: 0.40 },
+        { maxVol: Infinity, margin: 0.25 },
+      ],
+      fixedFeeTiers: [
+        { maxVol: 100000,   fee: 10 },
+        { maxVol: 200000,   fee: 8  },
+        { maxVol: Infinity, fee: 5  },
+      ],
+    },
+    intlRules:    { manualOverride: true, countryCoverageThreshold: 0.80 },
+    blendedRules: { suppressAtZero: true, suppressAtHundred: true },
+  };
+};
+
 // ── decidePricingMode ─────────────────────────────────────────
 // Determines whether split pricing (UK + International separate rates)
 // should be the PRIMARY presentation, or whether blended can serve as primary
@@ -396,7 +454,7 @@ function generateQuoteId() {
 // ── POST /api/calculate_quote ─────────────────────────────────
 router.post("/", (req, res) => {
   try {
-    const { merchant_name, merchant_email, monthly_volume, transaction_count, current_fees, debit_frac, intl_frac, csv_debit_frac_is_real, pricing_profile, settings_override } = req.body;
+    const { merchant_name, merchant_email, monthly_volume, transaction_count, current_fees, debit_frac, intl_frac, csv_debit_frac_is_real, pricing_profile, settings_override, simulate } = req.body;
 
     if (!merchant_email) {
       return res.status(400).json({ error: "Email address is required" });
@@ -435,6 +493,28 @@ router.post("/", (req, res) => {
     const result = calculateQuote(vol, cnt, debitFrac, cur, intlFrac, csvDebitFracIsReal, profileName, resolvedSettings);
     if (!result) {
       return res.status(400).json({ error: "Unable to calculate rate with the provided data" });
+    }
+
+    // ── Simulation mode — return results without storing anything ──
+    // When simulate=true the DB insert and quote_id generation are skipped.
+    // All calculated fields are still returned for display purposes.
+    if (simulate === true || simulate === "true") {
+      return res.json({
+        success:                true,
+        simulate:               true,
+        rate:                   result.rate,
+        fixed_fee:              result.fixed_fee,
+        current_rate:           result.current_rate,
+        monthly_saving:         result.monthly_saving,
+        yearly_saving:          result.yearly_saving,
+        sell_uk_rate:            result.sell_uk_rate,
+        sell_international_rate: result.sell_international_rate,
+        blended_rate:            result.blended_rate,
+        pricing_mode:            result.pricing_mode,
+        split_is_primary:        result.split_is_primary,
+        blended_is_valid:        result.blended_is_valid,
+        pricing_profile:         profileName,
+      });
     }
 
     const quote_id    = generateQuoteId();
@@ -527,7 +607,19 @@ router.post("/", (req, res) => {
 // Used by admin panel to populate the pricing settings form on load.
 router.get("/settings", (req, res) => {
   try {
-    res.json({ success: true, settings: getPricingSettings() });
+    // ?mode=defaults — return the hardcoded fallback values only, no DB read.
+    // Used by the admin UI to get the canonical defaults without any saved overrides.
+    if (req.query.mode === "defaults") {
+      return res.json({ success: true, settings: getPricingSettings._getDefaults() });
+    }
+
+    // Standard mode — DB values with fallback to defaults.
+    const latestRow = db.prepare(
+      "SELECT updated_at FROM settings ORDER BY updated_at DESC LIMIT 1"
+    ).get();
+    const updatedAt = latestRow ? latestRow.updated_at : null;
+
+    res.json({ success: true, settings: getPricingSettings(), updated_at: updatedAt });
   } catch (err) {
     console.error("Error fetching settings:", err);
     res.status(500).json({ error: "Failed to load settings" });
@@ -568,7 +660,7 @@ router.put("/settings", (req, res) => {
       if (blendedRules) upsert.run("blended_rules", serialise(blendedRules), now);
     })();
 
-    res.json({ success: true, settings: getPricingSettings() });
+    res.json({ success: true, settings: getPricingSettings(), updated_at: now });
   } catch (err) {
     console.error("Error saving settings:", err);
     res.status(500).json({ error: "Failed to save settings" });
