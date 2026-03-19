@@ -6,8 +6,7 @@ const path     = require("path");
 const quotesRoute     = require("./routes/quotes");
 const acceptanceRoute = require("./routes/acceptance");
 const pricingRoute    = require("./routes/pricing");
-const leadsRoute      = require("./routes/leads");
-const settingsRoute   = require("./routes/settings");  // ← Pricing Engine Settings API
+const leadsRoute      = require("./routes/leads");      // ← NEW: Back Office leads API
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -22,27 +21,13 @@ app.use("/api/quotes",           quotesRoute);
 app.use("/api/quote_acceptance", acceptanceRoute);
 app.use("/api/calculate_quote",  pricingRoute);
 
-// ── Leads / Back Office API ───────────────────────────────────
+// ── NEW: Leads / Back Office API ──────────────────────────────
 app.use("/api/leads", leadsRoute);
-
-// ── Pricing Engine Settings API ───────────────────────────────
-// Mounted at /api so:
-//   GET  /api/settings          → router.get("/settings")
-//   GET  /api/settings?mode=defaults
-//   PUT  /api/settings          → router.put("/settings")
-app.use("/api", settingsRoute);
 
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 
 // ── Admin panel redirect (/admin → /admin/index.html) ─────────
 app.get("/admin", (_req, res) => res.redirect("/admin/index.html"));
-
-// ── Pricing Engine Settings clean URL ─────────────────────────
-// Serves settings.html at /admin/settings (no .html extension needed).
-// /admin/settings.html still works via express.static above.
-app.get("/admin/settings", (_req, res) => {
-  res.sendFile(path.join(__dirname, "public/admin/settings.html"));
-});
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public/index.html"));
