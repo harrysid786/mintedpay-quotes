@@ -70,10 +70,16 @@ function getPricingSettings() {
 
   // ── Hardcoded defaults (never removed — always the safety net) ────────────
   const DEFAULT_BASE_COSTS = {
-    uk:            REGIONAL_BASE_COST.uk,            // 1.10
-    eea:           REGIONAL_BASE_COST.eea,           // 1.60
-    international: REGIONAL_BASE_COST.international, // 2.60
-    wespell:       0.0435,
+    uk:                     REGIONAL_BASE_COST.uk,            // 1.10
+    eea:                    REGIONAL_BASE_COST.eea,           // 1.60
+    international:          REGIONAL_BASE_COST.international, // 2.60
+    wespell:                0.0435,
+    // ── Granular cost components (used by calculateQuote cost base) ──
+    // These replace the previous hardcoded values of 0.20, 0.30, 0.13, 0.10
+    domesticInterchange:    0.20,   // UK debit interchange %
+    intlInterchange:        1.50,   // Non-UK issued interchange %
+    schemeFees:             0.13,   // Visa/Mastercard network %
+    acquirerFee:            0.10,   // Acquirer/processor base %
   };
 
   const DEFAULT_PROFILES = {
@@ -163,10 +169,14 @@ function getPricingSettings() {
 getPricingSettings._getDefaults = function () {
   return {
     baseCosts: {
-      uk:            REGIONAL_BASE_COST.uk,
-      eea:           REGIONAL_BASE_COST.eea,
-      international: REGIONAL_BASE_COST.international,
-      wespell:       0.0435,
+      uk:                     REGIONAL_BASE_COST.uk,
+      eea:                    REGIONAL_BASE_COST.eea,
+      international:          REGIONAL_BASE_COST.international,
+      wespell:                0.0435,
+      domesticInterchange:    0.20,
+      intlInterchange:        1.50,
+      schemeFees:             0.13,
+      acquirerFee:            0.10,
     },
     profiles: {
       aggressive: {
@@ -354,8 +364,30 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
   const avgTx = vol / cnt;
 
   // ── 1. TRUE COST ────────────────────────────────────────────
-  const interchangeRate = (debitFrac * 0.20) + ((1 - debitFrac) * 0.30);
-  const costRate = interchangeRate + 0.13 + 0.10;
+  // All cost components sourced from settings — nothing hardcoded.
+  //
+  // When intlFrac is explicitly known (from lead.intlPercentage or CSV detection)
+  // we use it directly to weight domestic vs international interchange — this is
+  // the most accurate representation of real card mix cost.
+  //
+  // When intlFrac is null (no real data) we fall back to debitFrac as a proxy:
+  // debit cards are predominantly UK-issued, non-debit skew international.
+  //
+  const bc = settings.baseCosts;
+  const domIc   = Number.isFinite(bc.domesticInterchange) ? bc.domesticInterchange : 0.20;
+  const intlIc  = Number.isFinite(bc.intlInterchange)     ? bc.intlInterchange     : 1.50;
+  const scheme  = Number.isFinite(bc.schemeFees)          ? bc.schemeFees          : 0.13;
+  const acq     = Number.isFinite(bc.acquirerFee)         ? bc.acquirerFee         : 0.10;
+
+  // Determine domestic fraction for interchange weighting
+  // Priority 1: real intlFrac (most accurate)
+  // Priority 2: debitFrac as proxy (debit ≈ domestic, credit/prepaid ≈ international)
+  const domesticFrac = (intlFrac !== null && intlFrac >= 0 && intlFrac <= 1)
+    ? (1 - intlFrac)
+    : debitFrac;
+
+  const interchangeRate = (domesticFrac * domIc) + ((1 - domesticFrac) * intlIc);
+  const costRate = interchangeRate + scheme + acq;
 
   // ── 2. FIXED COST PER TRANSACTION ──────────────────────────
   const gatewayTier = rules.gatewayFeeTiers.find(t => vol < t.maxVol) || rules.gatewayFeeTiers[rules.gatewayFeeTiers.length - 1];
@@ -381,22 +413,52 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
   const pricingDecision = decidePricingMode(intlFrac, blendedRate, profileName, settings);
 
   // ── 3. MINIMUM MARGIN PROTECTION ──────────────────────────
+  // minAllowedRate is the absolute floor below which we will never quote.
+  // It is: blended cost base + configured minimum margin.
+  //
+  // When intlFrac is material (≥ profile split threshold), we apply an
+  // international uplift: the cost floor is weighted toward the higher
+  // international cost base to prevent quoting below cost on intl-heavy
+  // portfolios. This is additive — it only ever raises the floor, never lowers it.
+  //
   const minimumMargin  = rules.minMargin;
   const minAllowedRate = costRate + minimumMargin;
 
+  // International uplift: applies when real intlFrac data exists and is material
+  let effectiveMinRate = minAllowedRate;
+  if (intlFrac !== null && intlFrac > 0 && intlFrac < 1) {
+    // Pure international cost base (worst-case cost for intl-heavy portfolios)
+    const pureDomCost   = domIc + scheme + acq;
+    const pureIntlCost  = intlIc + scheme + acq;
+    // Weighted cost floor using actual intl proportion
+    const weightedCostFloor = ((1 - intlFrac) * pureDomCost) + (intlFrac * pureIntlCost);
+    const weightedMinRate   = weightedCostFloor + minimumMargin;
+    // Uplift only applies if it raises the floor (never lowers it)
+    effectiveMinRate = Math.max(minAllowedRate, weightedMinRate);
+  }
+
   // ── 4. CALCULATE QUOTE RATE ───────────────────────────────
+  // Two paths:
+  //   A) Competitor undercut — target = currentRate × undercutMultiplier
+  //   B) Volume-based       — target = costRate + volumeMargin
+  //
+  // In both cases: finalRate = max(targetRate, effectiveMinRate, profile.minDomestic)
+  // effectiveMinRate = costBase + minMargin (with international uplift when relevant)
+  // profile.minDomestic is the profile's absolute minimum floor
+  //
   let quoteRate;
   let currentRate = null;
 
   if (curFees && curFees > 0) {
-    // Competitor undercut
+    // Path A: Competitor undercut
     currentRate = (curFees / vol) * 100;
     const targetRate = currentRate * rules.undercutMultiplier;
-    quoteRate = Math.max(targetRate, minAllowedRate);
+    quoteRate = Math.max(targetRate, effectiveMinRate, profile.minDomestic);
   } else {
-    // Volume-based pricing — margin sourced from settings
+    // Path B: Volume-based pricing
     const volMarginTier = rules.volumeMargins.find(t => vol < t.maxVol) || rules.volumeMargins[rules.volumeMargins.length - 1];
-    quoteRate = costRate + volMarginTier.margin;
+    const targetRate = costRate + volMarginTier.margin;
+    quoteRate = Math.max(targetRate, effectiveMinRate, profile.minDomestic);
   }
 
   // ── 5. RATE FLOOR ─────────────────────────────────────────
@@ -442,6 +504,9 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
     pricing_mode:            pricingDecision.mode,
     split_is_primary:        pricingDecision.splitIsPrimary,
     blended_is_valid:        pricingDecision.blendedIsValid,
+    // ── Cost transparency (admin / simulator only) ─────────────
+    cost_rate:               Math.round(costRate * 10000) / 10000,
+    effective_min_rate:      Math.round(effectiveMinRate * 10000) / 10000,
   };
 }
 
@@ -514,6 +579,8 @@ router.post("/", (req, res) => {
         split_is_primary:        result.split_is_primary,
         blended_is_valid:        result.blended_is_valid,
         pricing_profile:         profileName,
+        cost_rate:               result.cost_rate,
+        effective_min_rate:      result.effective_min_rate,
       });
     }
 
