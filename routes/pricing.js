@@ -26,19 +26,28 @@ const PRICING_PROFILES = {
     targetMargin:      0.20,
     minDomestic:       1.40,
     minInternational:  2.50,
-    forceSplitThreshold: 0.40,  // split is primary if intl > 40%
+    forceSplitThreshold: 0.40,
   },
   standard: {
     targetMargin:      0.30,
     minDomestic:       1.60,
     minInternational:  3.00,
-    forceSplitThreshold: 0.35,  // split is primary if intl > 35%
+    forceSplitThreshold: 0.35,
   },
   conservative: {
     targetMargin:      0.45,
     minDomestic:       1.90,
     minInternational:  3.20,
-    forceSplitThreshold: 0.30,  // split is primary if intl > 30%
+    forceSplitThreshold: 0.30,
+  },
+  // ── Acquisition profile ───────────────────────────────────────
+  // Used for merchant-facing indicative quotes. Optimises for conversion.
+  // Rates are clearly labelled as indicative — final pricing subject to underwriting.
+  acquisition: {
+    targetMargin:      0.15,
+    minDomestic:       1.39,
+    minInternational:  2.49,
+    forceSplitThreshold: 0.35,
   },
 };
 
@@ -67,6 +76,31 @@ const SCHEME_FEE = 0.13; // ~0.13% blended
 
 // Platform/Wespell cost — loaded from settings (default 0.0435%)
 // Gateway/processing fee — loaded from settings tiers
+
+// ── Acquisition global rules ──────────────────────────────────
+// Separate rule set used when profileName === "acquisition".
+// Kept isolated so standard/aggressive/conservative are unaffected.
+const ACQUISITION_GLOBAL_RULES = {
+  minMargin:          0.20,
+  undercutMultiplier: 0.72,
+  rateFloor:          1.15,
+  gatewayFeeTiers: [
+    { maxVol: 100000,   fee: 0.10 },
+    { maxVol: 200000,   fee: 0.08 },
+    { maxVol: Infinity, fee: 0.05 },
+  ],
+  fixedFeeMinimum: 5,
+  volumeMargins: [
+    { maxVol: 50000,    margin: 0.40 },
+    { maxVol: 200000,   margin: 0.25 },
+    { maxVol: Infinity, margin: 0.15 },
+  ],
+  fixedFeeTiers: [
+    { maxVol: 100000,   fee: 5 },
+    { maxVol: 200000,   fee: 5 },
+    { maxVol: Infinity, fee: 3 },
+  ],
+};
 
 function getAcquirerMarkup(vol) {
   const tier = ADYEN_ACQUIRER_MARKUP_TIERS.find(t => vol < t.maxVol)
@@ -133,6 +167,13 @@ function getPricingSettings() {
       minDomestic:      PRICING_PROFILES.conservative.minDomestic,         // 1.90
       minInternational: PRICING_PROFILES.conservative.minInternational,    // 3.20
       splitThreshold:   PRICING_PROFILES.conservative.forceSplitThreshold, // 0.30
+    },
+    // Acquisition profile — merchant-facing indicative quotes, conversion-optimised
+    acquisition: {
+      targetMargin:     PRICING_PROFILES.acquisition.targetMargin,         // 0.15
+      minDomestic:      PRICING_PROFILES.acquisition.minDomestic,          // 1.39
+      minInternational: PRICING_PROFILES.acquisition.minInternational,     // 2.49
+      splitThreshold:   PRICING_PROFILES.acquisition.forceSplitThreshold,  // 0.35
     },
   };
 
@@ -345,7 +386,8 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
   if (!vol || vol <= 0 || !cnt || cnt <= 0) return null;
 
   const profile  = settings.profiles[profileName];
-  const rules    = settings.globalRules;
+  // Acquisition profile uses its own global rules (different undercut, floor, margins, fixed fees)
+  const rules    = profileName === "acquisition" ? ACQUISITION_GLOBAL_RULES : settings.globalRules;
 
   const avgTx = vol / cnt;
 
