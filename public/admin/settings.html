@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing Engine Settings — MintedPay Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#0a0a0a;--g1:#1a1a1a;--g2:#2d2d2d;--g3:#6b6b6b;--g4:#a0a0a0;
+  --g5:#d4d4d4;--g6:#ebebeb;--g7:#f5f5f5;--g8:#fafafa;--white:#fff;
+  --brand:#4b2afd;--brand-lt:#f0edff;--brand-bd:#c4b5fd;--brand-dk:#3a1fe8;
+  --green:#00916e;--green-lt:#e6f7f2;--green-bd:#a7f3d0;
+  --red:#dc2626;--red-lt:#fff0f0;--red-bd:#fca5a5;
+  --amber:#b45309;--amber-lt:#fffbeb;--amber-bd:#fde68a;
+  --r:6px;--r2:10px;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 14px rgba(0,0,0,.1),0 2px 4px rgba(0,0,0,.05);
+}
+html,body{height:100%;min-height:100%}
+body{font-family:'Inter',sans-serif;background:var(--g7);color:var(--black);font-size:13px;-webkit-font-smoothing:antialiased}
+button{cursor:pointer;font-family:'Inter',sans-serif}
+a{color:var(--brand);text-decoration:none}
+a:hover{text-decoration:underline}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--g7)}
+::-webkit-scrollbar-thumb{background:var(--g5);border-radius:10px}
+
+/* ── Topbar ── */
+.topbar{
+  background:var(--white);border-bottom:2px solid var(--g6);height:54px;
+  display:flex;align-items:center;padding:0 24px;justify-content:space-between;
+  position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.06)
+}
+.tb-left{display:flex;align-items:center;gap:14px}
+.wordmark{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;letter-spacing:-.5px;color:var(--black)}
+.wordmark em{color:var(--brand);font-style:normal}
+.badge-admin{
+  background:var(--brand-lt);color:var(--brand);border:1px solid var(--brand-bd);
+  font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  padding:2px 8px;border-radius:20px
+}
+.tb-sep{width:1px;height:20px;background:var(--g6)}
+.tb-tool{font-size:11px;color:var(--g3);font-weight:500}
+.tb-right{display:flex;align-items:center;gap:10px}
+.tb-nav-link{
+  font-size:11px;color:var(--g3);padding:5px 10px;
+  border:1px solid var(--g6);border-radius:var(--r);background:var(--g8);
+  text-decoration:none;transition:all .15s
+}
+.tb-nav-link:hover{background:var(--brand-lt);color:var(--brand);border-color:var(--brand-bd);text-decoration:none}
+.tb-nav-link.active{background:var(--brand-lt);color:var(--brand);border-color:var(--brand-bd);font-weight:600}
+
+/* ── Page wrap ── */
+.page-wrap{padding:28px 24px;max-width:960px;margin:0 auto}
+
+/* ── Page header ── */
+.page-hdr{margin-bottom:24px}
+.page-hdr-title{
+  font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.5px;color:var(--black);margin-bottom:4px
+}
+.page-hdr-sub{font-size:12px;color:var(--g3);line-height:1.5}
+
+/* ── Section card ── */
+.section-card{
+  background:var(--white);border:1px solid var(--g6);border-radius:var(--r2);
+  padding:22px;margin-bottom:16px;box-shadow:var(--sh);
+  border-left:3px solid var(--brand)
+}
+.section-title{
+  font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--g3);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--g6);
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap
+}
+.sub-label{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:1px;color:var(--g3);margin-bottom:8px
+}
+
+/* ── Status badges ── */
+.badge{font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;letter-spacing:.5px;border:1px solid}
+.badge-saved{background:var(--green-lt);color:var(--green);border-color:var(--green-bd)}
+.badge-unsaved{background:var(--amber-lt);color:var(--amber);border-color:var(--amber-bd)}
+
+/* ── Inputs ── */
+.field-input{
+  width:90px;padding:5px 8px;border:1.5px solid var(--g5);border-radius:var(--r);
+  font-size:12px;font-family:'Inter',sans-serif;text-align:right;outline:none;
+  transition:border .15s;background:var(--white);color:var(--black)
+}
+.field-input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(75,42,253,.08)}
+.field-input.error{border-color:var(--red)!important;background:var(--red-lt)}
+
+/* ── Grid layouts ── */
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.grid-label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--g3)}
+@media(max-width:600px){.grid-3{grid-template-columns:1fr 1fr}}
+
+/* ── Table ── */
+.settings-table{width:100%;border-collapse:collapse;border:1px solid var(--g6);border-radius:var(--r);overflow:hidden;margin-bottom:20px}
+.settings-table thead tr{background:var(--brand-lt)}
+.settings-table th{
+  text-align:left;padding:9px 12px;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.8px;color:var(--brand);
+  border-bottom:1px solid var(--brand-bd)
+}
+.settings-table th:last-child{text-align:right}
+.settings-table td{padding:9px 12px;border-bottom:1px solid var(--g6);font-size:12px;color:var(--g3)}
+.settings-table td:last-child{text-align:right}
+.settings-table tbody tr:last-child td{border-bottom:none}
+
+/* ── Profile cards ── */
+.profiles-grid{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.profile-card{
+  background:var(--g8);border:1px solid var(--g6);border-radius:var(--r);
+  overflow:hidden;flex:1;min-width:200px
+}
+.profile-card-hdr{padding:9px 13px}
+.profile-card-hdr-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.profile-card-body{padding:12px 13px;display:flex;flex-direction:column;gap:9px}
+.profile-field{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--g3)}
+.profile-derived{
+  margin-top:6px;padding-top:10px;border-top:1px solid var(--g6)
+}
+.profile-derived-title{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.8px;color:var(--brand);margin-bottom:5px
+}
+.profile-derived-row{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
+.profile-derived-row strong{color:var(--brand)}
+
+/* ── Logic rules ── */
+.rules-list{border-top:1px solid var(--g6)}
+.rule-row{
+  display:flex;gap:8px;padding:7px 0;
+  border-bottom:1px solid var(--g6);font-size:12px;color:var(--black);line-height:1.4
+}
+.rule-tick{color:var(--green);font-size:13px;flex-shrink:0}
+
+/* ── Action bar ── */
+.action-bar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding-top:16px;border-top:1px solid var(--g6);margin-top:4px
+}
+.btn-primary{
+  background:var(--brand);color:var(--white);border:none;
+  padding:10px 22px;border-radius:var(--r);font-size:13px;font-weight:700;
+  font-family:'Inter',sans-serif;transition:background .15s
+}
+.btn-primary:hover{background:var(--brand-dk)}
+.btn-primary:disabled{background:var(--g5);cursor:not-allowed}
+.btn-secondary{
+  background:var(--white);color:var(--g3);border:1.5px solid var(--g5);
+  padding:10px 16px;border-radius:var(--r);font-size:13px;font-weight:600;
+  font-family:'Inter',sans-serif;transition:all .15s
+}
+.btn-secondary:hover{border-color:var(--g3);color:var(--black)}
+.status-msg{font-size:11px;color:var(--g3)}
+.status-msg.ok{color:var(--green);font-weight:600}
+.status-msg.err{color:var(--red);font-weight:600}
+
+/* ── Toast notifications ── */
+#toast-container{
+  position:fixed;top:66px;left:50%;transform:translateX(-50%);
+  z-index:9999;display:flex;flex-direction:column;gap:8px;
+  pointer-events:none;min-width:320px;max-width:560px
+}
+.toast{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:13px 16px;border-radius:var(--r2);
+  box-shadow:var(--sh-md);pointer-events:all;
+  font-size:13px;line-height:1.45;animation:toastIn .2s ease
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-8px)}}
+.toast.ok{ background:var(--green-lt);border:1.5px solid var(--green-bd);color:#064e3b }
+.toast.err{background:var(--red-lt);  border:1.5px solid var(--red-bd);  color:#7f1d1d }
+.toast-icon{font-size:15px;flex-shrink:0;margin-top:1px}
+.toast-body{flex:1}
+.toast-title{font-weight:700;margin-bottom:2px}
+.toast-msg{font-size:12px;opacity:.85}
+.toast-close{
+  background:none;border:none;font-size:16px;line-height:1;
+  cursor:pointer;opacity:.5;padding:0 0 0 6px;flex-shrink:0;
+  color:inherit
+}
+.toast-close:hover{opacity:1}
+.loading-state{
+  text-align:center;padding:60px 0;color:var(--g3);font-size:13px
+}
+.spinner{
+  width:28px;height:28px;border:2.5px solid var(--g6);
+  border-top-color:var(--brand);border-radius:50%;
+  animation:spin .6s linear infinite;margin:0 auto 12px
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Preview impact panel ── */
+#preview-impact{margin-top:14px;display:none}
+.preview-card{
+  background:var(--amber-lt);border:1.5px solid var(--amber-bd);
+  border-radius:var(--r2);padding:16px
+}
+.preview-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;flex-wrap:wrap;gap:8px
+}
+.preview-hdr-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--amber)}
+.preview-count{
+  font-size:10px;font-weight:700;background:var(--amber);color:var(--white);
+  padding:2px 9px;border-radius:20px;letter-spacing:.5px
+}
+.preview-table{width:100%;border-collapse:collapse;font-size:12px}
+.preview-table th{
+  text-align:left;padding:6px 10px;font-size:9px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.8px;color:var(--amber);
+  border-bottom:1px solid var(--amber-bd);background:rgba(180,83,9,.06)
+}
+.preview-table td{padding:7px 10px;border-bottom:1px solid var(--amber-bd);vertical-align:middle}
+.preview-table tbody tr:last-child td{border-bottom:none}
+.preview-table tbody tr.changed td{background:rgba(180,83,9,.05)}
+.pv-old{color:var(--g4);text-decoration:line-through;font-size:11px;margin-right:2px}
+.pv-arrow{color:var(--g5);padding:0 4px;font-size:11px}
+.pv-new{font-weight:700;color:var(--amber)}
+.pv-same{color:var(--g4);font-size:11px}
+</style>
+</head>
+<body>
+
+<!-- ── Topbar ── -->
+<div class="topbar">
+  <div class="tb-left">
+    <div class="wordmark">Minted<em>Pay</em></div>
+    <span class="badge-admin">Admin</span>
+    <div class="tb-sep"></div>
+    <span class="tb-tool">⚙ Pricing Engine Settings</span>
+  </div>
+  <div class="tb-right">
+    <a href="/admin/" class="tb-nav-link">← Back to Dashboard</a>
+    <a href="/pricing.html" target="_blank" class="tb-nav-link">Public Tool ↗</a>
+  </div>
+</div>
+
+<!-- ── Toast notifications ── -->
+<div id="toast-container"></div>
+
+<!-- ── Page ── -->
+<div class="page-wrap">
+
+  <div class="page-hdr">
+    <div class="page-hdr-title">Pricing Engine Settings</div>
+    <div class="page-hdr-sub">
+      Configure base costs, profile margins, and rate rules. Changes are saved to the database and take effect on the next quote calculation.
+      Values fall back to hardcoded defaults if the database is empty.
+    </div>
+    <div id="last-updated" style="margin-top:8px;font-size:11px;color:var(--g4)">Loading…</div>
+  </div>
+
+  <div id="settingsContainer">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      Loading settings…
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// MintedPay — Pricing Engine Settings Page
+// Standalone admin page — no dependency on leadFlow.js
+// ═══════════════════════════════════════════════════════════
+
+// systemDefaults — canonical default values fetched from the backend.
+// Populated once via GET /api/settings?mode=defaults on first load.
+// Never hardcoded here — backend is the single source of truth.
+let systemDefaults = null;
+
+let currentSettings = null;  // live settings from server
+let isDirty = false;          // true when inputs differ from loaded settings
+
+// ── Format and display last updated timestamp ──────────────
+function setLastUpdated(updatedAt) {
+  const el = document.getElementById("last-updated");
+  if (!el) return;
+  if (!updatedAt) {
+    el.textContent = "Last updated: using default system settings";
+    el.style.color = "var(--g4)";
+  } else {
+    // Format ISO timestamp to human-readable local time
+    const d = new Date(updatedAt);
+    const formatted = d.toLocaleDateString("en-GB", {
+      day: "2-digit", month: "short", year: "numeric",
+    }) + " at " + d.toLocaleTimeString("en-GB", {
+      hour: "2-digit", minute: "2-digit",
+    });
+    el.textContent = "Last updated: " + formatted;
+    el.style.color = "var(--g3)";
+  }
+}
+
+// ── Derived sell rate (mirrors server formula) ─────────────
+function sellRate(base, wespell, margin, floor) {
+  return Math.ceil(Math.max(base + wespell + margin, floor) * 100) / 100;
+}
+
+// ── Input helper ───────────────────────────────────────────
+function inp(id, val, step = "0.01", min = "0") {
+  return `<input id="${id}" type="number" step="${step}" min="${min}"
+    value="${val}" class="field-input"
+    oninput="markDirty()">`;
+}
+
+// ── Profile card ───────────────────────────────────────────
+function profileCard(name, p, bc) {
+  const isStd = name === "standard";
+  const uk   = sellRate(bc.uk,            bc.wespell, p.targetMargin, p.minDomestic);
+  const intl = sellRate(bc.international, bc.wespell, p.targetMargin, p.minInternational);
+  return `
+    <div class="profile-card">
+      <div class="profile-card-hdr" style="background:${isStd ? "var(--brand)" : "var(--g6)"}">
+        <div class="profile-card-hdr-label" style="color:${isStd ? "var(--white)" : "var(--g3)"}">
+          ${name.charAt(0).toUpperCase() + name.slice(1)}${isStd ? " ✦ Default" : ""}
+        </div>
+      </div>
+      <div class="profile-card-body">
+        <div class="profile-field">Target margin ${inp("ps-" + name + "-margin", p.targetMargin.toFixed(2))}</div>
+        <div class="profile-field">Min domestic ${inp("ps-" + name + "-mindom", p.minDomestic.toFixed(2))}</div>
+        <div class="profile-field">Min international ${inp("ps-" + name + "-minintl", p.minInternational.toFixed(2))}</div>
+        <div class="profile-field">Split threshold % ${inp("ps-" + name + "-split", (p.splitThreshold * 100).toFixed(0), "1", "0")}</div>
+        <div class="profile-derived">
+          <div class="profile-derived-title">Derived sell rates</div>
+          <div class="profile-derived-row"><span>UK</span><strong id="ps-${name}-sell-uk">${uk.toFixed(2)}%</strong></div>
+          <div class="profile-derived-row"><span>International</span><strong id="ps-${name}-sell-intl">${intl.toFixed(2)}%</strong></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Render full settings panel ─────────────────────────────
+function renderPanel(s) {
+  const bc = s.baseCosts;
+  const gr = s.globalRules;
+
+  document.getElementById("settingsContainer").innerHTML = `
+
+    <!-- Status bar -->
+    <div class="section-card" style="border-left-color:${isDirty ? "var(--amber)" : "var(--green)"}">
+      <div class="section-title">
+        ⚙ Pricing Engine Settings
+        <span class="badge ${isDirty ? "badge-unsaved" : "badge-saved"}">
+          ${isDirty ? "⚠ Unsaved changes" : "✓ Using saved settings"}
+        </span>
+      </div>
+
+      <!-- BASE COSTS -->
+      <div class="sub-label">Base Costs (Interchange + Scheme Fees)</div>
+      <div class="grid-3">
+        <div class="grid-label">
+          UK base cost (%)
+          ${inp("ps-base-uk", bc.uk.toFixed(4))}
+          <span style="font-size:10px;color:var(--g4)">UK-issued Visa &amp; Mastercard</span>
+        </div>
+        <div class="grid-label">
+          International / ROW (%)
+          ${inp("ps-base-intl", bc.international.toFixed(4))}
+          <span style="font-size:10px;color:var(--g4)">Non-UK issued, Rest of World</span>
+        </div>
+        <div class="grid-label">
+          Wespell cost (p/tx)
+          ${inp("ps-base-wespell", bc.wespell.toFixed(4), "0.0001")}
+          <span style="font-size:10px;color:var(--g4)">Per transaction, all regions</span>
+        </div>
+      </div>
+
+      <!-- GLOBAL RULES -->
+      <div class="sub-label">Global Rules</div>
+      <div class="grid-3">
+        <div class="grid-label">
+          Min margin (%)
+          ${inp("ps-rule-minmargin", gr.minMargin.toFixed(2))}
+          <span style="font-size:10px;color:var(--g4)">quoteRate ≥ costRate + minMargin</span>
+        </div>
+        <div class="grid-label">
+          Undercut multiplier
+          ${inp("ps-rule-undercut", gr.undercutMultiplier.toFixed(2))}
+          <span style="font-size:10px;color:var(--g4)">targetRate = currentRate × this</span>
+        </div>
+        <div class="grid-label">
+          Rate floor (%)
+          ${inp("ps-rule-floor", gr.rateFloor.toFixed(2))}
+          <span style="font-size:10px;color:var(--g4)">Absolute minimum sell rate</span>
+        </div>
+      </div>
+
+      <!-- VOLUME MARGINS -->
+      <div class="sub-label">Volume-Based Margins (% above cost)</div>
+      <table class="settings-table">
+        <thead>
+          <tr>
+            <th>Volume band</th>
+            <th>Margin added (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${gr.volumeMargins.map((t, i) => `
+          <tr>
+            <td>${["Under £50k / mo", "£50k – £200k / mo", "£200k+ / mo"][i]}</td>
+            <td>${inp("ps-vmarg-" + i, t.margin.toFixed(2))}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+
+      <!-- FIXED FEE TIERS -->
+      <div class="sub-label">Fixed Fee Tiers (pence per transaction)</div>
+      <table class="settings-table">
+        <thead>
+          <tr>
+            <th>Volume band</th>
+            <th>Fixed fee (p/tx)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${gr.fixedFeeTiers.map((t, i) => `
+          <tr>
+            <td>${["Under £100k / mo", "£100k – £200k / mo", "£200k+ / mo"][i]}</td>
+            <td>${inp("ps-ftier-" + i, t.fee.toFixed(0), "1", "1")}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+
+      <!-- PRICING PROFILES -->
+      <div class="sub-label">Pricing Profiles</div>
+      <div class="profiles-grid">
+        ${profileCard("aggressive",   s.profiles.aggressive,   bc)}
+        ${profileCard("standard",     s.profiles.standard,     bc)}
+        ${profileCard("conservative", s.profiles.conservative, bc)}
+      </div>
+
+      <!-- ACTION BAR -->
+      <div class="action-bar">
+        <button class="btn-primary" onclick="applySettings()">✓ Apply Changes</button>
+        <button class="btn-secondary" onclick="loadSettings()">↺ Reset</button>
+        <button class="btn-secondary" onclick="restoreDefaults()" style="color:var(--red);border-color:var(--red-bd)">⚠ Restore Defaults</button>
+        <span class="status-msg" id="ps-status"></span>
+      </div>
+
+      <!-- PREVIEW IMPACT — shown only when isDirty -->
+      <div id="preview-impact"></div>
+
+      <!-- LOGIC RULES (read-only) -->
+      <div class="sub-label" style="margin-top:20px">Active Logic Rules (read-only)</div>
+      <div class="rules-list">
+        ${[
+          "Manual intl % always overrides CSV-detected intl %",
+          "CSV intl detection uses card issue country column only (currency not used)",
+          "CSV intl detection requires ≥80% country coverage — below returns null",
+          "Blended rate calculated only when real intl data exists",
+          "Blended rate suppressed at 0% international (= UK rate) and 100% (= intl rate)",
+          "Unknown or missing pricing profile defaults to Standard",
+        ].map(t => `
+          <div class="rule-row">
+            <span class="rule-tick">✓</span>
+            <span>${t}</span>
+          </div>`).join("")}
+      </div>
+
+      <div style="margin-top:12px;font-size:10px;color:var(--g4);line-height:1.6">
+        Sell rates are calculated as:
+        <code style="background:var(--g7);padding:1px 6px;border-radius:3px;font-size:10px">
+          ceil( max( baseCost + wespellCost + targetMargin, minFloor ) )
+        </code>
+        — applied per profile and region. Source: <strong>routes/pricing.js</strong>
+      </div>
+    </div>
+
+    <!-- ══ SIMULATOR ══ -->
+    <div class="section-card" style="border-left-color:var(--g5)">
+      <div class="section-title">
+        🧪 Test Pricing Engine
+        <span class="badge" style="background:var(--g7);color:var(--g3);border-color:var(--g5)">Simulator only — no quote created</span>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:14px">
+        <div class="grid-label">
+          Monthly volume (£)
+          <input id="sim-vol" type="number" class="field-input" style="width:100%" placeholder="e.g. 50000" min="1" step="1">
+        </div>
+        <div class="grid-label">
+          Transaction count
+          <input id="sim-cnt" type="number" class="field-input" style="width:100%" placeholder="e.g. 900" min="1" step="1">
+        </div>
+        <div class="grid-label">
+          Current fees £/mo (optional)
+          <input id="sim-fees" type="number" class="field-input" style="width:100%" placeholder="Leave blank if unknown" min="0" step="0.01">
+        </div>
+        <div class="grid-label">
+          International % (optional)
+          <input id="sim-intl" type="number" class="field-input" style="width:100%" placeholder="e.g. 20" min="0" max="100" step="1">
+        </div>
+        <div class="grid-label">
+          Pricing profile
+          <select id="sim-profile" class="field-input" style="width:100%;text-align:left">
+            <option value="standard">Standard</option>
+            <option value="aggressive">Aggressive</option>
+            <option value="conservative">Conservative</option>
+          </select>
+        </div>
+        <div class="grid-label" style="justify-content:flex-end">
+          <div style="height:18px"></div><!-- spacer aligns button -->
+          <button class="btn-primary" id="sim-run-btn" onclick="runSimulator()" style="width:100%">▶ Run Simulation</button>
+        </div>
+      </div>
+
+      <div id="sim-results" style="display:none">
+        <div style="height:1px;background:var(--g6);margin-bottom:14px"></div>
+        <div class="sub-label">Results</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:4px" id="sim-metrics"></div>
+        <div id="sim-mode-note" style="font-size:11px;color:var(--g3);margin-top:8px"></div>
+      </div>
+
+      <div id="sim-error" style="display:none;font-size:12px;color:var(--red);margin-top:8px"></div>
+    </div>
+  `;
+
+  // Re-attach live sell rate recalculation to profile inputs
+  ["aggressive", "standard", "conservative"].forEach(name => {
+    ["margin", "mindom", "minintl", "split"].forEach(field => {
+      const el = document.getElementById(`ps-${name}-${field}`);
+      if (el) el.addEventListener("input", () => updateDerivedRates(name));
+    });
+  });
+  // Base costs affect all profiles' derived rates
+  ["ps-base-uk", "ps-base-intl", "ps-base-wespell"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("input", () => {
+      ["aggressive","standard","conservative"].forEach(n => updateDerivedRates(n));
+    });
+  });
+}
+
+// ── Live derived rate update ───────────────────────────────
+function updateDerivedRates(name) {
+  const v  = id => parseFloat(document.getElementById(id)?.value);
+  const uk   = v("ps-base-uk");
+  const intl = v("ps-base-intl");
+  const wsp  = v("ps-base-wespell");
+  const mgn  = v(`ps-${name}-margin`);
+  const mdom = v(`ps-${name}-mindom`);
+  const mint = v(`ps-${name}-minintl`);
+
+  if ([uk, intl, wsp, mgn, mdom, mint].some(x => !Number.isFinite(x))) return;
+
+  const ukSell   = sellRate(uk,   wsp, mgn, mdom);
+  const intlSell = sellRate(intl, wsp, mgn, mint);
+
+  const ukEl   = document.getElementById(`ps-${name}-sell-uk`);
+  const intlEl = document.getElementById(`ps-${name}-sell-intl`);
+  if (ukEl)   ukEl.textContent   = ukSell.toFixed(2)   + "%";
+  if (intlEl) intlEl.textContent = intlSell.toFixed(2) + "%";
+}
+
+// ── Mark dirty on any input change ────────────────────────
+function markDirty() {
+  isDirty = true;
+  const badge = document.querySelector(".badge");
+  if (badge) {
+    badge.className = "badge badge-unsaved";
+    badge.textContent = "⚠ Unsaved changes";
+  }
+  const card = document.querySelector(".section-card");
+  if (card) card.style.borderLeftColor = "var(--amber)";
+  renderPreview();
+}
+
+// ── Preview Impact ─────────────────────────────────────────
+// Reads current form values, diffs against currentSettings,
+// and renders a change summary into #preview-impact.
+// Called by markDirty() on every input event.
+// Hidden when there are no changes or no saved settings to compare.
+function renderPreview() {
+  const el = document.getElementById("preview-impact");
+  if (!el) return;
+
+  // Nothing to compare against
+  if (!currentSettings) { el.style.display = "none"; return; }
+
+  const result = readInputs();
+  const form = result?.settings;
+  if (!form) { el.style.display = "none"; return; }
+
+  const cs = currentSettings;  // saved server values
+  const fmt = (n, dp = 2) => Number.isFinite(n) ? n.toFixed(dp) : "—";
+  const eq  = (a, b, dp = 4) => Math.abs(a - b) < Math.pow(10, -dp);
+
+  // Build flat list of fields to diff
+  // Each: { label, section, old, new, unit }
+  const fields = [
+    // Base costs
+    { label: "UK base cost",           old: cs.baseCosts.uk,            nw: form.baseCosts.uk,            unit: "%",  dp: 4 },
+    { label: "International base cost",old: cs.baseCosts.international, nw: form.baseCosts.international, unit: "%",  dp: 4 },
+    { label: "Wespell cost",           old: cs.baseCosts.wespell,       nw: form.baseCosts.wespell,       unit: "p",  dp: 4 },
+    // Profiles
+    ...["aggressive","standard","conservative"].flatMap(name => [
+      { label: name + " — target margin",    old: cs.profiles[name].targetMargin,     nw: form.profiles[name].targetMargin,     unit: "%" },
+      { label: name + " — min domestic",     old: cs.profiles[name].minDomestic,      nw: form.profiles[name].minDomestic,      unit: "%" },
+      { label: name + " — min international",old: cs.profiles[name].minInternational, nw: form.profiles[name].minInternational, unit: "%" },
+      { label: name + " — split threshold",  old: cs.profiles[name].splitThreshold,   nw: form.profiles[name].splitThreshold,   unit: "%", scale: 100 },
+    ]),
+  ];
+
+  const changes = fields.filter(f => !eq(f.old, f.nw));
+
+  if (changes.length === 0) {
+    el.style.display = "none";
+    return;
+  }
+
+  const rows = fields.map(f => {
+    const changed = !eq(f.old, f.nw);
+    const scale   = f.scale || 1;
+    const dp      = f.dp ?? 2;
+    const oldVal  = fmt(f.old * scale, dp) + f.unit;
+    const newVal  = fmt(f.nw  * scale, dp) + f.unit;
+
+    // Capitalise profile name in label
+    const displayLabel = f.label.replace(/^(aggressive|standard|conservative)/, n =>
+      n.charAt(0).toUpperCase() + n.slice(1));
+
+    if (changed) {
+      return `<tr class="changed">
+        <td>${displayLabel}</td>
+        <td>
+          <span class="pv-old">${oldVal}</span>
+          <span class="pv-arrow">→</span>
+          <span class="pv-new">${newVal}</span>
+        </td>
+      </tr>`;
+    }
+    return `<tr>
+      <td style="color:var(--g4)">${displayLabel}</td>
+      <td><span class="pv-same">${oldVal} (unchanged)</span></td>
+    </tr>`;
+  }).join("");
+
+  el.innerHTML = `
+    <div class="preview-card">
+      <div class="preview-hdr">
+        <span class="preview-hdr-title">⚡ Preview Impact</span>
+        <span class="preview-count">${changes.length} field${changes.length !== 1 ? "s" : ""} changed</span>
+      </div>
+      <table class="preview-table">
+        <thead>
+          <tr>
+            <th style="width:55%">Setting</th>
+            <th>Change</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div style="margin-top:10px;font-size:10px;color:var(--amber)">
+        Click <strong>Apply Changes</strong> to save these values to the database.
+      </div>
+    </div>`;
+  el.style.display = "block";
+}
+
+// ── Validate and read all inputs ───────────────────────────
+// Returns { settings, errors } where:
+//   settings — the built object (null if field-level errors exist)
+//   errors   — array of { ids: [], message: string } (empty when valid)
+//
+// Validation rules (in order):
+//   Pass 1 — field-level
+//     • All fields must be valid finite numbers
+//     • base costs >= 0
+//     • wespell >= 0
+//     • margins >= 0
+//     • min domestic >= 0
+//     • min international >= 0
+//     • split threshold 0–100 (UI), stored as 0–1
+//     • rate floor >= 0
+//     • undercut multiplier > 0 (0 would mean always undercut to 0%)
+//     • volume margins >= 0
+//     • fixed fee tiers >= 0
+//   Pass 2 — cross-field (only runs if Pass 1 passes)
+//     • min international >= min domestic per profile
+//       (international cards always cost more to process)
+function readInputs() {
+  const g  = id => document.getElementById(id);
+  const v  = id => parseFloat(g(id)?.value);
+  const errors = [];
+
+  // ── helpers ──────────────────────────────────────────────
+  function mark(ids, msg) {
+    ids.forEach(id => { const el = g(id); if (el) el.classList.add("error"); });
+    errors.push({ ids, message: msg });
+  }
+  function clear(id) { const el = g(id); if (el) el.classList.remove("error"); }
+
+  // ── Pass 1 — field-level rules ───────────────────────────
+
+  // Numeric-only fields (any finite ≥ 0)
+  const nonNegFields = [
+    ["ps-base-uk",             "UK base cost"],
+    ["ps-base-intl",           "International base cost"],
+    ["ps-base-wespell",        "Wespell cost"],
+    ["ps-rule-minmargin",      "Min margin"],
+    ["ps-rule-floor",          "Rate floor"],
+    ["ps-aggressive-margin",   "Aggressive target margin"],
+    ["ps-aggressive-mindom",   "Aggressive min domestic"],
+    ["ps-aggressive-minintl",  "Aggressive min international"],
+    ["ps-standard-margin",     "Standard target margin"],
+    ["ps-standard-mindom",     "Standard min domestic"],
+    ["ps-standard-minintl",    "Standard min international"],
+    ["ps-conservative-margin", "Conservative target margin"],
+    ["ps-conservative-mindom", "Conservative min domestic"],
+    ["ps-conservative-minintl","Conservative min international"],
+    ["ps-vmarg-0",             "Volume margin (under £50k)"],
+    ["ps-vmarg-1",             "Volume margin (£50k–£200k)"],
+    ["ps-vmarg-2",             "Volume margin (£200k+)"],
+    ["ps-ftier-0",             "Fixed fee (under £100k)"],
+    ["ps-ftier-1",             "Fixed fee (£100k–£200k)"],
+    ["ps-ftier-2",             "Fixed fee (£200k+)"],
+  ];
+  nonNegFields.forEach(([id, label]) => {
+    const val = v(id);
+    if (!Number.isFinite(val) || val < 0) mark([id], `${label} must be a number ≥ 0`);
+    else clear(id);
+  });
+
+  // Undercut multiplier: must be > 0 (0 = quote would always be free)
+  const undercut = v("ps-rule-undercut");
+  if (!Number.isFinite(undercut) || undercut <= 0) {
+    mark(["ps-rule-undercut"], "Undercut multiplier must be greater than 0");
+  } else {
+    clear("ps-rule-undercut");
+  }
+
+  // Split thresholds: 0–100 in the UI
+  ["aggressive", "standard", "conservative"].forEach(name => {
+    const id  = `ps-${name}-split`;
+    const val = v(id);
+    if (!Number.isFinite(val) || val < 0 || val > 100) {
+      mark([id], `${name.charAt(0).toUpperCase() + name.slice(1)} split threshold must be between 0 and 100`);
+    } else {
+      clear(id);
+    }
+  });
+
+  // If any field-level errors — return early, don't attempt cross-field
+  if (errors.length > 0) return { settings: null, errors };
+
+  // ── Pass 2 — cross-field rules ────────────────────────────
+
+  // Min international must be >= min domestic per profile
+  // (international cards cost more to process; allowing intl < domestic
+  //  would silently produce inverted pricing)
+  ["aggressive", "standard", "conservative"].forEach(name => {
+    const domId  = `ps-${name}-mindom`;
+    const intlId = `ps-${name}-minintl`;
+    const dom  = v(domId);
+    const intl = v(intlId);
+    if (intl < dom) {
+      mark([domId, intlId],
+        `${name.charAt(0).toUpperCase() + name.slice(1)}: min international (${intl.toFixed(2)}%) cannot be lower than min domestic (${dom.toFixed(2)}%)`
+      );
+    }
+  });
+
+  if (errors.length > 0) return { settings: null, errors };
+
+  // ── Build and return settings object ─────────────────────
+  return {
+    settings: {
+      baseCosts: {
+        uk:            v("ps-base-uk"),
+        eea:           currentSettings?.baseCosts?.eea ?? 1.60,
+        international: v("ps-base-intl"),
+        wespell:       v("ps-base-wespell"),
+      },
+      profiles: {
+        aggressive: {
+          targetMargin:     v("ps-aggressive-margin"),
+          minDomestic:      v("ps-aggressive-mindom"),
+          minInternational: v("ps-aggressive-minintl"),
+          splitThreshold:   v("ps-aggressive-split") / 100,
+        },
+        standard: {
+          targetMargin:     v("ps-standard-margin"),
+          minDomestic:      v("ps-standard-mindom"),
+          minInternational: v("ps-standard-minintl"),
+          splitThreshold:   v("ps-standard-split") / 100,
+        },
+        conservative: {
+          targetMargin:     v("ps-conservative-margin"),
+          minDomestic:      v("ps-conservative-mindom"),
+          minInternational: v("ps-conservative-minintl"),
+          splitThreshold:   v("ps-conservative-split") / 100,
+        },
+      },
+      globalRules: {
+        minMargin:          v("ps-rule-minmargin"),
+        undercutMultiplier: v("ps-rule-undercut"),
+        rateFloor:          v("ps-rule-floor"),
+        fixedFeeMinimum:    v("ps-ftier-0"),
+        volumeMargins: [
+          { maxVol: 50000,    margin: v("ps-vmarg-0") },
+          { maxVol: 200000,   margin: v("ps-vmarg-1") },
+          { maxVol: Infinity, margin: v("ps-vmarg-2") },
+        ],
+        fixedFeeTiers: [
+          { maxVol: 100000,   fee: v("ps-ftier-0") },
+          { maxVol: 200000,   fee: v("ps-ftier-1") },
+          { maxVol: Infinity, fee: v("ps-ftier-2") },
+        ],
+        gatewayFeeTiers: currentSettings?.globalRules?.gatewayFeeTiers ?? systemDefaults?.globalRules?.gatewayFeeTiers ?? [],
+      },
+      intlRules:    currentSettings?.intlRules    ?? systemDefaults?.intlRules    ?? { manualOverride: true, countryCoverageThreshold: 0.80 },
+      blendedRules: currentSettings?.blendedRules ?? systemDefaults?.blendedRules ?? { suppressAtZero: true, suppressAtHundred: true },
+    },
+    errors: [],
+  };
+}
+
+// ── Restore original system defaults ──────────────────────
+// Fetches the canonical defaults from GET /api/settings?mode=defaults
+// (the hardcoded fallback values in pricing.js), then saves them via PUT.
+// No default values are hardcoded here — backend is the single source.
+async function restoreDefaults() {
+  if (!confirm(
+    "Restore all settings to the original system defaults?\n\n" +
+    "This will overwrite your current saved settings with the\n" +
+    "original pricing.js fallback values and cannot be undone."
+  )) return;
+
+  const btn = document.querySelector(".btn-primary");
+  if (btn) { btn.disabled = true; }
+  setStatus("Fetching defaults…");
+
+  try {
+    // Step 1 — fetch the canonical defaults from the backend
+    const defResp = await fetch("/api/settings?mode=defaults");
+    const defData = await defResp.json();
+    if (!defData.success) throw new Error(defData.error || "Could not fetch defaults");
+    const payload = defData.settings;
+
+    // Step 2 — save them to the DB
+    setStatus("Restoring defaults…");
+    const resp = await fetch("/api/settings", {
+      method:  "PUT",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(payload),
+    });
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.error || "Restore failed");
+
+    currentSettings = data.settings;
+    systemDefaults  = payload;   // update local cache
+    isDirty = false;
+    setLastUpdated(data.updated_at ?? null);
+    setStatus("");
+    renderPanel(currentSettings);
+    showToast("Defaults restored", "All settings have been reset to the original system defaults and saved.", "ok", 5000);
+  } catch (err) {
+    setStatus("");
+    showToast("Restore failed", err.message, "err");
+  } finally {
+    const b = document.querySelector(".btn-primary");
+    if (b) { b.disabled = false; }
+  }
+}
+
+// ── Load settings from API ─────────────────────────────────
+async function loadSettings() {
+  document.getElementById("settingsContainer").innerHTML = `
+    <div class="loading-state"><div class="spinner"></div>Loading settings…</div>`;
+  try {
+    // Fetch current settings and system defaults in parallel
+    const [resp, defResp] = await Promise.all([
+      fetch("/api/settings"),
+      fetch("/api/settings?mode=defaults"),
+    ]);
+    const data    = await resp.json();
+    const defData = await defResp.json();
+
+    if (!data.success) throw new Error(data.error || "Load failed");
+    currentSettings = data.settings;
+    if (defData.success) systemDefaults = defData.settings;
+    isDirty = false;
+    setLastUpdated(data.updated_at ?? null);
+    renderPanel(currentSettings);
+  } catch (err) {
+    document.getElementById("settingsContainer").innerHTML = `
+      <div class="loading-state" style="color:var(--red)">
+        ⚠ Failed to load settings: ${err.message}<br>
+        <button class="btn-secondary" style="margin-top:12px" onclick="loadSettings()">Retry</button>
+      </div>`;
+  }
+}
+
+// ── Apply (save) settings to API ───────────────────────────
+async function applySettings() {
+  const { settings: payload, errors } = readInputs() ?? { settings: null, errors: [] };
+  if (!payload) {
+    // Build a readable list of all validation failures
+    const detail = errors.length === 1
+      ? errors[0].message
+      : errors.map((e, i) => `${i + 1}. ${e.message}`).join("<br>");
+    showToast(
+      `${errors.length} validation error${errors.length !== 1 ? "s" : ""} — cannot save`,
+      detail,
+      "err"
+    );
+    return;
+  }
+
+  const btn = document.querySelector(".btn-primary");
+  if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
+  setStatus("Saving…");
+
+  try {
+    const resp = await fetch("/api/settings", {
+      method:  "PUT",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(payload),
+    });
+    const data = await resp.json();
+
+    if (!data.success) throw new Error(data.error || "Save failed");
+
+    currentSettings = data.settings;
+    isDirty = false;
+    setLastUpdated(data.updated_at ?? null);
+    setStatus("");
+    renderPanel(currentSettings);
+    showToast("Settings saved", "All pricing values have been saved to the database and are now live.", "ok", 5000);
+  } catch (err) {
+    setStatus("");
+    showToast("Save failed", err.message, "err");
+  } finally {
+    const b = document.querySelector(".btn-primary");
+    if (b) { b.disabled = false; b.textContent = "✓ Apply Changes"; }
+  }
+}
+
+// ── Simulator ─────────────────────────────────────────────
+// Calls POST /api/calculate_quote with a test payload and the
+// currently loaded form settings as settings_override.
+// Uses unsaved form edits when present — no quote is stored.
+async function runSimulator() {
+  const vol  = parseFloat(document.getElementById("sim-vol")?.value);
+  const cnt  = parseFloat(document.getElementById("sim-cnt")?.value);
+  const fees = parseFloat(document.getElementById("sim-fees")?.value) || 0;
+  const intlRaw = parseFloat(document.getElementById("sim-intl")?.value);
+  const profile = document.getElementById("sim-profile")?.value || "standard";
+
+  const errEl = document.getElementById("sim-error");
+  const resEl = document.getElementById("sim-results");
+  errEl.style.display = "none";
+  resEl.style.display  = "none";
+
+  if (!Number.isFinite(vol) || vol <= 0) {
+    errEl.textContent = "⚠ Please enter a valid monthly volume.";
+    errEl.style.display = "block"; return;
+  }
+  if (!Number.isFinite(cnt) || cnt <= 0) {
+    errEl.textContent = "⚠ Please enter a valid transaction count.";
+    errEl.style.display = "block"; return;
+  }
+
+  // Use current form values as the settings override.
+  // Falls back to saved settings if form has validation errors (simulator is best-effort).
+  const { settings: formSettings } = readInputs() ?? { settings: null };
+  const settingsOverride = formSettings || currentSettings || null;
+
+  const intlFrac = (Number.isFinite(intlRaw) && intlRaw >= 0 && intlRaw <= 100)
+    ? intlRaw / 100 : null;
+
+  const btn = document.getElementById("sim-run-btn");
+  if (btn) { btn.disabled = true; btn.textContent = "Running…"; }
+
+  try {
+    const resp = await fetch("/api/calculate_quote", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        merchant_name:   "Simulator",
+        merchant_email:  "simulator@mintedpay.com",
+        monthly_volume:  vol,
+        transaction_count: cnt,
+        current_fees:    fees,
+        debit_frac:      0.70,
+        intl_frac:       intlFrac,
+        pricing_profile: profile,
+        settings_override: settingsOverride,
+        simulate:        true,   // skips DB insert — no quote created
+      }),
+    });
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.error || "Calculation failed");
+
+    // Format helpers
+    const pct  = v => v !== null && v !== undefined ? v.toFixed(2) + "%" : "—";
+    const gbp  = v => v !== null && v !== undefined ? "£" + parseFloat(v).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—";
+    const p    = v => v !== null && v !== undefined ? v + "p" : "—";
+
+    const monthlyCost = vol * (data.rate / 100) + cnt * ((data.fixed_fee || 0) / 100);
+
+    const modeLabels = {
+      split_primary:    "Split primary — international volume above threshold",
+      blended_primary:  "Blended primary — below threshold, real data available",
+      split_indicative: "Indicative — no international data provided",
+    };
+
+    const metrics = [
+      { label: "Quote Rate",         value: pct(data.rate),                    note: "Final sell rate" },
+      { label: "Fixed Fee",          value: p(data.fixed_fee),                 note: "Per transaction" },
+      { label: "UK Sell Rate",       value: pct(data.sell_uk_rate),            note: profile + " profile" },
+      { label: "Intl Sell Rate",     value: pct(data.sell_international_rate), note: profile + " profile" },
+      { label: "Blended Rate",       value: pct(data.blended_rate),            note: data.blended_rate ? "Weighted by intl %" : "No data / suppressed" },
+      { label: "Est. Monthly Cost",  value: gbp(monthlyCost),                  note: "At quoted rate + fixed fee" },
+    ];
+
+    if (data.current_rate) {
+      metrics.push({ label: "Current Rate",    value: pct(data.current_rate),    note: "From provided fees" });
+      metrics.push({ label: "Monthly Saving",  value: gbp(data.monthly_saving),  note: "vs current provider" });
+    }
+
+    document.getElementById("sim-metrics").innerHTML = metrics.map(m => `
+      <div style="background:var(--g8);border:1px solid var(--g6);border-radius:var(--r);padding:11px 13px">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g4);margin-bottom:4px">${m.label}</div>
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:${m.label.includes("Rate") || m.label.includes("Fee") ? "var(--brand)" : "var(--black)"};line-height:1;margin-bottom:3px">${m.value}</div>
+        <div style="font-size:10px;color:var(--g4)">${m.note}</div>
+      </div>`).join("");
+
+    document.getElementById("sim-mode-note").innerHTML =
+      `Pricing mode: <strong>${data.pricing_mode || "—"}</strong>` +
+      (modeLabels[data.pricing_mode] ? ` — ${modeLabels[data.pricing_mode]}` : "") +
+      (settingsOverride && isDirty ? `<span style="color:var(--amber);margin-left:8px">⚠ Using unsaved form values</span>` : "");
+
+    resEl.style.display = "block";
+
+  } catch (err) {
+    errEl.textContent = "⚠ " + err.message;
+    errEl.style.display = "block";
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "▶ Run Simulation"; }
+  }
+}
+
+// ── Toast notifications ───────────────────────────────────
+// type: "ok" (green) | "err" (red)
+// duration: ms before auto-dismiss (0 = manual dismiss only)
+function showToast(title, msg, type, duration = 0) {
+  const container = document.getElementById("toast-container");
+  if (!container) return;
+
+  const id = "toast-" + Date.now();
+  const icon = type === "ok" ? "✓" : "⚠";
+  const el = document.createElement("div");
+  el.id = id;
+  el.className = "toast " + type;
+  el.innerHTML = `
+    <span class="toast-icon">${icon}</span>
+    <div class="toast-body">
+      <div class="toast-title">${title}</div>
+      ${msg ? `<div class="toast-msg">${msg}</div>` : ""}
+    </div>
+    <button class="toast-close" onclick="dismissToast('${id}')" aria-label="Dismiss">×</button>`;
+  container.appendChild(el);
+
+  if (duration > 0) {
+    setTimeout(() => dismissToast(id), duration);
+  }
+  return id;
+}
+
+function dismissToast(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.animation = "toastOut .2s ease forwards";
+  setTimeout(() => el?.remove(), 200);
+}
+
+// ── Inline status (in-progress states only) ───────────────
+// Used for "Saving…" / "Restoring…" transient messages next to buttons.
+// Success and error use showToast instead.
+function setStatus(msg) {
+  const el = document.getElementById("ps-status");
+  if (!el) return;
+  el.textContent = msg;
+  el.className = "status-msg";
+}
+
+// ── Init ───────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", loadSettings);
+</script>
+</body>
+</html>
