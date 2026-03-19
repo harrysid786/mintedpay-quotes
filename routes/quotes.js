@@ -248,7 +248,12 @@ router.get("/:quote_id", (req, res) => {
     }
 
     if (blendedRate === null) {
-      const csvDebitFracIsReal = storedIntlFrac !== null || storedDebitFrac !== 0.70;
+      // csvDebitFracIsReal: only trust debitFrac as a mix signal when it is a positive
+      // value that genuinely differs from the hardcoded default. debitFrac === 0 is not
+      // a reliable signal — it likely means no debit cards were detected, not that
+      // 100% of volume is international.
+      const csvDebitFracIsReal = storedIntlFrac !== null ||
+        (storedDebitFrac > 0 && storedDebitFrac < 1 && storedDebitFrac !== 0.70);
       if (storedIntlFrac !== null && storedIntlFrac > 0 && storedIntlFrac < 1) {
         blendedRate = Math.round(((1 - storedIntlFrac) * sellUkRate + storedIntlFrac * sellInternationalRate) * 100) / 100;
       } else if (csvDebitFracIsReal && storedIntlFrac === null) {
