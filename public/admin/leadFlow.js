@@ -256,6 +256,7 @@
         this.leadId  = existingLead.id;
         this.showingOverview = true;
         this.currentStep = 1;
+        this.quoteGenerated = !!existingLead.quote_id;
       } else {
         this.lead       = { brand: "minted" };
         this.leadId     = null;
@@ -842,6 +843,17 @@
                   ${this.lead.currentMonthlyFees ? `<span>Current fees: <strong>£${parseFloat(this.lead.currentMonthlyFees).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong></span>` : ""}
                   ${this.lead.csvCurrentRate ? `<span>Current rate: <strong style="color:${parseFloat(this.lead.csvCurrentRate)<1?"var(--green)":parseFloat(this.lead.csvCurrentRate)<2.2?"var(--amber)":"var(--red)"}">${parseFloat(this.lead.csvCurrentRate).toFixed(2)}%</strong></span>` : ""}
                   ${this.lead.csvDebitFrac ? `<span>${Math.round(parseFloat(this.lead.csvDebitFrac)*100)}% debit / ${Math.round((1-parseFloat(this.lead.csvDebitFrac))*100)}% credit</span>` : ""}
+                  ${(() => {
+                    const manual  = parseFloat(this.lead.intlPercentage);
+                    const fromCsv = parseFloat(this.lead.csvIntlFrac);
+                    const hasManual = Number.isFinite(manual) && manual >= 0 && manual <= 100;
+                    const hasCsv    = Number.isFinite(fromCsv);
+                    if (hasManual && hasCsv)
+                      return `<span style="color:var(--brand)">Using ${manual}% international transactions <span style="font-weight:400;color:var(--g3)">(manual input)</span></span>`;
+                    if (hasCsv)
+                      return `<span style="color:var(--brand)">Detected ${Math.round(fromCsv*100)}% international transactions from your statement</span>`;
+                    return "";
+                  })()}
                 </div>
               </div>
               <button class="lf-csv-clear-btn" id="lf-csv-clear">Replace</button>
@@ -1128,21 +1140,72 @@
               </div>
             </div>
 
-            <!-- Rate comparison (mirrors quote.html) -->
-            <div class="lf-op-rate-compare">
-              ${curRate !== null ? `
-              <div class="lf-op-rate-block lf-op-rate-current">
-                <div class="lf-op-rate-lbl">Currently paying</div>
-                <div class="lf-op-rate-big" style="color:var(--red)">${curRate.toFixed(2)}<span class="lf-op-rate-pct">%</span></div>
-                <div class="lf-op-rate-sub">effective rate on submitted data</div>
-              </div>
-              <div class="lf-op-rate-arrow">→</div>` : ""}
-              <div class="lf-op-rate-block lf-op-rate-mp${curRate === null ? " lf-op-rate-solo" : ""}">
-                <div class="lf-op-rate-lbl">MintedPay rate</div>
-                <div class="lf-op-rate-big" style="color:var(--brand)">${simRate.toFixed(2)}<span class="lf-op-rate-pct">%</span></div>
-                <div class="lf-op-rate-sub">+ <strong>${simFixed}p</strong> fixed fee per transaction</div>
-              </div>
-            </div>
+            <!-- Rate comparison — driven by pricing_mode so headline always matches table -->
+            ${(() => {
+              const sellUkH   = p.sell_uk_rate            ? parseFloat(p.sell_uk_rate)            : null;
+              const sellIntlH = p.sell_international_rate ? parseFloat(p.sell_international_rate) : null;
+              const blendedH  = p.blended_rate            ? parseFloat(p.blended_rate)            : null;
+              const hasRegH   = sellUkH !== null && sellIntlH !== null;
+              const pMode     = p.pricing_mode || "split_indicative";
+              // Show split headline for split_primary and split_indicative; blended only for blended_primary
+              const showSplitHeadline = hasRegH && pMode !== "blended_primary";
+
+              if (showSplitHeadline) {
+                // Split is primary — show UK / International rates as the headline
+                // intlFracH used only for blended footnote display
+                const manualPct = parseFloat(this.lead.intlPercentage);
+                const csvIntl   = this.lead.csvIntlFrac != null ? parseFloat(this.lead.csvIntlFrac) : null;
+                const intlFracH = Number.isFinite(manualPct) && manualPct >= 0 && manualPct <= 100
+                  ? manualPct / 100
+                  : (csvIntl !== null ? csvIntl : null);
+                return `
+              <div class="lf-op-rate-compare" style="grid-template-columns:${curRate !== null ? '1fr auto 1fr' : '1fr'}">
+                ${curRate !== null ? `
+                <div class="lf-op-rate-block lf-op-rate-current">
+                  <div class="lf-op-rate-lbl">Currently paying</div>
+                  <div class="lf-op-rate-big" style="color:var(--red)">${curRate.toFixed(2)}<span class="lf-op-rate-pct">%</span></div>
+                  <div class="lf-op-rate-sub">effective rate on submitted data</div>
+                </div>
+                <div class="lf-op-rate-arrow">→</div>` : ""}
+                <div class="lf-op-rate-block lf-op-rate-mp${curRate === null ? " lf-op-rate-solo" : ""}">
+                  <div class="lf-op-rate-lbl">MintedPay rate</div>
+                  <div style="display:flex;flex-direction:column;gap:8px;margin:8px 0 4px">
+                    <div style="display:flex;justify-content:space-between;align-items:baseline">
+                      <span style="font-size:11px;font-weight:700;color:var(--g3)">UK Cards</span>
+                      <span style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--brand)">${sellUkH.toFixed(2)}<span style="font-size:13px">%</span> <span style="font-size:11px;color:var(--g3)">+ ${simFixed}p</span></span>
+                    </div>
+                    <div style="height:1px;background:var(--g6)"></div>
+                    <div style="display:flex;justify-content:space-between;align-items:baseline">
+                      <span style="font-size:11px;font-weight:700;color:var(--g3)">International</span>
+                      <span style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--brand)">${sellIntlH.toFixed(2)}<span style="font-size:13px">%</span> <span style="font-size:11px;color:var(--g3)">+ ${simFixed}p</span></span>
+                    </div>
+                  </div>
+                  ${blendedH !== null && intlFracH !== null && intlFracH > 0 && intlFracH < 1 ? `
+                  <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--g6);font-size:10px;color:var(--g3)">
+                    Estimated blended rate: <strong style="color:var(--g2)">${blendedH.toFixed(2)}%</strong>
+                    <span style="margin-left:4px">(based on ${Math.round(intlFracH*100)}% international)</span>
+                  </div>` : ""}
+                </div>
+              </div>`;
+              }
+
+              // blended_primary or no regional rates — show single blended rate
+              return `
+              <div class="lf-op-rate-compare">
+                ${curRate !== null ? `
+                <div class="lf-op-rate-block lf-op-rate-current">
+                  <div class="lf-op-rate-lbl">Currently paying</div>
+                  <div class="lf-op-rate-big" style="color:var(--red)">${curRate.toFixed(2)}<span class="lf-op-rate-pct">%</span></div>
+                  <div class="lf-op-rate-sub">effective rate on submitted data</div>
+                </div>
+                <div class="lf-op-rate-arrow">→</div>` : ""}
+                <div class="lf-op-rate-block lf-op-rate-mp${curRate === null ? " lf-op-rate-solo" : ""}">
+                  <div class="lf-op-rate-lbl">MintedPay rate</div>
+                  <div class="lf-op-rate-big" style="color:var(--brand)">${simRate.toFixed(2)}<span class="lf-op-rate-pct">%</span></div>
+                  <div class="lf-op-rate-sub">+ <strong>${simFixed}p</strong> fixed fee per transaction</div>
+                </div>
+              </div>`;
+            })()}
 
             ${mSave > 0 ? `
             <div class="lf-op-save-banner">
@@ -1321,16 +1384,132 @@
               <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Current Rate</div><div class="lf-op-snap-val" style="color:${curRate !== null ? (curRate < 1 ? "var(--green)" : curRate < 2.2 ? "var(--amber)" : "var(--red)") : "var(--g4)"}">${curRate !== null ? curRate.toFixed(2) + "%" : "—"}</div></div>
             </div>` : ""}
 
-            <!-- Pricing table -->
+            <!-- Pricing table — driven by pricing_mode to stay in sync with headline -->
+            ${(() => {
+              const sellUk   = p.sell_uk_rate            ? parseFloat(p.sell_uk_rate)            : null;
+              const sellIntl = p.sell_international_rate ? parseFloat(p.sell_international_rate) : null;
+              const blended  = p.blended_rate            ? parseFloat(p.blended_rate)            : null;
+              const hasRegional = sellUk !== null && sellIntl !== null;
+              const pMode       = p.pricing_mode || "split_indicative";
+              // Show split rows for split_primary and split_indicative
+              const showSplit   = hasRegional && pMode !== "blended_primary";
+              // intlFrac still needed for blended footnote and current cost breakdown
+              const manualIntlPct = parseFloat(this.lead.intlPercentage);
+              const csvIntlFrac   = this.lead.csvIntlFrac != null ? parseFloat(this.lead.csvIntlFrac) : null;
+              const intlFrac = Number.isFinite(manualIntlPct) && manualIntlPct >= 0 && manualIntlPct <= 100
+                ? manualIntlPct / 100
+                : (csvIntlFrac !== null ? csvIntlFrac : null);
+              const hasIntlData = intlFrac !== null && intlFrac > 0 && intlFrac < 1;
+
+              // Current cost split — from API response
+              const curUkRate   = p.current_uk_rate   != null ? parseFloat(p.current_uk_rate)   : null;
+              const curIntlRate = p.current_intl_rate != null ? parseFloat(p.current_intl_rate) : null;
+
+              // Determine which current cost breakdown to show based on intlFrac
+              const curBreakdown = (() => {
+                if (curRate === null) return '';  // no fee data at all
+
+                if (intlFrac === 0) {
+                  // 100% domestic
+                  return `
+            <div style="margin-bottom:10px;padding:10px 12px;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:var(--r)">
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--red);margin-bottom:8px">Current Cost (UK Domestic Only)</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                <div style="text-align:center">
+                  <div style="font-size:9px;color:var(--g3);margin-bottom:2px">UK Domestic</div>
+                  <div style="font-size:16px;font-weight:700;color:var(--red)">${curUkRate !== null ? curUkRate.toFixed(2) : curRate.toFixed(2)}%</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-size:9px;color:var(--g3);margin-bottom:2px">Blended</div>
+                  <div style="font-size:16px;font-weight:700;color:var(--red)">${curRate.toFixed(2)}%</div>
+                </div>
+              </div>
+              <div style="font-size:9px;color:var(--g3);margin-top:6px">No international volume reported — all transactions treated as UK domestic. Blended rate is from statement.</div>
+            </div>`;
+                }
+
+                if (intlFrac === 1) {
+                  // 100% international
+                  return `
+            <div style="margin-bottom:10px;padding:10px 12px;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:var(--r)">
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--red);margin-bottom:8px">Current Cost (International Only)</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                <div style="text-align:center">
+                  <div style="font-size:9px;color:var(--g3);margin-bottom:2px">International</div>
+                  <div style="font-size:16px;font-weight:700;color:var(--red)">${curIntlRate !== null ? curIntlRate.toFixed(2) : curRate.toFixed(2)}%</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-size:9px;color:var(--g3);margin-bottom:2px">Blended</div>
+                  <div style="font-size:16px;font-weight:700;color:var(--red)">${curRate.toFixed(2)}%</div>
+                </div>
+              </div>
+              <div style="font-size:9px;color:var(--g3);margin-top:6px">No UK domestic volume reported — all transactions treated as international. Blended rate is from statement.</div>
+            </div>`;
+                }
+
+                if (intlFrac !== null && curUkRate !== null && curIntlRate !== null) {
+                  // Mixed — show all three
+                  return `
+            <div style="margin-bottom:10px;padding:10px 12px;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:var(--r)">
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--red);margin-bottom:8px">Current Cost Breakdown (Estimated from Statement)</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+                <div style="text-align:center">
+                  <div style="font-size:9px;color:var(--g3);margin-bottom:2px">UK Domestic</div>
+                  <div style="font-size:16px;font-weight:700;color:var(--red)">${curUkRate.toFixed(2)}%</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-size:9px;color:var(--g3);margin-bottom:2px">International</div>
+                  <div style="font-size:16px;font-weight:700;color:var(--red)">${curIntlRate.toFixed(2)}%</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-size:9px;color:var(--g3);margin-bottom:2px">Blended</div>
+                  <div style="font-size:16px;font-weight:700;color:var(--red)">${curRate.toFixed(2)}%</div>
+                </div>
+              </div>
+              <div style="font-size:9px;color:var(--g3);margin-top:6px">UK and international figures are estimates based on ${Math.round(intlFrac*100)}% international mix and IC++ cost ratios. Blended is from statement.</div>
+            </div>`;
+                }
+
+                // No reliable intl data — blended only
+                return `
+            <div style="margin-bottom:10px;padding:10px 12px;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:var(--r)">
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--red);margin-bottom:8px">Current Effective Rate</div>
+              <div style="text-align:center;padding:4px 0">
+                <div style="font-size:9px;color:var(--g3);margin-bottom:2px">Blended</div>
+                <div style="font-size:20px;font-weight:700;color:var(--red)">${curRate.toFixed(2)}%</div>
+              </div>
+              <div style="font-size:9px;color:var(--g3);margin-top:6px">No international mix data — UK/international estimate not available. Blended is from statement.</div>
+            </div>`;
+              })();
+
+              return `
+            ${curBreakdown}
             <div class="lf-op-ptable-wrap">
               <table class="lf-op-ptable">
                 <thead><tr><th>Transaction Type</th><th>Rate</th><th>Notes</th></tr></thead>
                 <tbody>
+                  ${showSplit ? `
+                  <tr>
+                    <td>UK Cards${pMode === "split_indicative" ? ' <span style="font-size:10px;color:var(--g3);font-weight:400">(indicative)</span>' : ''}</td>
+                    <td class="lf-op-ptable-rate">${sellUk.toFixed(2)}% + ${simFixed}p per transaction</td>
+                    <td class="lf-op-ptable-note">UK-issued Visa &amp; Mastercard debit and credit</td>
+                  </tr>
+                  <tr>
+                    <td>International Cards${pMode === "split_indicative" ? ' <span style="font-size:10px;color:var(--g3);font-weight:400">(indicative)</span>' : ''}</td>
+                    <td class="lf-op-ptable-rate">${sellIntl.toFixed(2)}% + ${simFixed}p per transaction</td>
+                    <td class="lf-op-ptable-note">Non-UK issued cards — EEA and Rest of World</td>
+                  </tr>
+                  ${blended !== null && hasIntlData ? `
+                  <tr style="background:var(--g7)">
+                    <td style="color:var(--g3);font-size:11px">Estimated Blended Rate</td>
+                    <td class="lf-op-ptable-rate" style="color:var(--g3);font-size:11px">${blended.toFixed(2)}% + ${simFixed}p</td>
+                    <td class="lf-op-ptable-note">Weighted estimate based on ${Math.round(intlFrac*100)}% international</td>
+                  </tr>` : ''}` : `
                   <tr>
                     <td>All Cards (Blended)</td>
-                    <td class="lf-op-ptable-rate">${simRate.toFixed(2)}% + ${simFixed}p per transaction</td>
+                    <td class="lf-op-ptable-rate">${blended !== null ? blended.toFixed(2) : simRate.toFixed(2)}% + ${simFixed}p per transaction</td>
                     <td class="lf-op-ptable-note">Single blended rate, Visa &amp; Mastercard debit and credit</td>
-                  </tr>
+                  </tr>`}
                   <tr id="lf-qp-amex-row">
                     <td>American Express</td>
                     <td class="lf-op-ptable-rate" style="color:var(--red)" id="lf-qp-amex-val">3.50% + 20p per transaction</td>
@@ -1354,11 +1533,22 @@
                 </tbody>
               </table>
             </div>
+            <div style="margin-top:8px;font-size:10px;color:var(--g3)">Includes interchange, scheme fees (Visa/Mastercard), Adyen acquiring markup, processing fee, and MintedPay margin.</div>`;
+            })()}
           </div>
 
           <!-- ══ E: ADMIN ACTIONS ══ -->
           <div class="lf-op-section lf-op-actions-section">
             <div class="lf-op-section-title">Admin Actions</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--g6)">
+              <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);white-space:nowrap">Pricing Profile</label>
+              <select id="lf-pricing-profile" style="border:1px solid var(--g5);border-radius:var(--r);padding:6px 10px;font-size:12px;font-family:'Inter',sans-serif;background:var(--white);color:var(--black);cursor:pointer;outline:none">
+                <option value="aggressive" ${(this.lead.pricingProfile || "standard") === "aggressive" ? "selected" : ""}>Aggressive</option>
+                <option value="standard"   ${(this.lead.pricingProfile || "standard") === "standard"   ? "selected" : ""}>Standard</option>
+                <option value="conservative" ${(this.lead.pricingProfile || "standard") === "conservative" ? "selected" : ""}>Conservative</option>
+              </select>
+              <span style="font-size:10px;color:var(--g3)">Changes pricing on recalculate</span>
+            </div>
             <div class="lf-op-action-row">
               <button class="lf-op-act-btn lf-op-act-primary" id="lf-gen-quote"
                       ${this.pricingResult && !this.quoteGenerated ? "" : "disabled"}>
@@ -1385,6 +1575,7 @@
               🔐 This lead is marked KYB Ready and added to the onboarding pipeline.
             </div>` : ""}
           </div>
+
 
         </div>
       `;
@@ -1504,6 +1695,15 @@
 
       q("lf-apply-override")?.addEventListener("click", () => this._applyPricingOverride());
 
+      // ── Pricing profile selector ───────────────────────────
+      q("lf-pricing-profile")?.addEventListener("change", (e) => {
+        this.lead.pricingProfile = e.target.value;
+        // Clear cached result so Step 10 recalculates with the new profile
+        this.pricingResult = null;
+        this._scheduleSave();
+        this._render();
+      });
+
       // ── Rate Simulator live updates ────────────────────────
       const simRateEl  = q("lf-sim-rate");
       const simFixedEl = q("lf-sim-fixed");
@@ -1541,15 +1741,47 @@
         // Keep range in sync with number input
         if (simRange) simRange.value = sr;
 
-        // Update quote preview rate
-        const ptRow = document.querySelector(".lf-op-ptable tbody tr:first-child td:nth-child(2)");
-        if (ptRow) ptRow.textContent = sr.toFixed(2) + "% + " + sf + "p per transaction";
+        // Update quote preview pricing table
+        // When split pricing is shown, update the UK and International rows directly
+        // using the stored sell rates from the pricing result (not the simulator rate,
+        // which is a blended adjustment tool — the split rates are fixed by the engine).
+        const sellUkSim   = this.pricingResult.sell_uk_rate            ? parseFloat(this.pricingResult.sell_uk_rate)            : null;
+        const sellIntlSim = this.pricingResult.sell_international_rate ? parseFloat(this.pricingResult.sell_international_rate) : null;
+        const blendedSim  = this.pricingResult.blended_rate            ? parseFloat(this.pricingResult.blended_rate)            : null;
+        const hasRegSim   = sellUkSim !== null && sellIntlSim !== null;
 
-        // Update rate comparison block
-        const mpBig = document.querySelector(".lf-op-rate-mp .lf-op-rate-big");
-        if (mpBig) mpBig.innerHTML = sr.toFixed(2) + '<span class="lf-op-rate-pct">%</span>';
-        const mpSub = document.querySelector(".lf-op-rate-mp .lf-op-rate-sub");
-        if (mpSub) mpSub.innerHTML = '+ <strong>' + sf + 'p</strong> fixed fee per transaction';
+        if (hasRegSim) {
+          // Split view: update UK row, International row, and blended row if present
+          const rows = document.querySelectorAll(".lf-op-ptable tbody tr");
+          rows.forEach(row => {
+            const label = row.querySelector("td:first-child")?.textContent?.trim() || "";
+            const rateCell = row.querySelector("td:nth-child(2)");
+            if (!rateCell) return;
+            if (label === "UK Cards") {
+              rateCell.textContent = sellUkSim.toFixed(2) + "% + " + sf + "p per transaction";
+            } else if (label === "International Cards") {
+              rateCell.textContent = sellIntlSim.toFixed(2) + "% + " + sf + "p per transaction";
+            } else if (label === "Estimated Blended Rate" && blendedSim !== null) {
+              rateCell.textContent = blendedSim.toFixed(2) + "% + " + sf + "p";
+            }
+          });
+          // Update split headline (UK / International lines inside .lf-op-rate-mp)
+          const mpBlock = document.querySelector(".lf-op-rate-mp");
+          if (mpBlock) {
+            const ukSpan   = mpBlock.querySelectorAll("[style*='Syne']")[0];
+            const intlSpan = mpBlock.querySelectorAll("[style*='Syne']")[1];
+            if (ukSpan)   ukSpan.innerHTML   = sellUkSim.toFixed(2)   + '<span style="font-size:13px">%</span> <span style="font-size:11px;color:var(--g3)">+ ' + sf + 'p</span>';
+            if (intlSpan) intlSpan.innerHTML = sellIntlSim.toFixed(2) + '<span style="font-size:13px">%</span> <span style="font-size:11px;color:var(--g3)">+ ' + sf + 'p</span>';
+          }
+        } else {
+          // Blended view: update single rate row and headline
+          const ptRow = document.querySelector(".lf-op-ptable tbody tr:first-child td:nth-child(2)");
+          if (ptRow) ptRow.textContent = sr.toFixed(2) + "% + " + sf + "p per transaction";
+          const mpBig = document.querySelector(".lf-op-rate-mp .lf-op-rate-big");
+          if (mpBig) mpBig.innerHTML = sr.toFixed(2) + '<span class="lf-op-rate-pct">%</span>';
+          const mpSub = document.querySelector(".lf-op-rate-mp .lf-op-rate-sub");
+          if (mpSub) mpSub.innerHTML = '+ <strong>' + sf + 'p</strong> fixed fee per transaction';
+        }
 
         // Store sim state so re-renders preserve it
         this.pricingResult._simRate  = sr;
@@ -1890,6 +2122,7 @@
           this.lead.transactionCount    = "";
           this.lead.currentMonthlyFees  = "";
           this.lead.csvDebitFrac        = "";
+          this.lead.csvIntlFrac         = null;  // reset international detection
           this.lead.csvCurrentRate      = "";
           this.lead.csvCardMix          = "";
           this.lead.csvTierLabel        = "";
@@ -1995,6 +2228,9 @@
         this.lead.currentMonthlyFees  = s.totalFees > 0 ? Number(s.totalFees.toFixed(2)) : "";
         // csvDebitFrac → actual card mix, replaces hardcoded 0.70 in pricing call
         this.lead.csvDebitFrac        = s.debitFrac;
+        // csvIntlFrac → statement-derived international fraction (null when undetectable)
+        // Manual intlPercentage always wins — only set csvIntlFrac, never overwrite intlPercentage
+        this.lead.csvIntlFrac         = s.csvIntlFrac;
         // csvCurrentRate → pre-calculated effective rate for Step 10 display fallback
         this.lead.csvCurrentRate      = s.currentRate > 0 ? Number(s.currentRate.toFixed(4)) : "";
         this.lead.csvCardMix          = s.cardMix ? JSON.stringify(s.cardMix) : "";
@@ -2058,22 +2294,60 @@
 
       // ── Column detection — same HINTS as public quote builder ─────────────
       const HINTS = {
-        amount:   ["amount","gross","total","value","sale","payment","charge","net"],
-        fee:      ["fee","fees","processing","commission","cost","charge_amount"],
+        // "payment" removed — matches "Payment Method" before real amount columns.
+        // amount detection handled separately below with two-pass priority logic.
+        amount:   ["amount","gross","total","value","sale","charge","net"],
+        fee:      ["fee","fees","processing","commission","cost","charge_amount","charge"],
         cardType: ["card","brand","scheme","network","card_brand"],
-        rowType:  ["type","transaction_type","entry_type","record_type"],
+        // rowType: "type" is exact-only to prevent matching "Card Type", "Payment Type" etc.
+        // Multi-word phrases use includes() via the existing isMultiWord path.
+        rowType:  ["transaction type","entry type","record type","transaction_type","entry_type","record_type","__exact__type"],
+        // ── International detection columns ─────────────────────────────────
+        // Priority 1: card/issuing country (Stripe: "Card Issue Country", Adyen: "Issued Country")
+        country:  ["card issue country","issued country","card country","issuing country","card_country","card_issue_country"],
+        currency: ["currency","converted currency","transaction currency"],
       };
       const colMap = {};
       for (const [field, hints] of Object.entries(HINTS)) {
         colMap[field] = "";
         for (const hint of hints) {
-          const match = rawHeaders.find((_, i) => lowerHeaders[i].includes(hint));
+          // "__exact__" prefix forces exact-match regardless of word count
+          if (hint.startsWith("__exact__")) {
+            const exact = hint.slice(9);
+            const match = rawHeaders.find((_, i) => lowerHeaders[i] === exact);
+            if (match) { colMap[field] = match; break; }
+            continue;
+          }
+          // Multi-word hints use full-string match; single-word use substring
+          const isMultiWord = hint.includes(" ");
+          const match = rawHeaders.find((_, i) =>
+            isMultiWord ? lowerHeaders[i] === hint : lowerHeaders[i].includes(hint)
+          );
           if (match) { colMap[field] = match; break; }
         }
       }
 
+      // ── Amount column — two-pass selection ───────────────────────────────
+      // Pass 1: collect all candidate headers that match any amount hint.
+      // Ordered by priority: gross > amount > total > value > sale > charge > net.
+      // "payment" excluded — too broad, hits "Payment Method" before real amount cols.
+      const AMOUNT_PRIORITY = ["gross","amount","total","value","sale","charge","net"];
+      const amountCandidates = [];
+      for (const hint of AMOUNT_PRIORITY) {
+        const matches = rawHeaders.filter((_, i) => lowerHeaders[i].includes(hint));
+        for (const h of matches) {
+          if (!amountCandidates.includes(h)) amountCandidates.push(h);
+        }
+      }
+      // Pass 2: from candidates, prefer the first one where the first data row
+      // contains a parseable positive number. Falls back to first candidate if none parse.
+      const pAmtTest = (v) => { const n = parseFloat(String(v||"").replace(/[£$€,\s]/g,"")); return Number.isFinite(n) && n > 0; };
+      const firstDataRow = rows[0] || {};
+      const numericCandidate = amountCandidates.find(h => pAmtTest(firstDataRow[h]));
+      colMap.amount = numericCandidate || amountCandidates[0] || "";
+
       if (!colMap.amount) {
-        throw new Error("Could not find an amount column. Supported names: amount, gross, total, value, sale, payment, charge, net");
+        throw new Error("Could not find an amount column. Supported names: amount, gross, total, value, sale, charge, net");
       }
 
       // Strip currency symbols — same as pAmt() in public quote builder
@@ -2114,15 +2388,22 @@
         if (keywords.some(kw => haystack.includes(kw))) { processor = name; break; }
       }
 
+      // ── International detection mode ──────────────────────────────────────
+      // Only country column is reliable enough to derive intlFrac.
+      // Currency is NOT used — non-GBP currency ≠ international card origin
+      // (e.g. a French tourist paying in GBP counts as non-GBP but non-UK card).
+      // If no country column → intlFrac = null. Do not guess.
+      const intlMode = colMap.country ? "country" : "none";
+
       // ── Main aggregation — identical to processCSV() in public quote builder ──
-      let vol = 0, cnt = 0, totalFees = 0;
+      let vol = 0, cnt = 0, totalFees = 0, intlVol = 0, countryPopulated = 0;
       const cardData = {};
 
       rows.forEach(r => {
         // Row type filter: skip non-charge rows (fees, refunds, payouts)
         if (colMap.rowType) {
           const rowT = (r[colMap.rowType] || "").toUpperCase().trim();
-          if (rowT && !["CHARGE","PAYMENT","SALE","TRANSACTION","DEBIT",""].includes(rowT)) return;
+          if (rowT && !["CHARGE","PAYMENT","SALE","TRANSACTION","DEBIT","SETTLED","CAPTURE",""].includes(rowT)) return;
         }
         const a = pAmt(r[colMap.amount]);
         if (!a) return;
@@ -2138,6 +2419,16 @@
         if (!cardData[k]) cardData[k] = { vol: 0, cnt: 0 };
         cardData[k].vol += a;
         cardData[k].cnt++;
+
+        // International volume tracking — country mode only
+        if (intlMode === "country") {
+          const c = (r[colMap.country] || "").trim().toUpperCase();
+          if (c !== "") {
+            countryPopulated++;
+            const isUK = c === "GB" || c === "GBR" || c === "UNITED KINGDOM" || c === "UK";
+            if (!isUK) intlVol += a;
+          }
+        }
       });
 
       if (vol <= 0) throw new Error("No valid transaction amounts found in this CSV.");
@@ -2151,6 +2442,14 @@
       // Current effective rate — fees / volume * 100
       const currentRate = (totalFees > 0 && vol > 0) ? (totalFees / vol) * 100 : 0;
 
+      // International fraction — requires country column AND ≥80% row coverage
+      // Below 80% coverage the country column is too sparse to trust — return null.
+      // Prefer null over a silently understated intlFrac.
+      const countryCoverage = cnt > 0 ? countryPopulated / cnt : 0;
+      const csvIntlFrac = (intlMode === "country" && vol > 0 && countryCoverage >= 0.80)
+        ? Math.round((intlVol / vol) * 10000) / 10000
+        : null;
+
       // Merchant tier
       let tierLabel = "Small merchant";
       if      (vol >= 200000) tierLabel = "Large merchant";
@@ -2158,12 +2457,14 @@
 
       return {
         summary: {
-          vol:         Number(vol.toFixed(2)),
+          vol:          Number(vol.toFixed(2)),
           cnt,
-          totalFees:   Number(totalFees.toFixed(2)),
-          debitFrac:   Number(debitFrac.toFixed(4)),
-          currentRate: Number(currentRate.toFixed(4)),
-          cardMix:     cardData,
+          totalFees:    Number(totalFees.toFixed(2)),
+          debitFrac:    Number(debitFrac.toFixed(4)),
+          currentRate:  Number(currentRate.toFixed(4)),
+          csvIntlFrac,   // null when undetectable or coverage < 80%, 0–1 when reliably derived
+          intlMode,      // "country" | "none"
+          cardMix:       cardData,
           tierLabel,
           processor,
         },
@@ -2172,8 +2473,8 @@
 
     // ── Apply Pricing Override ──────────────────────────────
     _applyPricingOverride() {
-      const rateEl  = document.getElementById("lf-override-rate");
-      const fixedEl = document.getElementById("lf-override-fixed");
+      const rateEl  = document.getElementById("lf-sim-rate");
+      const fixedEl = document.getElementById("lf-sim-fixed");
       if (!rateEl || !fixedEl) return;
 
       let newRate  = parseFloat(rateEl.value);
@@ -2204,6 +2505,8 @@
 
       this.pricingResult.rate      = newRate;
       this.pricingResult.fixed_fee = newFixed;
+      this.pricingResult._simRate  = newRate;
+      this.pricingResult._simFixed = newFixed;
       this.lead.processingRate     = newRate;
       this.lead.fixedFee           = newFixed;
       this._scheduleSave();
@@ -2444,7 +2747,26 @@
 
       // Debit fraction — priority: CSV card mix → intl% proxy → UK default 0.70
       const csvDebitFrac = parseFloat(this.lead.csvDebitFrac);
-      const intlPct      = parseFloat(this.lead.intlPercentage) || 0;
+      // ── intlFrac: three-source priority chain ─────────────────────────────
+      // 1. Manual intlPercentage (Step 4 field) — explicit user input, highest trust
+      //    Convert % → decimal. Valid range 0–100 inclusive (0 is legitimate).
+      // 2. CSV-derived csvIntlFrac — statement-detected, already stored as 0–1
+      // 3. null — no real data available; API will suppress blended rate
+      const manualIntlPct  = parseFloat(this.lead.intlPercentage);
+      const csvIntlFracVal = (this.lead.csvIntlFrac !== null && this.lead.csvIntlFrac !== undefined)
+        ? parseFloat(this.lead.csvIntlFrac) : null;
+
+      let intlFrac = null;
+      if (Number.isFinite(manualIntlPct) && manualIntlPct >= 0 && manualIntlPct <= 100) {
+        intlFrac = manualIntlPct / 100;                    // manual wins
+      } else if (csvIntlFracVal !== null && Number.isFinite(csvIntlFracVal)) {
+        intlFrac = csvIntlFracVal;                         // CSV fallback
+      }
+      // else: intlFrac remains null → API returns split_indicative, no blended rate
+
+      // intlPct as percentage for debitFrac proxy calculation (unchanged behaviour)
+      const intlPct = intlFrac !== null ? intlFrac * 100 : 0;
+
       const debitFrac    = (csvDebitFrac > 0 && csvDebitFrac <= 1) ? csvDebitFrac
                          : intlPct > 50 ? 0.50
                          : intlPct > 20 ? 0.60
@@ -2467,12 +2789,18 @@
           method:  "POST",
           headers: { "Content-Type": "application/json" },
           body:    JSON.stringify({
-            merchant_name:     this.lead.contactName  || this.lead.businessName || "",
-            merchant_email:    this.lead.email        || "admin@mintedpay.com",
-            monthly_volume:    vol,
-            transaction_count: txCnt,
-            current_fees:      effectiveCurFees,
-            debit_frac:        debitFrac,
+            merchant_name:          this.lead.contactName  || this.lead.businessName || "",
+            merchant_email:         this.lead.email        || "admin@mintedpay.com",
+            monthly_volume:         vol,
+            transaction_count:      txCnt,
+            current_fees:           effectiveCurFees,
+            debit_frac:             debitFrac,
+            // intl_frac: manual % → CSV-derived → null (priority order above)
+            intl_frac:              intlFrac,
+            // Tell the engine whether debitFrac came from real CSV card-mix detection
+            csv_debit_frac_is_real: (csvDebitFrac > 0 && csvDebitFrac <= 1),
+            // Pricing profile — admin-selectable, defaults to standard
+            pricing_profile: this.lead.pricingProfile || "standard",
           }),
         });
         const data = await resp.json();
@@ -2527,6 +2855,17 @@
 
     // ── Action: Generate Quote ────────────────────────────
     async _generateQuote() {
+      // If a quote already exists on the lead, open it directly — no recalculation needed
+      if (this.lead.quote_id && this.quoteGenerated) {
+        window.open(`/quote.html?quote=${this.lead.quote_id}`, "_blank");
+        return;
+      }
+      // If no pricingResult but lead has a quote_id (e.g. overview load), treat as already generated
+      if (!this.pricingResult?.quote_id && this.lead.quote_id) {
+        this.quoteGenerated = true;
+        window.open(`/quote.html?quote=${this.lead.quote_id}`, "_blank");
+        return;
+      }
       if (!this.pricingResult?.quote_id) {
         alert("No quote available. Please wait for the pricing calculation to complete.");
         return;
@@ -2579,7 +2918,8 @@
       }
       if (this.isSubmitting) return;
       this.isSubmitting = true;
-      const btn = document.getElementById("lf-push-zoho");
+      // Support both Step 10 and Overview button IDs
+      const btn = document.getElementById("lf-push-zoho") || document.getElementById("lf-ov-push-zoho");
       if (!btn) { this.isSubmitting = false; return; }
       btn.textContent = "Pushing…";
       btn.disabled    = true;
@@ -2613,7 +2953,8 @@
     // ── Action: Mark KYB Ready ────────────────────────────
     async _markKYB() {
       if (this.lead.status === "kyb_pending") return;
-      const btn = document.getElementById("lf-mark-kyb");
+      // Support both Step 10 and Overview button IDs
+      const btn = document.getElementById("lf-mark-kyb") || document.getElementById("lf-ov-mark-kyb");
       if (btn) { btn.textContent = "Saving…"; btn.disabled = true; }
       try {
         await fetch(`/api/leads/${this.leadId}/kyb`, { method: "POST" });
