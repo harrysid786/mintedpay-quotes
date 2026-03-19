@@ -6,7 +6,8 @@ const path     = require("path");
 const quotesRoute     = require("./routes/quotes");
 const acceptanceRoute = require("./routes/acceptance");
 const pricingRoute    = require("./routes/pricing");
-const leadsRoute      = require("./routes/leads");      // ← NEW: Back Office leads API
+const leadsRoute      = require("./routes/leads");
+const settingsRoute   = require("./routes/settings");  // ← Pricing Engine Settings API
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -21,8 +22,15 @@ app.use("/api/quotes",           quotesRoute);
 app.use("/api/quote_acceptance", acceptanceRoute);
 app.use("/api/calculate_quote",  pricingRoute);
 
-// ── NEW: Leads / Back Office API ──────────────────────────────
+// ── Leads / Back Office API ───────────────────────────────────
 app.use("/api/leads", leadsRoute);
+
+// ── Pricing Engine Settings API ───────────────────────────────
+// Mounted at /api so:
+//   GET  /api/settings          → router.get("/settings")
+//   GET  /api/settings?mode=defaults
+//   PUT  /api/settings          → router.put("/settings")
+app.use("/api", settingsRoute);
 
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 
