@@ -42,6 +42,120 @@ const PRICING_PROFILES = {
   },
 };
 
+// ── getSetting ────────────────────────────────────────────────
+// Reads a single key from the settings table.
+// Returns parsed JSON value when found, fallback when not.
+// Safe: if the table doesn't exist yet or value is malformed, fallback is used.
+function getSetting(key, fallback) {
+  try {
+    const row = db.prepare("SELECT value FROM settings WHERE key = ?").get(key);
+    if (!row) return fallback;
+    return JSON.parse(row.value);
+  } catch (e) {
+    return fallback;
+  }
+}
+
+// ── getPricingSettings ────────────────────────────────────────
+// Returns the single source-of-truth pricing settings object.
+// Each section is loaded from the DB settings table when a row exists,
+// falling back to the hardcoded defaults below when not.
+//
+// This means:
+//   - First deploy / empty DB → hardcoded defaults used (no behaviour change)
+//   - After admin saves settings → DB values used
+//   - If DB row is deleted → falls back to hardcoded defaults automatically
+//
+function getPricingSettings() {
+
+  // ── Hardcoded defaults (never removed — always the safety net) ────────────
+  const DEFAULT_BASE_COSTS = {
+    uk:            REGIONAL_BASE_COST.uk,            // 1.10
+    eea:           REGIONAL_BASE_COST.eea,           // 1.60
+    international: REGIONAL_BASE_COST.international, // 2.60
+    wespell:       0.0435,
+  };
+
+  const DEFAULT_PROFILES = {
+    aggressive: {
+      targetMargin:     PRICING_PROFILES.aggressive.targetMargin,          // 0.20
+      minDomestic:      PRICING_PROFILES.aggressive.minDomestic,           // 1.40
+      minInternational: PRICING_PROFILES.aggressive.minInternational,      // 2.50
+      splitThreshold:   PRICING_PROFILES.aggressive.forceSplitThreshold,   // 0.40
+    },
+    standard: {
+      targetMargin:     PRICING_PROFILES.standard.targetMargin,            // 0.30
+      minDomestic:      PRICING_PROFILES.standard.minDomestic,             // 1.60
+      minInternational: PRICING_PROFILES.standard.minInternational,        // 3.00
+      splitThreshold:   PRICING_PROFILES.standard.forceSplitThreshold,     // 0.35
+    },
+    conservative: {
+      targetMargin:     PRICING_PROFILES.conservative.targetMargin,        // 0.45
+      minDomestic:      PRICING_PROFILES.conservative.minDomestic,         // 1.90
+      minInternational: PRICING_PROFILES.conservative.minInternational,    // 3.20
+      splitThreshold:   PRICING_PROFILES.conservative.forceSplitThreshold, // 0.30
+    },
+  };
+
+  const DEFAULT_GLOBAL_RULES = {
+    minMargin:          0.30,
+    undercutMultiplier: 0.80,
+    rateFloor:          1.30,
+    gatewayFeeTiers: [
+      { maxVol: 100000,   fee: 0.10 },
+      { maxVol: 200000,   fee: 0.08 },
+      { maxVol: Infinity, fee: 0.05 },
+    ],
+    fixedFeeMinimum: 10,
+    volumeMargins: [
+      { maxVol: 50000,    margin: 0.60 },
+      { maxVol: 200000,   margin: 0.40 },
+      { maxVol: Infinity, margin: 0.25 },
+    ],
+    fixedFeeTiers: [
+      { maxVol: 100000,   fee: 10 },
+      { maxVol: 200000,   fee: 8  },
+      { maxVol: Infinity, fee: 5  },
+    ],
+  };
+
+  const DEFAULT_INTL_RULES = {
+    manualOverride:           true,
+    countryCoverageThreshold: 0.80,
+  };
+
+  const DEFAULT_BLENDED_RULES = {
+    suppressAtZero:    true,
+    suppressAtHundred: true,
+  };
+
+  // ── Load from DB, fall back to defaults ───────────────────────────────────
+  // Tiers stored in DB use maxVol: null for Infinity (JSON doesn't support Infinity).
+  // Restore Infinity on any tier where maxVol is null.
+  function restoreInfinity(tiers) {
+    return tiers.map(t => ({ ...t, maxVol: t.maxVol === null ? Infinity : t.maxVol }));
+  }
+
+  const dbBaseCosts    = getSetting("base_costs",    DEFAULT_BASE_COSTS);
+  const dbProfiles     = getSetting("profiles",      DEFAULT_PROFILES);
+  const dbGlobalRules  = getSetting("global_rules",  DEFAULT_GLOBAL_RULES);
+  const dbIntlRules    = getSetting("intl_rules",    DEFAULT_INTL_RULES);
+  const dbBlendedRules = getSetting("blended_rules", DEFAULT_BLENDED_RULES);
+
+  // Restore Infinity on tier arrays (JSON serialises Infinity as null)
+  if (dbGlobalRules.gatewayFeeTiers) dbGlobalRules.gatewayFeeTiers = restoreInfinity(dbGlobalRules.gatewayFeeTiers);
+  if (dbGlobalRules.volumeMargins)   dbGlobalRules.volumeMargins   = restoreInfinity(dbGlobalRules.volumeMargins);
+  if (dbGlobalRules.fixedFeeTiers)   dbGlobalRules.fixedFeeTiers   = restoreInfinity(dbGlobalRules.fixedFeeTiers);
+
+  return {
+    baseCosts:    dbBaseCosts,
+    profiles:     dbProfiles,
+    globalRules:  dbGlobalRules,
+    intlRules:    dbIntlRules,
+    blendedRules: dbBlendedRules,
+  };
+}
+
 // ── decidePricingMode ─────────────────────────────────────────
 // Determines whether split pricing (UK + International separate rates)
 // should be the PRIMARY presentation, or whether blended can serve as primary
@@ -60,8 +174,9 @@ const PRICING_PROFILES = {
 //   "split_indicative" — no real intlFrac available (intlFrac is null).
 //                        Split rates still shown as indicative, blended suppressed.
 //
-function decidePricingMode(intlFrac, blendedRate, profileName) {
-  const profile    = PRICING_PROFILES[profileName] || PRICING_PROFILES.standard;
+function decidePricingMode(intlFrac, blendedRate, profileName, settings) {
+  if (!settings) settings = getPricingSettings();
+  const profile      = settings.profiles[profileName] || settings.profiles.standard;
   const blendedIsValid = blendedRate !== null;
 
   // No real international proportion data available
@@ -73,8 +188,8 @@ function decidePricingMode(intlFrac, blendedRate, profileName) {
     };
   }
 
-  // intlFrac is real — check against profile threshold
-  if (intlFrac >= profile.forceSplitThreshold) {
+  // intlFrac is real — check against profile split threshold
+  if (intlFrac >= profile.splitThreshold) {
     return {
       splitIsPrimary: true,
       blendedIsValid,
@@ -96,12 +211,13 @@ function decidePricingMode(intlFrac, blendedRate, profileName) {
 //   target_sell_rate = true_cost + profile.targetMargin
 //   final_sell_rate = max(target_sell_rate, profile.min*)
 // Returns: { trueUkCost, trueInternationalCost, sellUkRate, sellInternationalRate }
-function calculateRegionalRates(wespellCost, profileName) {
-  const profile = PRICING_PROFILES[profileName] || PRICING_PROFILES.standard;
+function calculateRegionalRates(wespellCost, profileName, settings) {
+  if (!settings) settings = getPricingSettings();
+  const profile  = settings.profiles[profileName] || settings.profiles.standard;
 
   // True cost per region = regional base cost + Wespell cost
-  const trueUkCost            = REGIONAL_BASE_COST.uk            + wespellCost;
-  const trueInternationalCost = REGIONAL_BASE_COST.international + wespellCost;
+  const trueUkCost            = settings.baseCosts.uk            + wespellCost;
+  const trueInternationalCost = settings.baseCosts.international + wespellCost;
 
   // Target sell rate = true cost + profile target margin
   const targetUkRate            = trueUkCost            + profile.targetMargin;
@@ -162,12 +278,20 @@ function calculateBlendedRate(sellUkRate, sellInternationalRate, intlFrac, csvDe
 // csvDebitFracIsReal — true when debitFrac came from real CSV card-mix detection,
 //                     false when it is the hardcoded 0.70 default.
 // profileName        — "aggressive" | "standard" | "conservative". Defaults to "standard".
-function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsReal, profileName) {
+// settingsOverride   — optional settings object from admin UI. null = use getPricingSettings().
+function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsReal, profileName, settingsOverride) {
   if (intlFrac === undefined) intlFrac = null;
   if (csvDebitFracIsReal === undefined) csvDebitFracIsReal = false;
-  // Validate and default profileName — reject unknown values silently
-  if (!profileName || !PRICING_PROFILES[profileName]) profileName = "standard";
+
+  // ── Single source of truth — override when admin has applied local changes ──
+  const settings = settingsOverride || getPricingSettings();
+
+  // Validate and default profileName against resolved settings
+  if (!profileName || !settings.profiles[profileName]) profileName = "standard";
   if (!vol || vol <= 0 || !cnt || cnt <= 0) return null;
+
+  const profile  = settings.profiles[profileName];
+  const rules    = settings.globalRules;
 
   const avgTx = vol / cnt;
 
@@ -176,16 +300,14 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
   const costRate = interchangeRate + 0.13 + 0.10;
 
   // ── 2. FIXED COST PER TRANSACTION ──────────────────────────
-  let gatewayFee;
-  if (vol < 100000)       gatewayFee = 0.10;
-  else if (vol < 200000)  gatewayFee = 0.08;
-  else                    gatewayFee = 0.05;
+  const gatewayTier = rules.gatewayFeeTiers.find(t => vol < t.maxVol) || rules.gatewayFeeTiers[rules.gatewayFeeTiers.length - 1];
+  const gatewayFee  = gatewayTier.fee;
 
-  const wespellCost = 0.0435;
-  const costFixed = gatewayFee + wespellCost;
+  const wespellCost = settings.baseCosts.wespell;
+  const costFixed   = gatewayFee + wespellCost;
 
   // ── 2b. REGIONAL RATES — uses selected profile ────────────────
-  const regional = calculateRegionalRates(wespellCost, profileName);
+  const regional = calculateRegionalRates(wespellCost, profileName, settings);
 
   // ── 2c. BLENDED RATE — only when real mix data exists ─────────
   // calculateBlendedRate returns null when only the hardcoded default is available.
@@ -198,10 +320,10 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
   );
 
   // ── 2d. PRICING MODE DECISION — uses selected profile threshold ──
-  const pricingDecision = decidePricingMode(intlFrac, blendedRate, profileName);
+  const pricingDecision = decidePricingMode(intlFrac, blendedRate, profileName, settings);
 
   // ── 3. MINIMUM MARGIN PROTECTION ──────────────────────────
-  const minimumMargin = 0.30;
+  const minimumMargin  = rules.minMargin;
   const minAllowedRate = costRate + minimumMargin;
 
   // ── 4. CALCULATE QUOTE RATE ───────────────────────────────
@@ -209,28 +331,25 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
   let currentRate = null;
 
   if (curFees && curFees > 0) {
-    // Competitor undercut: 25% reduction from current rate
+    // Competitor undercut
     currentRate = (curFees / vol) * 100;
-    const targetRate = currentRate * 0.80;
+    const targetRate = currentRate * rules.undercutMultiplier;
     quoteRate = Math.max(targetRate, minAllowedRate);
   } else {
-    // Volume-based pricing
-    if (vol < 50000)        quoteRate = costRate + 0.60;
-    else if (vol < 200000)  quoteRate = costRate + 0.40;
-    else                    quoteRate = costRate + 0.25;
+    // Volume-based pricing — margin sourced from settings
+    const volMarginTier = rules.volumeMargins.find(t => vol < t.maxVol) || rules.volumeMargins[rules.volumeMargins.length - 1];
+    quoteRate = costRate + volMarginTier.margin;
   }
 
   // ── 5. RATE FLOOR ─────────────────────────────────────────
-  quoteRate = Math.max(quoteRate, 1.30);
+  quoteRate = Math.max(quoteRate, rules.rateFloor);
 
   // ── 6. FIXED FEE TIERS ───────────────────────────────────
-  let fixedFee;
-  if (vol < 100000)       fixedFee = 10;
-  else if (vol < 200000)  fixedFee = 8;
-  else                    fixedFee = 5;
+  const fixedFeeTier = rules.fixedFeeTiers.find(t => vol < t.maxVol) || rules.fixedFeeTiers[rules.fixedFeeTiers.length - 1];
+  let fixedFee = fixedFeeTier.fee;
 
   // ── 6b. ENFORCE MINIMUM FIXED FEE (CRITICAL) ──────────
-  fixedFee = Math.max(fixedFee, 10);
+  fixedFee = Math.max(fixedFee, rules.fixedFeeMinimum);
 
   // ── 7. ROUND FINAL RATE ──────────────────────────────────
   quoteRate = Math.ceil(quoteRate * 100) / 100;
@@ -257,17 +376,11 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
     current_rate:           currentRate !== null ? Math.round(currentRate * 100) / 100 : null,
     monthly_saving:         monthlySaving !== null ? Math.round(monthlySaving * 100) / 100 : null,
     yearly_saving:          yearlySaving  !== null ? Math.round(yearlySaving  * 100) / 100 : null,
-    // ── Regional rates (new additive outputs — not exposed to API response yet) ──
     true_uk_cost:            regional.trueUkCost,
     true_international_cost: regional.trueInternationalCost,
     sell_uk_rate:            regional.sellUkRate,
     sell_international_rate: regional.sellInternationalRate,
-    // ── Blended rate — null unless real domestic/international mix data exists ──
     blended_rate:            blendedRate,
-    // ── Pricing mode decision ──────────────────────────────────────────────────
-    // split_primary    — intl >= profile threshold, split rates are the main output
-    // blended_primary  — intl < threshold AND real data exists, blended is main
-    // split_indicative — no real intl data, split shown as indicative only
     pricing_mode:            pricingDecision.mode,
     split_is_primary:        pricingDecision.splitIsPrimary,
     blended_is_valid:        pricingDecision.blendedIsValid,
@@ -283,7 +396,7 @@ function generateQuoteId() {
 // ── POST /api/calculate_quote ─────────────────────────────────
 router.post("/", (req, res) => {
   try {
-    const { merchant_name, merchant_email, monthly_volume, transaction_count, current_fees, debit_frac, intl_frac, csv_debit_frac_is_real, pricing_profile } = req.body;
+    const { merchant_name, merchant_email, monthly_volume, transaction_count, current_fees, debit_frac, intl_frac, csv_debit_frac_is_real, pricing_profile, settings_override } = req.body;
 
     if (!merchant_email) {
       return res.status(400).json({ error: "Email address is required" });
@@ -311,10 +424,15 @@ router.post("/", (req, res) => {
     // CSV card-mix detection, not from the hardcoded 0.70 default.
     const csvDebitFracIsReal = csv_debit_frac_is_real === true || csv_debit_frac_is_real === "true";
 
-    // profileName: validate against known profiles, default to "standard".
-    const profileName = PRICING_PROFILES[pricing_profile] ? pricing_profile : "standard";
+    // profileName: validate against resolved settings, default to "standard".
+    // Use override settings for validation if provided.
+    const resolvedSettings = (settings_override && typeof settings_override === "object" && settings_override.profiles)
+      ? settings_override
+      : null;
+    const effectiveSettings = resolvedSettings || getPricingSettings();
+    const profileName = effectiveSettings.profiles[pricing_profile] ? pricing_profile : "standard";
 
-    const result = calculateQuote(vol, cnt, debitFrac, cur, intlFrac, csvDebitFracIsReal, profileName);
+    const result = calculateQuote(vol, cnt, debitFrac, cur, intlFrac, csvDebitFracIsReal, profileName, resolvedSettings);
     if (!result) {
       return res.status(400).json({ error: "Unable to calculate rate with the provided data" });
     }
@@ -401,6 +519,59 @@ router.post("/", (req, res) => {
   } catch (err) {
     console.error("Error calculating quote:", err);
     res.status(500).json({ error: "Failed to generate quote" });
+  }
+});
+
+// ── GET /api/settings ────────────────────────────────────────
+// Returns the current live settings object (DB values or defaults).
+// Used by admin panel to populate the pricing settings form on load.
+router.get("/settings", (req, res) => {
+  try {
+    res.json({ success: true, settings: getPricingSettings() });
+  } catch (err) {
+    console.error("Error fetching settings:", err);
+    res.status(500).json({ error: "Failed to load settings" });
+  }
+});
+
+// ── PUT /api/settings ─────────────────────────────────────────
+// Saves the full settings object to the DB.
+// Each section stored as a separate key for granular fallback.
+// Infinity in tier maxVol is serialised as null (JSON limitation).
+router.put("/settings", (req, res) => {
+  try {
+    const { baseCosts, profiles, globalRules, intlRules, blendedRules } = req.body;
+
+    // Basic structural validation — each section must be present
+    if (!baseCosts || !profiles || !globalRules) {
+      return res.status(400).json({ error: "Missing required settings sections" });
+    }
+    if (!profiles.aggressive || !profiles.standard || !profiles.conservative) {
+      return res.status(400).json({ error: "All three profiles are required" });
+    }
+
+    // Serialise — Infinity becomes null in JSON; restored on read via restoreInfinity()
+    const serialise = obj => JSON.stringify(obj, (_, v) => v === Infinity ? null : v);
+    const now = new Date().toISOString();
+
+    const upsert = db.prepare(`
+      INSERT INTO settings (key, value, updated_at)
+      VALUES (?, ?, ?)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+    `);
+
+    db.transaction(() => {
+      upsert.run("base_costs",    serialise(baseCosts),    now);
+      upsert.run("profiles",      serialise(profiles),     now);
+      upsert.run("global_rules",  serialise(globalRules),  now);
+      if (intlRules)    upsert.run("intl_rules",    serialise(intlRules),    now);
+      if (blendedRules) upsert.run("blended_rules", serialise(blendedRules), now);
+    })();
+
+    res.json({ success: true, settings: getPricingSettings() });
+  } catch (err) {
+    console.error("Error saving settings:", err);
+    res.status(500).json({ error: "Failed to save settings" });
   }
 });
 
