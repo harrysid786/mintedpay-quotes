@@ -1089,6 +1089,13 @@
       else if (vol >= 50000)  { tierLabel = "Medium Merchant"; tierColor = "#2563eb"; tierBg = "#eff6ff"; }
       else if (vol > 0)       { tierLabel = "Small Merchant";  tierColor = "#94a3b8"; tierBg = "#f8fafc"; }
 
+      // Simulator zone colour
+      const minRate  = 0.76, maxRate  = 4.0;
+      const minFixed = 10,   maxFixed = 50;
+      const rPct     = Math.round(((simRate  - minRate)  / (maxRate  - minRate))  * 100);
+      const fPct     = Math.round(((simFixed - minFixed) / (maxFixed - minFixed)) * 100);
+      const rZone    = simRate < 1.5 ? "var(--green)" : simRate < 2.5 ? "var(--amber)" : "var(--red)";
+
       const fmt2 = (n) => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const fmtK = (n) => { const a = Math.abs(n); if (a >= 1e6) return "£" + (a / 1e6).toFixed(2) + "m"; if (a >= 1e3) return "£" + (a / 1e3).toFixed(1) + "k"; return "£" + a.toFixed(2); };
 
@@ -1233,152 +1240,69 @@
 
           <!-- ══ C: RATE SIMULATOR ══ -->
           <div class="lf-op-section">
-            <div class="lf-op-section-title" style="display:flex;align-items:center;justify-content:space-between">
-              Rate Simulator
-              <span style="font-size:9px;font-weight:600;letter-spacing:.5px;color:var(--g4)">ADMIN ONLY</span>
-            </div>
-
-            <!-- Rate cards: Break-even / Recommended / Max -->
-            <div id="lf-rate-cards" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
-              ${(()=>{
-                const p  = this.pricingResult;
-                const breakEven    = p._breakEvenRate;   // set by _calculateOutput — null if engine didn't return cost data
-                const recommended  = p._recommendedRate ?? p.rate;
-                const maxR         = p._maxRate ?? (recommended + 0.50);
-                const selR         = p._simRate ?? recommended;
-                const fixedFee     = p._simFixed ?? p.fixed_fee;
-                const fmtR = r => r != null ? r.toFixed(2) + "%" : "—";
-                const fmt2 = n => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const mpCost = p.cost_rate ? (vol * p.cost_rate / 100) : 0;
-
-                // Only render break-even card if we have real cost data from the engine
-                const cards = [
-                  ...(breakEven !== null ? [{
-                    id: "rc-breakeven",
-                    cls: "lf-rc-min",
-                    badge: "Break-Even",
-                    icon: "▲",
-                    rate: breakEven,
-                    desc: "Your cost. Do not go below this.",
-                    rec: false,
-                  }] : []),
-                  {
-                    id: "rc-recommended",
-                    cls: "lf-rc-ideal",
-                    badge: "Recommended",
-                    icon: "★",
-                    rate: recommended,
-                    desc: p.current_rate ? "Undercuts merchant. Healthy margin." : "Suggested rate based on volume and profile.",
-                    rec: true,
-                  },
-                  {
-                    id: "rc-max",
-                    cls: "lf-rc-max",
-                    badge: p.current_rate ? "Parity Rate" : "Market Rate",
-                    icon: "■",
-                    rate: maxR,
-                    desc: p.current_rate ? "Merchant pays same as now — max you can charge." : "Typical market ceiling for this merchant.",
-                    rec: false,
-                  },
-                ];
-
-                return cards.map(card => {
-                  const rev    = vol > 0 ? ((vol * card.rate / 100) + (txCnt * fixedFee / 100)) : 0;
-                  const prof   = vol > 0 ? ((vol * card.rate / 100) - mpCost) : 0;
-                  const save   = curPaying !== null ? Math.max(0, curPaying - rev) : null;
-                  const margin = vol > 0 && mpCost > 0 ? card.rate - (mpCost / vol * 100) : null;
-                  const isSelected = Math.abs((selR ?? recommended) - card.rate) < 0.001;
-                  const mg = margin !== null ? (margin > 0.30 ? "var(--green)" : margin > 0.10 ? "var(--amber)" : "var(--red)") : "var(--g4)";
-
-                  return `<div class="lf-rc ${card.cls}${isSelected ? " lf-rc-sel" : ""}" data-rate="${card.rate.toFixed(4)}" onclick="document.getElementById('lf-slider-rate').value=${card.rate.toFixed(4)};document.getElementById('lf-slider-rate').dispatchEvent(new Event('input'))">
-                    <div class="lf-rc-bar"></div>
-                    <div class="lf-rc-chk">${isSelected ? "✓" : ""}</div>
-                    <div class="lf-rc-badge">${card.icon} ${card.badge}${card.rec ? " <span class='lf-rc-rec'>RECOMMENDED</span>" : ""}</div>
-                    <div class="lf-rc-rate">${fmtR(card.rate)}</div>
-                    <div class="lf-rc-rate-sub">+ ${fixedFee}p / transaction</div>
-                    <div class="lf-rc-desc">${card.desc}</div>
-                    <hr class="lf-rc-hr">
-                    <div class="lf-rc-kv"><span class="lf-rc-k">Merchant pays/mo</span><span class="lf-rc-v">${fmt2(rev)}</span></div>
-                    ${save !== null ? `<div class="lf-rc-kv"><span class="lf-rc-k">Merchant saving/mo</span><span class="lf-rc-v" style="color:${save > 0 ? "var(--green)" : "var(--g3)"}">${save > 0 ? "+" + fmt2(save) : "—"}</span></div>` : ""}
-                    ${mpCost > 0 ? `<div class="lf-rc-kv"><span class="lf-rc-k">MP profit/mo</span><span class="lf-rc-v" style="color:${prof >= 0 ? "var(--green)" : "var(--red)"}">${prof >= 0 ? "+" : ""}${fmt2(prof)}</span></div>` : ""}
-                    ${margin !== null ? `<div class="lf-rc-mg"><span class="lf-rc-mg-lbl">Margin</span><div class="lf-rc-mg-track"><div class="lf-rc-mg-fill" style="width:${Math.min(100,Math.max(0,margin*100)).toFixed(1)}%;background:${mg}"></div></div><span class="lf-rc-mg-val" style="color:${mg}">${margin.toFixed(2)}%</span></div>` : ""}
-                  </div>`;
-                }).join("");
-              })()}
-            </div>
-
-            <!-- Slider -->
-            ${(()=>{
-              // Resolve slider boundaries once here — fallback reads from _maxRate set by _calculateOutput.
-              // The +0.50 headroom is defined as SLIDER_MAX_NO_FEES_HEADROOM in _calculateOutput
-              // and is already baked into _maxRate. This ?? is only a safety net for null _maxRate.
-              const pr       = this.pricingResult;
-              const sliderMin = pr._breakEvenRate ?? pr.rate;
-              const sliderMax = pr._maxRate ?? (pr.rate + 0.50);
-              const sliderVal = pr._simRate ?? pr.rate;
-              const sliderRec = pr._recommendedRate ?? pr.rate;
-              const isMxParity = !!pr.current_rate;
-              return `
-            <div class="lf-op-sim" style="background:var(--g8);border:1px solid var(--g6);border-radius:var(--r);padding:14px;margin-bottom:12px">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3)">Selected Rate</div>
-                <div style="display:flex;align-items:baseline;gap:4px">
-                  <span id="lf-slider-display" style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--brand)">${sliderVal.toFixed(2)}</span>
-                  <span style="font-size:14px;font-weight:700;color:var(--g3)">%</span>
-                  <span style="font-size:12px;color:var(--g3);margin-left:4px">+ ${pr._simFixed ?? pr.fixed_fee}p</span>
+            <div class="lf-op-section-title">Rate Simulator</div>
+            <div class="lf-op-sim">
+              <div class="lf-op-sim-top">
+                <div class="lf-op-sim-ctrl">
+                  <div class="lf-op-sim-ctrl-lbl">Processing Rate</div>
+                  <div class="lf-op-sim-spin-wrap lf-op-sim-spin-brand">
+                    <button class="lf-op-sim-btn" id="lf-sim-rate-up">▲</button>
+                    <input type="number" class="lf-op-sim-box" id="lf-sim-rate"
+                           value="${simRate}" min="${minRate}" max="${maxRate}" step="0.01">
+                    <button class="lf-op-sim-btn" id="lf-sim-rate-dn">▼</button>
+                  </div>
+                  <span class="lf-op-sim-pct">%</span>
+                </div>
+                <div class="lf-op-sim-sep">+</div>
+                <div class="lf-op-sim-ctrl">
+                  <div class="lf-op-sim-ctrl-lbl">Fixed Fee</div>
+                  <div class="lf-op-sim-spin-wrap lf-op-sim-spin-green">
+                    <button class="lf-op-sim-btn" id="lf-sim-fixed-up">▲</button>
+                    <input type="number" class="lf-op-sim-box lf-op-sim-box-green" id="lf-sim-fixed"
+                           value="${simFixed}" min="${minFixed}" max="${maxFixed}" step="1">
+                    <button class="lf-op-sim-btn" id="lf-sim-fixed-dn">▼</button>
+                  </div>
+                  <span class="lf-op-sim-pct" style="color:var(--green)">p</span>
                 </div>
               </div>
 
-              <div class="lf-op-sim-track-wrap" style="margin-bottom:6px">
-                <div id="lf-slider-bg" class="lf-op-sim-track-bg"></div>
-                <input type="range" class="lf-op-sim-range" id="lf-slider-rate"
-                  min="${sliderMin.toFixed(4)}"
-                  max="${sliderMax.toFixed(4)}"
-                  step="0.01"
-                  value="${sliderVal.toFixed(2)}">
+              <!-- Rate zone slider -->
+              <div class="lf-op-sim-track-wrap">
+                <div class="lf-op-sim-track-bg"></div>
+                <input type="range" class="lf-op-sim-range" id="lf-sim-rate-range"
+                       min="${minRate}" max="${maxRate}" step="0.01" value="${simRate}">
+                <div class="lf-op-sim-ticks">
+                  <span style="color:var(--green)">▼ Floor</span>
+                  <span style="color:var(--amber);text-align:center">Market</span>
+                  <span style="color:var(--red);text-align:right">Premium ▲</span>
+                </div>
               </div>
-              <div style="display:flex;justify-content:space-between;font-size:9px;font-weight:700;padding-bottom:8px">
-                <span style="color:var(--green)">▲ ${sliderMin.toFixed(2)}% BREAK-EVEN</span>
-                <span style="color:var(--amber)">${sliderRec.toFixed(2)}% RECOMMENDED</span>
-                <span style="color:var(--red)">${sliderMax.toFixed(2)}% ${isMxParity ? "PARITY" : "MARKET"}</span>
-              </div>`;
-            })()}
 
-              <!-- Live strip outputs -->
-              <div class="lf-op-sim-strip" style="grid-template-columns:repeat(4,1fr)">
+              <!-- Simulator output strip -->
+              <div class="lf-op-sim-strip">
                 <div class="lf-op-sim-cell">
-                  <div class="lf-op-sim-cell-lbl">Merchant/mo</div>
+                  <div class="lf-op-sim-cell-lbl">Monthly Cost</div>
                   <div class="lf-op-sim-cell-val" id="lf-sim-out-cost">${vol > 0 ? fmt2(simRev) : "—"}</div>
                 </div>
                 <div class="lf-op-sim-cell">
-                  <div class="lf-op-sim-cell-lbl">Saving/mo</div>
-                  <div class="lf-op-sim-cell-val" id="lf-sim-out-save" style="color:${mSave > 0 ? "var(--green)" : "var(--g3)"}">
-                    ${mSave > 0 ? "+" + fmt2(mSave) : "—"}
-                  </div>
+                  <div class="lf-op-sim-cell-lbl">Effective Rate</div>
+                  <div class="lf-op-sim-cell-val" id="lf-sim-out-eff">${effectiveRate !== null ? effectiveRate + "%" : "—"}</div>
                 </div>
                 <div class="lf-op-sim-cell">
-                  <div class="lf-op-sim-cell-lbl">MP profit/mo</div>
-                  <div class="lf-op-sim-cell-val" id="lf-sim-out-prof" style="color:var(--green)">—</div>
-                </div>
-                <div class="lf-op-sim-cell">
-                  <div class="lf-op-sim-cell-lbl">Margin</div>
+                  <div class="lf-op-sim-cell-lbl">Est. Margin</div>
                   <div class="lf-op-sim-cell-val" id="lf-sim-out-mrg">~${estMrg}%</div>
                 </div>
-              </div>
-              <div class="lf-op-sim-strip" style="grid-template-columns:repeat(2,1fr);margin-top:1px;margin-bottom:12px">
                 <div class="lf-op-sim-cell">
-                  <div class="lf-op-sim-cell-lbl">MP profit/yr</div>
-                  <div class="lf-op-sim-cell-val" id="lf-sim-out-prof-yr" style="color:var(--green)">—</div>
-                </div>
-                <div class="lf-op-sim-cell">
-                  <div class="lf-op-sim-cell-lbl">Saving/yr</div>
-                  <div class="lf-op-sim-cell-val" id="lf-sim-out-save-yr" style="color:var(--g3)">—</div>
+                  <div class="lf-op-sim-cell-lbl">Monthly Saving</div>
+                  <div class="lf-op-sim-cell-val" id="lf-sim-out-save" style="color:${mSave > 0 ? "var(--green)" : "var(--g3)"}">
+                    ${mSave > 0 ? fmt2(mSave) : "—"}
+                  </div>
                 </div>
               </div>
 
-              <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <div class="lf-op-sim-actions">
                 <button class="lf-op-sim-apply" id="lf-apply-override">✓ Apply This Rate to Quote</button>
-                <button class="lf-op-sim-reset" id="lf-sim-reset">↺ Reset to Recommended</button>
+                <button class="lf-op-sim-reset" id="lf-sim-reset">↺ Reset to System Rate</button>
               </div>
             </div>
           </div>
@@ -1987,116 +1911,93 @@
         this._render();
       });
 
-      // ── Rate Simulator — slider-driven break-even / recommended / max ──
-      const sliderEl = q("lf-slider-rate");
-      const simFixedEl = q("lf-sim-fixed");  // kept for fixed fee (if present)
+      // ── Rate Simulator live updates ────────────────────────
+      const simRateEl  = q("lf-sim-rate");
+      const simFixedEl = q("lf-sim-fixed");
+      const simRange   = q("lf-sim-rate-range");
 
-      const updateSliderOutputs = () => {
-        if (!sliderEl || !this.pricingResult) return;
-
-        const sr  = parseFloat(sliderEl.value);
-        const sf  = this.pricingResult._simFixed ?? this.pricingResult.fixed_fee ?? 10;
+      const updateSimOutputs = () => {
+        const sr = parseFloat(simRateEl?.value) || this.pricingResult.rate;
+        const sf = parseFloat(simFixedEl?.value) || this.pricingResult.fixed_fee;
         const vol    = parseFloat(this.lead.monthlyVolume) || 0;
         const avgTx  = parseFloat(this.lead.avgTransactionValue) || 55;
         const txCnt  = avgTx > 0 ? Math.round(vol / avgTx) : 0;
-
         const rev    = vol > 0 ? ((vol * sr / 100) + (txCnt * sf / 100)) : 0;
-
-        // Cost base — use engine-returned cost_rate when available
-        const costRate  = this.pricingResult.cost_rate ?? 0;
-        const mpCost    = vol * costRate / 100;
-        const prof      = rev - mpCost - (txCnt * sf / 100);  // MP net profit (rate revenue minus cost %)
-        const profSimple = vol > 0 ? (vol * sr / 100) - (vol * costRate / 100) : 0;
-        const margin    = vol > 0 ? sr - costRate : 0;
-
-        const rawFeeManual  = parseFloat(this.lead.currentMonthlyFees) || 0;
+        const effR   = vol > 0 ? ((rev / vol) * 100).toFixed(2) + "%" : "—";
+        const mrg    = Math.max(0, sr - 0.46).toFixed(2);
+        const rawFeeManual  = parseFloat(this.lead.currentMonthlyFees)          || 0;
         const rawFeePricing = parseFloat(this.lead.pricing?.currentMonthlyFees) || 0;
-        const csvCurRate    = parseFloat(this.lead.csvCurrentRate) || 0;
+        const csvCurRateSim = parseFloat(this.lead.csvCurrentRate)              || 0;
         let simCurFees = 0;
-        if (rawFeeManual > 0)                simCurFees = rawFeeManual;
-        else if (rawFeePricing > 0)          simCurFees = rawFeePricing;
-        else if (csvCurRate > 0 && vol > 0)  simCurFees = (csvCurRate / 100) * vol;
-        const curPay = simCurFees > 0 ? simCurFees : (this.pricingResult.current_rate && vol > 0 ? (this.pricingResult.current_rate / 100) * vol : null);
-        const save   = curPay !== null ? curPay - rev : null;
+        if (rawFeeManual > 0)               simCurFees = rawFeeManual;
+        else if (rawFeePricing > 0)         simCurFees = rawFeePricing;
+        else if (csvCurRateSim > 0 && vol > 0) simCurFees = (csvCurRateSim / 100) * vol;
+        const curRate = this.pricingResult.current_rate || (simCurFees > 0 && vol > 0 ? (simCurFees / vol * 100) : null);
+        const curPay  = simCurFees > 0 ? simCurFees : (curRate && vol > 0 ? (curRate / 100) * vol : null);
+        const save    = curPay !== null ? Math.max(0, curPay - rev) : 0;
 
-        const fmt2 = n => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const mgColor = margin > 0.30 ? "var(--green)" : margin > 0.10 ? "var(--amber)" : "var(--red)";
+        const fmt2 = (n) => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-        // Update strip
-        if (q("lf-sim-out-cost"))     q("lf-sim-out-cost").textContent     = vol > 0 ? fmt2(rev) : "—";
+        if (q("lf-sim-out-cost"))  q("lf-sim-out-cost").textContent  = vol > 0 ? fmt2(rev)  : "—";
+        if (q("lf-sim-out-eff"))   q("lf-sim-out-eff").textContent   = effR;
+        if (q("lf-sim-out-mrg"))   q("lf-sim-out-mrg").textContent   = "~" + mrg + "%";
         if (q("lf-sim-out-save")) {
-          const el = q("lf-sim-out-save");
-          el.textContent = save !== null && save > 0 ? "+" + fmt2(save) : (save !== null && save < 0 ? "-" + fmt2(-save) : "—");
-          el.style.color = save !== null ? (save > 0 ? "var(--green)" : "var(--red)") : "var(--g3)";
+          q("lf-sim-out-save").textContent  = save > 0 ? fmt2(save) : "—";
+          q("lf-sim-out-save").style.color  = save > 0 ? "var(--green)" : "var(--g3)";
         }
-        if (q("lf-sim-out-prof")) {
-          const el = q("lf-sim-out-prof");
-          el.textContent = vol > 0 ? (profSimple >= 0 ? "+" : "") + fmt2(profSimple) : "—";
-          el.style.color = profSimple >= 0 ? "var(--green)" : "var(--red)";
-        }
-        if (q("lf-sim-out-prof-yr")) {
-          const el = q("lf-sim-out-prof-yr");
-          el.textContent = vol > 0 ? (profSimple >= 0 ? "+" : "") + fmt2(profSimple * 12) : "—";
-          el.style.color = profSimple >= 0 ? "var(--green)" : "var(--red)";
-        }
-        if (q("lf-sim-out-save-yr")) {
-          const el = q("lf-sim-out-save-yr");
-          el.textContent = save !== null && save > 0 ? "+" + fmt2(save * 12) : "—";
-          el.style.color = save !== null && save > 0 ? "var(--green)" : "var(--g3)";
-        }
-        if (q("lf-sim-out-mrg")) {
-          q("lf-sim-out-mrg").textContent = margin.toFixed(2) + "%";
-          q("lf-sim-out-mrg").style.color = mgColor;
-        }
+        // Keep range in sync with number input
+        if (simRange) simRange.value = sr;
 
-        // Update displayed rate
-        const dispEl = q("lf-slider-display");
-        if (dispEl) dispEl.textContent = sr.toFixed(2);
+        // Update quote preview rate
+        const ptRow = document.querySelector(".lf-op-ptable tbody tr:first-child td:nth-child(2)");
+        if (ptRow) ptRow.textContent = sr.toFixed(2) + "% + " + sf + "p per transaction";
 
-        // Colour the slider track to show zone: red left of break-even, green between, amber above recommended
-        const brk  = this.pricingResult._breakEvenRate ?? sr;
-        const rec  = this.pricingResult._recommendedRate ?? sr;
-        const mx   = parseFloat(sliderEl.max);
-        const span = mx - parseFloat(sliderEl.min);
-        const brkPct = span > 0 ? ((brk - parseFloat(sliderEl.min)) / span * 100).toFixed(1) : 0;
-        const recPct = span > 0 ? ((rec - parseFloat(sliderEl.min)) / span * 100).toFixed(1) : 50;
-        const bg = q("lf-slider-bg");
-        if (bg) bg.style.cssText = `position:absolute;top:50%;transform:translateY(-50%);width:calc(100% - 4px);left:2px;height:6px;border-radius:3px;background:linear-gradient(90deg,#fee2e2 0%,#fee2e2 ${brkPct}%,#d1fae5 ${brkPct}%,#d1fae5 ${recPct}%,#fef3c7 ${recPct}%,#fef3c7 100%)`;
-
-        // Highlight the matching rate card
-        document.querySelectorAll(".lf-rc").forEach(card => {
-          const cardRate = parseFloat(card.dataset.rate);
-          const isSel = Math.abs(cardRate - sr) < 0.001;
-          card.classList.toggle("lf-rc-sel", isSel);
-          card.querySelector(".lf-rc-chk").textContent = isSel ? "✓" : "";
-        });
-
-        // Update rate compare block in quote preview
+        // Update rate comparison block
         const mpBig = document.querySelector(".lf-op-rate-mp .lf-op-rate-big");
         if (mpBig) mpBig.innerHTML = sr.toFixed(2) + '<span class="lf-op-rate-pct">%</span>';
         const mpSub = document.querySelector(".lf-op-rate-mp .lf-op-rate-sub");
         if (mpSub) mpSub.innerHTML = '+ <strong>' + sf + 'p</strong> fixed fee per transaction';
-        const ptRow = document.querySelector(".lf-op-ptable tbody tr:first-child td:nth-child(2)");
-        if (ptRow) ptRow.textContent = sr.toFixed(2) + "% + " + sf + "p per transaction";
 
-        // Persist slider state
+        // Store sim state so re-renders preserve it
         this.pricingResult._simRate  = sr;
         this.pricingResult._simFixed = sf;
       };
 
-      if (sliderEl) {
-        sliderEl.addEventListener("input", updateSliderOutputs);
-        // Run immediately on render
-        updateSliderOutputs();
+      if (simRateEl) {
+        simRateEl.addEventListener("input", updateSimOutputs);
+        q("lf-sim-rate-up")?.addEventListener("click", () => {
+          simRateEl.value = Math.min(4.0, (parseFloat(simRateEl.value) || 0) + 0.01).toFixed(2);
+          updateSimOutputs();
+        });
+        q("lf-sim-rate-dn")?.addEventListener("click", () => {
+          simRateEl.value = Math.max(0.76, (parseFloat(simRateEl.value) || 0) - 0.01).toFixed(2);
+          updateSimOutputs();
+        });
       }
-
+      if (simFixedEl) {
+        simFixedEl.addEventListener("input", updateSimOutputs);
+        q("lf-sim-fixed-up")?.addEventListener("click", () => {
+          simFixedEl.value = Math.min(50, (parseInt(simFixedEl.value) || 10) + 1);
+          updateSimOutputs();
+        });
+        q("lf-sim-fixed-dn")?.addEventListener("click", () => {
+          simFixedEl.value = Math.max(10, (parseInt(simFixedEl.value) || 10) - 1);
+          updateSimOutputs();
+        });
+      }
+      if (simRange) {
+        simRange.addEventListener("input", () => {
+          if (simRateEl) simRateEl.value = parseFloat(simRange.value).toFixed(2);
+          updateSimOutputs();
+        });
+      }
       q("lf-sim-reset")?.addEventListener("click", () => {
-        if (!sliderEl || !this.pricingResult) return;
-        const rec = this.pricingResult._recommendedRate ?? this.pricingResult.rate;
-        sliderEl.value = rec.toFixed(2);
-        this.pricingResult._simRate  = rec;
+        if (simRateEl)  simRateEl.value  = this.pricingResult.rate;
+        if (simFixedEl) simFixedEl.value = this.pricingResult.fixed_fee;
+        if (simRange)   simRange.value   = this.pricingResult.rate;
+        this.pricingResult._simRate  = undefined;
         this.pricingResult._simFixed = undefined;
-        updateSliderOutputs();
+        updateSimOutputs();
       });
 
       // ── Fee toggles + optional fee row visibility ──────────
@@ -2745,41 +2646,39 @@
     }
 
     // ── Apply Pricing Override ──────────────────────────────
-    // Reads the slider value, enforces breakEvenRate as the hard floor,
-    // then stores and re-renders so quote generation uses the selected rate.
     _applyPricingOverride() {
-      if (!this.pricingResult) return;
+      const rateEl  = document.getElementById("lf-override-rate");
+      const fixedEl = document.getElementById("lf-override-fixed");
+      if (!rateEl || !fixedEl) return;
 
-      const sliderEl = document.getElementById("lf-slider-rate");
-      let newRate  = sliderEl ? parseFloat(sliderEl.value) : this.pricingResult.rate;
-      let newFixed = this.pricingResult._simFixed ?? this.pricingResult.fixed_fee ?? 10;
+      let newRate  = parseFloat(rateEl.value);
+      let newFixed = parseFloat(fixedEl.value);
 
-      // Hard floor — never allow quoting below break-even
-      const breakEven = this.pricingResult._breakEvenRate
-        ?? this.pricingResult.effective_min_rate
-        ?? this.pricingResult.cost_rate
-        ?? 0;
+      const MIN_FIXED = 10;   // pence — hard floor
+      const MIN_RATE  = 0.76; // 0.46 cost + 0.30 min margin
 
-      if (isNaN(newRate) || newRate < breakEven) {
-        newRate = breakEven;
-        if (sliderEl) sliderEl.value = newRate.toFixed(2);
-      }
+      // Hard-clamp — never let values below minimums save
+      if (isNaN(newRate)  || newRate  < MIN_RATE)  newRate  = MIN_RATE;
+      if (isNaN(newFixed) || newFixed < MIN_FIXED)  newFixed = MIN_FIXED;
 
-      // Remove any old feedback
+      // Sync inputs back to clamped values so UI matches
+      rateEl.value  = newRate;
+      fixedEl.value = newFixed;
+
+      // Remove any old override feedback
       const old = document.getElementById("lf-override-feedback");
       if (old) old.remove();
 
-      // Success feedback
+      // Show success feedback inline
       const fb = document.createElement("div");
       fb.id = "lf-override-feedback";
-      fb.style.cssText = "font-size:11px;color:var(--green);font-weight:600;margin-top:8px;";
-      fb.textContent = `✓ Rate applied — ${newRate.toFixed(2)}% + ${newFixed}p`;
+      fb.style.cssText = "font-size:11px;color:#00916e;font-weight:600;margin-top:6px;";
+      fb.textContent = `✓ Pricing updated — Rate: ${newRate}%  Fixed: ${newFixed}p`;
       document.getElementById("lf-apply-override")?.insertAdjacentElement("afterend", fb);
       setTimeout(() => fb?.remove(), 3000);
 
       this.pricingResult.rate      = newRate;
       this.pricingResult.fixed_fee = newFixed;
-      this.pricingResult._simRate  = newRate;
       this.lead.processingRate     = newRate;
       this.lead.fixedFee           = newFixed;
       this._scheduleSave();
@@ -3083,6 +2982,8 @@
         if (data.success) {
           this.pricingResult = data;
           // Prefer locally derived current_rate (more accurate) over API value
+          // API calculates current_rate from current_fees/vol too, but we make sure
+          // it's always set here for consistency
           if (derivedCurRate !== null) {
             this.pricingResult.current_rate = derivedCurRate;
           }
@@ -3097,34 +2998,6 @@
             estimatedMonthlyCost: ((vol * data.rate / 100) + (txCnt * data.fixed_fee / 100)).toFixed(2),
             margin:               (data.rate - 0.46).toFixed(2),
           };
-
-          // ── Derive break-even / recommended / max for the slider ──────────
-          //
-          // SLIDER_MAX_NO_FEES_HEADROOM: when no current provider fees exist,
-          // maxRate = recommendedRate + this value. Adjust here if needed.
-          // This is the only fallback that adds an arbitrary buffer — it exists
-          // purely to give the slider a right-hand anchor when no parity target exists.
-          const SLIDER_MAX_NO_FEES_HEADROOM = 0.50; // percentage points above recommended
-
-          // breakEvenRate: true cost floor from the engine — never quote below this.
-          // Falls back through: effective_min_rate → cost_rate → null (no slider if missing)
-          const breakEvenRate = data.effective_min_rate ?? data.cost_rate ?? null;
-
-          // recommendedRate: what the engine calculated — default slider position
-          const recommendedRate = data.rate;
-
-          // maxRate: parity with current provider (preferred), or recommended + headroom
-          const maxRate = derivedCurRate
-            ? Math.max(derivedCurRate, recommendedRate + 0.20)  // 0.20 ensures slider has room even at parity
-            : recommendedRate + SLIDER_MAX_NO_FEES_HEADROOM;
-
-          this.pricingResult._breakEvenRate   = breakEvenRate !== null ? Math.round(breakEvenRate * 10000) / 10000 : null;
-          this.pricingResult._recommendedRate = Math.round(recommendedRate * 10000) / 10000;
-          this.pricingResult._maxRate         = Math.round(maxRate * 100) / 100;
-          // Slider starts at recommended — preserved across re-renders if admin has moved it
-          if (this.pricingResult._simRate === undefined) {
-            this.pricingResult._simRate = recommendedRate;
-          }
         } else {
           this.pricingResult = { rate: 0, fixed_fee: 0, success: false, _error: data.error };
           if (derivedCurRate !== null) {
