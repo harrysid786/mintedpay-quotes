@@ -29,6 +29,13 @@ app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 // ── Admin panel redirect (/admin → /admin/index.html) ─────────
 app.get("/admin", (_req, res) => res.redirect("/admin/index.html"));
 
+// ── Pricing Engine Settings clean URL ─────────────────────────
+// Serves settings.html at /admin/settings (no .html extension needed).
+// /admin/settings.html still works via express.static above.
+app.get("/admin/settings", (_req, res) => {
+  res.sendFile(path.join(__dirname, "public/admin/settings.html"));
+});
+
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public/index.html"));
 });
