@@ -134,7 +134,51 @@ router.get("/:quote_id", (req, res) => {
     let addons = {};
     try { addons = JSON.parse(row.addons || "{}"); } catch(e) { /* keep empty */ }
 
+    // ── Re-derive regional pricing fields from stored inputs ────────────────
+    // Regional rates are not stored as columns — they are deterministic from
+    // debitFrac and intlFrac, so we recalculate rather than duplicate storage.
+    // This means quote.html and PDF always get the full pricing object on load.
+    const storedDebitFrac = row.debitFrac || 0.70;
+    const storedIntlFrac  = (row.intlFrac !== null && row.intlFrac !== undefined)
+      ? row.intlFrac : null;
+    const storedVol = row.vol || 0;
+    const storedCur = row.cur || 0;
+
+    // Wespell cost is a constant — safe to reuse here
+    const WESPELL_COST = 0.0435;
+
+    // Re-derive regional rates using Standard profile (matches quote creation default)
+    const REGIONAL_BASE = { uk: 1.10, international: 2.50 };
+    const STANDARD_PROFILE = { targetMargin: 0.30, minDomestic: 1.60, minInternational: 2.80, forceSplitThreshold: 0.35 };
+
+    const trueUkCost            = Math.round((REGIONAL_BASE.uk            + WESPELL_COST) * 10000) / 10000;
+    const trueInternationalCost = Math.round((REGIONAL_BASE.international + WESPELL_COST) * 10000) / 10000;
+    const sellUkRate            = Math.ceil(Math.max(trueUkCost            + STANDARD_PROFILE.targetMargin, STANDARD_PROFILE.minDomestic)    * 100) / 100;
+    const sellInternationalRate = Math.ceil(Math.max(trueInternationalCost + STANDARD_PROFILE.targetMargin, STANDARD_PROFILE.minInternational) * 100) / 100;
+
+    // Re-derive blended rate — only when real mix data was stored
+    const csvDebitFracIsReal = storedIntlFrac !== null || storedDebitFrac !== 0.70;
+    let blendedRate = null;
+    if (storedIntlFrac !== null) {
+      blendedRate = Math.round(((1 - storedIntlFrac) * sellUkRate + storedIntlFrac * sellInternationalRate) * 100) / 100;
+    } else if (csvDebitFracIsReal) {
+      blendedRate = Math.round((storedDebitFrac * sellUkRate + (1 - storedDebitFrac) * sellInternationalRate) * 100) / 100;
+    }
+
+    // Re-derive pricing mode
+    let pricingMode    = "split_indicative";
+    let splitIsPrimary = false;
+    if (storedIntlFrac !== null) {
+      if (storedIntlFrac >= STANDARD_PROFILE.forceSplitThreshold) {
+        pricingMode    = "split_primary";
+        splitIsPrimary = true;
+      } else {
+        pricingMode = blendedRate !== null ? "blended_primary" : "split_indicative";
+      }
+    }
+
     res.json({
+      // ── Existing fields (unchanged) ──────────────────────────────────────
       quote_id:       row.quote_id,
       merchant_name:  row.merchant_name,
       merchant_email: row.merchant_email,
@@ -147,8 +191,18 @@ router.get("/:quote_id", (req, res) => {
       cnt:            row.cnt       || 0,
       avgTx:          row.avgTx     || 0,
       cur:            row.cur       || 0,
-      debitFrac:      row.debitFrac || 0.70,
-      addons:         addons
+      debitFrac:      storedDebitFrac,
+      addons:         addons,
+      // ── New regional pricing fields ───────────────────────────────────────
+      intlFrac:                storedIntlFrac,
+      true_uk_cost:            trueUkCost,
+      true_international_cost: trueInternationalCost,
+      sell_uk_rate:            sellUkRate,
+      sell_international_rate: sellInternationalRate,
+      blended_rate:            blendedRate,
+      pricing_mode:            pricingMode,
+      split_is_primary:        splitIsPrimary,
+      blended_is_valid:        blendedRate !== null,
     });
 
   } catch (err) {
