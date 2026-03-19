@@ -842,6 +842,17 @@
                   ${this.lead.currentMonthlyFees ? `<span>Current fees: <strong>£${parseFloat(this.lead.currentMonthlyFees).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong></span>` : ""}
                   ${this.lead.csvCurrentRate ? `<span>Current rate: <strong style="color:${parseFloat(this.lead.csvCurrentRate)<1?"var(--green)":parseFloat(this.lead.csvCurrentRate)<2.2?"var(--amber)":"var(--red)"}">${parseFloat(this.lead.csvCurrentRate).toFixed(2)}%</strong></span>` : ""}
                   ${this.lead.csvDebitFrac ? `<span>${Math.round(parseFloat(this.lead.csvDebitFrac)*100)}% debit / ${Math.round((1-parseFloat(this.lead.csvDebitFrac))*100)}% credit</span>` : ""}
+                  ${(() => {
+                    const manual  = parseFloat(this.lead.intlPercentage);
+                    const fromCsv = parseFloat(this.lead.csvIntlFrac);
+                    const hasManual = Number.isFinite(manual) && manual >= 0 && manual <= 100;
+                    const hasCsv    = Number.isFinite(fromCsv);
+                    if (hasManual && hasCsv)
+                      return `<span style="color:var(--brand)">Using ${manual}% international transactions <span style="font-weight:400;color:var(--g3)">(manual input)</span></span>`;
+                    if (hasCsv)
+                      return `<span style="color:var(--brand)">Detected ${Math.round(fromCsv*100)}% international transactions from your statement</span>`;
+                    return "";
+                  })()}
                 </div>
               </div>
               <button class="lf-csv-clear-btn" id="lf-csv-clear">Replace</button>
@@ -1359,6 +1370,15 @@
           <!-- ══ E: ADMIN ACTIONS ══ -->
           <div class="lf-op-section lf-op-actions-section">
             <div class="lf-op-section-title">Admin Actions</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--g6)">
+              <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);white-space:nowrap">Pricing Profile</label>
+              <select id="lf-pricing-profile" style="border:1px solid var(--g5);border-radius:var(--r);padding:6px 10px;font-size:12px;font-family:'Inter',sans-serif;background:var(--white);color:var(--black);cursor:pointer;outline:none">
+                <option value="aggressive" ${(this.lead.pricingProfile || "standard") === "aggressive" ? "selected" : ""}>Aggressive</option>
+                <option value="standard"   ${(this.lead.pricingProfile || "standard") === "standard"   ? "selected" : ""}>Standard</option>
+                <option value="conservative" ${(this.lead.pricingProfile || "standard") === "conservative" ? "selected" : ""}>Conservative</option>
+              </select>
+              <span style="font-size:10px;color:var(--g3)">Changes pricing on recalculate</span>
+            </div>
             <div class="lf-op-action-row">
               <button class="lf-op-act-btn lf-op-act-primary" id="lf-gen-quote"
                       ${this.pricingResult && !this.quoteGenerated ? "" : "disabled"}>
@@ -1503,6 +1523,15 @@
       q("lf-mark-kyb")?.addEventListener("click",   () => this._markKYB());
 
       q("lf-apply-override")?.addEventListener("click", () => this._applyPricingOverride());
+
+      // ── Pricing profile selector ───────────────────────────
+      q("lf-pricing-profile")?.addEventListener("change", (e) => {
+        this.lead.pricingProfile = e.target.value;
+        // Clear cached result so Step 10 recalculates with the new profile
+        this.pricingResult = null;
+        this._scheduleSave();
+        this._render();
+      });
 
       // ── Rate Simulator live updates ────────────────────────
       const simRateEl  = q("lf-sim-rate");
@@ -1995,6 +2024,9 @@
         this.lead.currentMonthlyFees  = s.totalFees > 0 ? Number(s.totalFees.toFixed(2)) : "";
         // csvDebitFrac → actual card mix, replaces hardcoded 0.70 in pricing call
         this.lead.csvDebitFrac        = s.debitFrac;
+        // csvIntlFrac → statement-derived international fraction (null when undetectable)
+        // Manual intlPercentage always wins — only set csvIntlFrac, never overwrite intlPercentage
+        this.lead.csvIntlFrac         = s.csvIntlFrac;
         // csvCurrentRate → pre-calculated effective rate for Step 10 display fallback
         this.lead.csvCurrentRate      = s.currentRate > 0 ? Number(s.currentRate.toFixed(4)) : "";
         this.lead.csvCardMix          = s.cardMix ? JSON.stringify(s.cardMix) : "";
@@ -2058,22 +2090,60 @@
 
       // ── Column detection — same HINTS as public quote builder ─────────────
       const HINTS = {
-        amount:   ["amount","gross","total","value","sale","payment","charge","net"],
-        fee:      ["fee","fees","processing","commission","cost","charge_amount"],
+        // "payment" removed — matches "Payment Method" before real amount columns.
+        // amount detection handled separately below with two-pass priority logic.
+        amount:   ["amount","gross","total","value","sale","charge","net"],
+        fee:      ["fee","fees","processing","commission","cost","charge_amount","charge"],
         cardType: ["card","brand","scheme","network","card_brand"],
-        rowType:  ["type","transaction_type","entry_type","record_type"],
+        // rowType: "type" is exact-only to prevent matching "Card Type", "Payment Type" etc.
+        // Multi-word phrases use includes() via the existing isMultiWord path.
+        rowType:  ["transaction type","entry type","record type","transaction_type","entry_type","record_type","__exact__type"],
+        // ── International detection columns ─────────────────────────────────
+        // Priority 1: card/issuing country (Stripe: "Card Issue Country", Adyen: "Issued Country")
+        country:  ["card issue country","issued country","card country","issuing country","card_country","card_issue_country"],
+        currency: ["currency","converted currency","transaction currency"],
       };
       const colMap = {};
       for (const [field, hints] of Object.entries(HINTS)) {
         colMap[field] = "";
         for (const hint of hints) {
-          const match = rawHeaders.find((_, i) => lowerHeaders[i].includes(hint));
+          // "__exact__" prefix forces exact-match regardless of word count
+          if (hint.startsWith("__exact__")) {
+            const exact = hint.slice(9);
+            const match = rawHeaders.find((_, i) => lowerHeaders[i] === exact);
+            if (match) { colMap[field] = match; break; }
+            continue;
+          }
+          // Multi-word hints use full-string match; single-word use substring
+          const isMultiWord = hint.includes(" ");
+          const match = rawHeaders.find((_, i) =>
+            isMultiWord ? lowerHeaders[i] === hint : lowerHeaders[i].includes(hint)
+          );
           if (match) { colMap[field] = match; break; }
         }
       }
 
+      // ── Amount column — two-pass selection ───────────────────────────────
+      // Pass 1: collect all candidate headers that match any amount hint.
+      // Ordered by priority: gross > amount > total > value > sale > charge > net.
+      // "payment" excluded — too broad, hits "Payment Method" before real amount cols.
+      const AMOUNT_PRIORITY = ["gross","amount","total","value","sale","charge","net"];
+      const amountCandidates = [];
+      for (const hint of AMOUNT_PRIORITY) {
+        const matches = rawHeaders.filter((_, i) => lowerHeaders[i].includes(hint));
+        for (const h of matches) {
+          if (!amountCandidates.includes(h)) amountCandidates.push(h);
+        }
+      }
+      // Pass 2: from candidates, prefer the first one where the first data row
+      // contains a parseable positive number. Falls back to first candidate if none parse.
+      const pAmtTest = (v) => { const n = parseFloat(String(v||"").replace(/[£$€,\s]/g,"")); return Number.isFinite(n) && n > 0; };
+      const firstDataRow = rows[0] || {};
+      const numericCandidate = amountCandidates.find(h => pAmtTest(firstDataRow[h]));
+      colMap.amount = numericCandidate || amountCandidates[0] || "";
+
       if (!colMap.amount) {
-        throw new Error("Could not find an amount column. Supported names: amount, gross, total, value, sale, payment, charge, net");
+        throw new Error("Could not find an amount column. Supported names: amount, gross, total, value, sale, charge, net");
       }
 
       // Strip currency symbols — same as pAmt() in public quote builder
@@ -2114,15 +2184,22 @@
         if (keywords.some(kw => haystack.includes(kw))) { processor = name; break; }
       }
 
+      // ── International detection mode ──────────────────────────────────────
+      // Only country column is reliable enough to derive intlFrac.
+      // Currency is NOT used — non-GBP currency ≠ international card origin
+      // (e.g. a French tourist paying in GBP counts as non-GBP but non-UK card).
+      // If no country column → intlFrac = null. Do not guess.
+      const intlMode = colMap.country ? "country" : "none";
+
       // ── Main aggregation — identical to processCSV() in public quote builder ──
-      let vol = 0, cnt = 0, totalFees = 0;
+      let vol = 0, cnt = 0, totalFees = 0, intlVol = 0, countryPopulated = 0;
       const cardData = {};
 
       rows.forEach(r => {
         // Row type filter: skip non-charge rows (fees, refunds, payouts)
         if (colMap.rowType) {
           const rowT = (r[colMap.rowType] || "").toUpperCase().trim();
-          if (rowT && !["CHARGE","PAYMENT","SALE","TRANSACTION","DEBIT",""].includes(rowT)) return;
+          if (rowT && !["CHARGE","PAYMENT","SALE","TRANSACTION","DEBIT","SETTLED","CAPTURE",""].includes(rowT)) return;
         }
         const a = pAmt(r[colMap.amount]);
         if (!a) return;
@@ -2138,6 +2215,16 @@
         if (!cardData[k]) cardData[k] = { vol: 0, cnt: 0 };
         cardData[k].vol += a;
         cardData[k].cnt++;
+
+        // International volume tracking — country mode only
+        if (intlMode === "country") {
+          const c = (r[colMap.country] || "").trim().toUpperCase();
+          if (c !== "") {
+            countryPopulated++;
+            const isUK = c === "GB" || c === "GBR" || c === "UNITED KINGDOM" || c === "UK";
+            if (!isUK) intlVol += a;
+          }
+        }
       });
 
       if (vol <= 0) throw new Error("No valid transaction amounts found in this CSV.");
@@ -2151,6 +2238,14 @@
       // Current effective rate — fees / volume * 100
       const currentRate = (totalFees > 0 && vol > 0) ? (totalFees / vol) * 100 : 0;
 
+      // International fraction — requires country column AND ≥80% row coverage
+      // Below 80% coverage the country column is too sparse to trust — return null.
+      // Prefer null over a silently understated intlFrac.
+      const countryCoverage = cnt > 0 ? countryPopulated / cnt : 0;
+      const csvIntlFrac = (intlMode === "country" && vol > 0 && countryCoverage >= 0.80)
+        ? Math.round((intlVol / vol) * 10000) / 10000
+        : null;
+
       // Merchant tier
       let tierLabel = "Small merchant";
       if      (vol >= 200000) tierLabel = "Large merchant";
@@ -2158,12 +2253,14 @@
 
       return {
         summary: {
-          vol:         Number(vol.toFixed(2)),
+          vol:          Number(vol.toFixed(2)),
           cnt,
-          totalFees:   Number(totalFees.toFixed(2)),
-          debitFrac:   Number(debitFrac.toFixed(4)),
-          currentRate: Number(currentRate.toFixed(4)),
-          cardMix:     cardData,
+          totalFees:    Number(totalFees.toFixed(2)),
+          debitFrac:    Number(debitFrac.toFixed(4)),
+          currentRate:  Number(currentRate.toFixed(4)),
+          csvIntlFrac,   // null when undetectable or coverage < 80%, 0–1 when reliably derived
+          intlMode,      // "country" | "none"
+          cardMix:       cardData,
           tierLabel,
           processor,
         },
@@ -2444,7 +2541,26 @@
 
       // Debit fraction — priority: CSV card mix → intl% proxy → UK default 0.70
       const csvDebitFrac = parseFloat(this.lead.csvDebitFrac);
-      const intlPct      = parseFloat(this.lead.intlPercentage) || 0;
+      // ── intlFrac: three-source priority chain ─────────────────────────────
+      // 1. Manual intlPercentage (Step 4 field) — explicit user input, highest trust
+      //    Convert % → decimal. Valid range 0–100 inclusive (0 is legitimate).
+      // 2. CSV-derived csvIntlFrac — statement-detected, already stored as 0–1
+      // 3. null — no real data available; API will suppress blended rate
+      const manualIntlPct  = parseFloat(this.lead.intlPercentage);
+      const csvIntlFracVal = (this.lead.csvIntlFrac !== null && this.lead.csvIntlFrac !== undefined)
+        ? parseFloat(this.lead.csvIntlFrac) : null;
+
+      let intlFrac = null;
+      if (Number.isFinite(manualIntlPct) && manualIntlPct >= 0 && manualIntlPct <= 100) {
+        intlFrac = manualIntlPct / 100;                    // manual wins
+      } else if (csvIntlFracVal !== null && Number.isFinite(csvIntlFracVal)) {
+        intlFrac = csvIntlFracVal;                         // CSV fallback
+      }
+      // else: intlFrac remains null → API returns split_indicative, no blended rate
+
+      // intlPct as percentage for debitFrac proxy calculation (unchanged behaviour)
+      const intlPct = intlFrac !== null ? intlFrac * 100 : 0;
+
       const debitFrac    = (csvDebitFrac > 0 && csvDebitFrac <= 1) ? csvDebitFrac
                          : intlPct > 50 ? 0.50
                          : intlPct > 20 ? 0.60
@@ -2467,12 +2583,18 @@
           method:  "POST",
           headers: { "Content-Type": "application/json" },
           body:    JSON.stringify({
-            merchant_name:     this.lead.contactName  || this.lead.businessName || "",
-            merchant_email:    this.lead.email        || "admin@mintedpay.com",
-            monthly_volume:    vol,
-            transaction_count: txCnt,
-            current_fees:      effectiveCurFees,
-            debit_frac:        debitFrac,
+            merchant_name:          this.lead.contactName  || this.lead.businessName || "",
+            merchant_email:         this.lead.email        || "admin@mintedpay.com",
+            monthly_volume:         vol,
+            transaction_count:      txCnt,
+            current_fees:           effectiveCurFees,
+            debit_frac:             debitFrac,
+            // intl_frac: manual % → CSV-derived → null (priority order above)
+            intl_frac:              intlFrac,
+            // Tell the engine whether debitFrac came from real CSV card-mix detection
+            csv_debit_frac_is_real: (csvDebitFrac > 0 && csvDebitFrac <= 1),
+            // Pricing profile — admin-selectable, defaults to standard
+            pricing_profile: this.lead.pricingProfile || "standard",
           }),
         });
         const data = await resp.json();
