@@ -12,21 +12,40 @@ router.post("/", (req, res) => {
       return res.status(400).json({ error: "quote_id is required" });
     }
 
-    // Calculate expiry (30 days from now)
-    const expiry = new Date();
-    expiry.setDate(expiry.getDate() + 30);
-    const expiry_date = expiry.toISOString();
+    // ── Read existing row first — used by all merge logic below ──────────────
+    const existing = db.prepare("SELECT * FROM quotes WHERE quote_id = ?").get(q.quote_id);
 
-    // Store brand as JSON string
-    const brandJson = typeof q.brand === "object" ? JSON.stringify(q.brand) : (q.brand || "{}");
+    // Expiry: keep existing for known quotes; 30-day default for new rows only.
+    // q.expiry_date is NOT accepted — callers cannot override expiry externally.
+    const expiry_date = (() => {
+      if (existing?.expiry_date) return existing.expiry_date;
+      const e = new Date();
+      e.setDate(e.getDate() + 30);
+      return e.toISOString();
+    })();
+
+    // Store brand as JSON string — preserve existing if incoming is absent or invalid JSON.
+    const brandJson = (() => {
+      if (q.brand && typeof q.brand === "object" && Object.keys(q.brand).length > 0)
+        return JSON.stringify(q.brand);
+      if (q.brand && typeof q.brand === "string") {
+        try {
+          const parsed = JSON.parse(q.brand);
+          if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0)
+            return q.brand;
+        } catch (_) { /* not valid JSON — fall through */ }
+      }
+      if (existing?.brand && existing.brand !== "{}")
+        return existing.brand;
+      return "{}";
+    })();
 
     // Enforce minimum fixed fee of 10p before saving
-    const safeFee = Math.max(parseFloat(q.fixed_fee) || 0, 10);
-
-    // ── Read existing row so we never downgrade previously enriched quote data ──
-    // /api/calculate_quote writes richer regional fields; this route must not
-    // overwrite them with nulls or defaults when called later (e.g. from quote.html).
-    const existing = db.prepare("SELECT * FROM quotes WHERE quote_id = ?").get(q.quote_id);
+    const incomingFixedFee = parseFloat(q.fixed_fee);
+    const existingFixedFee = parseFloat(existing?.fixed_fee);
+    const safeFee = Number.isFinite(incomingFixedFee)
+      ? Math.max(incomingFixedFee, 10)
+      : (Number.isFinite(existingFixedFee) ? Math.max(existingFixedFee, 10) : 10);
 
     // Helper: use incoming value when it is a real non-null number/string;
     // otherwise fall back to the existing DB value; otherwise null/default.
@@ -43,8 +62,21 @@ router.post("/", (req, res) => {
       return dflt;
     };
     const keepBool = (incoming, dbVal, dflt = 0) => {
-      if (incoming !== undefined && incoming !== null) return incoming ? 1 : 0;
-      if (dbVal    !== undefined && dbVal    !== null) return dbVal ? 1 : 0;
+      const norm = (v) => {
+        if (v === undefined || v === null) return null;
+        if (typeof v === "boolean") return v ? 1 : 0;
+        if (typeof v === "number") return v ? 1 : 0;
+        if (typeof v === "string") {
+          const s = v.trim().toLowerCase();
+          if (s === "true" || s === "1") return 1;
+          if (s === "false" || s === "0" || s === "") return 0;
+        }
+        return v ? 1 : 0;
+      };
+      const incomingNorm = norm(incoming);
+      if (incomingNorm !== null) return incomingNorm;
+      const dbNorm = norm(dbVal);
+      if (dbNorm !== null) return dbNorm;
       return dflt;
     };
     const keepJson = (incoming, dbVal, dflt = "{}") => {
@@ -99,7 +131,7 @@ router.post("/", (req, res) => {
       q.quote_id,
       q.merchant_name  || existing?.merchant_name  || "",
       q.merchant_email || existing?.merchant_email || "",
-      parseFloat(q.rate) || existing?.rate || 0,
+      Number.isFinite(parseFloat(q.rate)) ? parseFloat(q.rate) : (existing?.rate ?? 0),
       safeFee,
       brandJson,
       q.created_at || existing?.created_at || new Date().toISOString(),
@@ -186,7 +218,7 @@ router.get("/:quote_id", (req, res) => {
     // ── Regional pricing fields ─────────────────────────────────────────────
     // Prefer the values stored at quote creation time (accurate to the profile used).
     // Fall back to re-derivation for older quotes that predate column storage.
-    const storedDebitFrac = row.debitFrac || 0.70;
+    const storedDebitFrac = row.debitFrac ?? 0.70;
     const storedIntlFrac  = (row.intlFrac !== null && row.intlFrac !== undefined)
       ? row.intlFrac : null;
 
@@ -199,12 +231,18 @@ router.get("/:quote_id", (req, res) => {
     const current_intl_rate   = row.current_intl_rate       ?? null;
 
     // ── Fallback re-derivation for old quotes without stored regional fields ──
+    // Constants match the current pricing engine Standard profile exactly.
+    // Only runs when sell_uk_rate / sell_international_rate were never stored.
     if (sellUkRate === null || sellInternationalRate === null) {
-      const WESPELL_COST   = 0.0435;
-      const REGIONAL_BASE  = { uk: 1.10, international: 2.50 };
-      const STD_PROFILE    = { targetMargin: 0.30, minDomestic: 1.60, minInternational: 2.80, forceSplitThreshold: 0.35 };
-      const trueUkCost     = Math.round((REGIONAL_BASE.uk            + WESPELL_COST) * 10000) / 10000;
-      const trueIntlCost   = Math.round((REGIONAL_BASE.international + WESPELL_COST) * 10000) / 10000;
+      // IC++ components: interchange + scheme (0.13%) + acquirer markup (0.20% small tier) + wespell
+      const WESPELL_COST    = 0.0435;
+      const ACQUIRER_MARKUP = 0.20;   // conservative (≤£50k tier)
+      const SCHEME_FEE      = 0.13;
+      const UK_INTERCHANGE  = (0.70 * 0.20) + (0.30 * 0.30); // 0.23% blended
+      const INTL_INTERCHANGE = 1.50;
+      const STD_PROFILE     = { targetMargin: 0.30, minDomestic: 1.60, minInternational: 3.00 };
+      const trueUkCost      = UK_INTERCHANGE   + SCHEME_FEE + ACQUIRER_MARKUP + WESPELL_COST;
+      const trueIntlCost    = INTL_INTERCHANGE + SCHEME_FEE + ACQUIRER_MARKUP + WESPELL_COST;
       sellUkRate            = Math.ceil(Math.max(trueUkCost   + STD_PROFILE.targetMargin, STD_PROFILE.minDomestic)        * 100) / 100;
       sellInternationalRate = Math.ceil(Math.max(trueIntlCost + STD_PROFILE.targetMargin, STD_PROFILE.minInternational)   * 100) / 100;
     }
@@ -233,9 +271,6 @@ router.get("/:quote_id", (req, res) => {
         splitIsPrimary = false;
       }
     }
-
-    const trueUkCostOut   = row.sell_uk_rate   ? null : undefined; // only expose if computed fresh
-    const trueIntlCostOut = row.sell_international_rate ? null : undefined;
 
     res.json({
       // ── Existing fields (unchanged) ──────────────────────────────────────
