@@ -241,6 +241,10 @@
       this.overlay       = document.getElementById("lead-flow");
       this.quoteGenerated = false;
       this.isSubmitting   = false;
+      // Local pricing settings — null means use server defaults.
+      // Populated when admin edits values in the Pricing Engine Settings panel.
+      // Temporary: not persisted to DB yet.
+      this._localPricingSettings = null;
     }
 
     // ── Public: open (new or resume or show overview) ─────────
@@ -1406,10 +1410,370 @@
             </div>` : ""}
           </div>
 
+          <!-- ══ F: PRICING ENGINE SETTINGS (READ-ONLY) ══ -->
+          ${this._buildPricingEnginePanel()}
+
         </div>
       `;
     }
 
+
+    // ── Pricing Engine Settings — editable, in-memory only ────────
+    // Values sourced from _localPricingSettings when set, otherwise from
+    // the hardcoded defaults matching routes/pricing.js exactly.
+    // Changes are temporary — no DB persistence yet.
+    _buildPricingEnginePanel() {
+
+      // ── Default constants (mirrors routes/pricing.js) ─────────────────────
+      const DEFAULTS = {
+        baseCosts: { uk: 1.10, eea: 1.60, international: 2.60, wespell: 0.0435 },
+        profiles: {
+          aggressive:   { targetMargin: 0.20, minDomestic: 1.40, minInternational: 2.50, splitThreshold: 0.40 },
+          standard:     { targetMargin: 0.30, minDomestic: 1.60, minInternational: 3.00, splitThreshold: 0.35 },
+          conservative: { targetMargin: 0.45, minDomestic: 1.90, minInternational: 3.20, splitThreshold: 0.30 },
+        },
+        globalRules: {
+          minMargin: 0.30, undercutMultiplier: 0.80, rateFloor: 1.30,
+          volumeMargins:  [{ maxVol:50000, margin:0.60 }, { maxVol:200000, margin:0.40 }, { maxVol:Infinity, margin:0.25 }],
+          fixedFeeTiers:  [{ maxVol:100000, fee:10 }, { maxVol:200000, fee:8 }, { maxVol:Infinity, fee:5 }],
+        },
+      };
+
+      // Use local overrides when set, otherwise defaults
+      const s  = this._localPricingSettings || DEFAULTS;
+      const bc = s.baseCosts;
+      const gr = s.globalRules;
+      const isModified = this._localPricingSettings !== null;
+
+      // ── Derived sell rates (same formula as server) ───────────────────────
+      const sellRate = (base, wespell, margin, floor) =>
+        Math.ceil(Math.max(base + wespell + margin, floor) * 100) / 100;
+
+      const derived = {};
+      for (const [name, p] of Object.entries(s.profiles)) {
+        derived[name] = {
+          uk:   sellRate(bc.uk,            bc.wespell, p.targetMargin, p.minDomestic),
+          intl: sellRate(bc.international, bc.wespell, p.targetMargin, p.minInternational),
+        };
+      }
+
+      // ── Input helper ──────────────────────────────────────────────────────
+      const inp = (id, val, step = "0.01", min = "0") =>
+        `<input id="${id}" type="number" step="${step}" min="${min}" value="${val}"
+          style="width:80px;padding:4px 7px;border:1.5px solid var(--g5);border-radius:var(--r);
+                 font-size:12px;font-family:'Inter',sans-serif;text-align:right;outline:none"
+          onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--g5)'">`;
+
+      // ── Profile column builder ────────────────────────────────────────────
+      const profileCol = (name, p, d) => {
+        const isStd = name === "standard";
+        return `
+          <div style="background:var(--g8);border:1px solid var(--g6);border-radius:var(--r);overflow:hidden;flex:1;min-width:160px">
+            <div style="background:${isStd ? "var(--brand)" : "var(--g6)"};padding:8px 12px">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${isStd ? "var(--white)" : "var(--g3)"}">
+                ${name.charAt(0).toUpperCase() + name.slice(1)}${isStd ? " ✦ Default" : ""}
+              </div>
+            </div>
+            <div style="padding:10px 12px;display:flex;flex-direction:column;gap:8px">
+              <label style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--g3)">
+                Target margin
+                ${inp("ps-" + name + "-margin", p.targetMargin.toFixed(2))}
+              </label>
+              <label style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--g3)">
+                Min domestic
+                ${inp("ps-" + name + "-mindom", p.minDomestic.toFixed(2))}
+              </label>
+              <label style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--g3)">
+                Min international
+                ${inp("ps-" + name + "-minintl", p.minInternational.toFixed(2))}
+              </label>
+              <label style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--g3)">
+                Split threshold %
+                ${inp("ps-" + name + "-split", (p.splitThreshold * 100).toFixed(0), "1", "0")}
+              </label>
+              <div style="margin-top:4px;padding-top:8px;border-top:1px solid var(--g6)">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--brand);margin-bottom:4px">Derived sell rates</div>
+                <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px">
+                  <span style="color:var(--g3)">UK</span>
+                  <strong id="ps-${name}-sell-uk" style="color:var(--brand)">${d.uk.toFixed(2)}%</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:11px">
+                  <span style="color:var(--g3)">International</span>
+                  <strong id="ps-${name}-sell-intl" style="color:var(--brand)">${d.intl.toFixed(2)}%</strong>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      };
+
+      return `
+        <div class="lf-op-section" style="border-left:3px solid var(--brand)" data-ps-panel="1">
+          <div class="lf-op-section-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            ⚙ Pricing Engine Settings
+            ${isModified
+              ? `<span style="font-size:9px;font-weight:600;background:#fef3c7;color:#b45309;border:1px solid #fde68a;padding:1px 7px;border-radius:20px;letter-spacing:.5px">⚠ Changes are temporary (not saved)</span>`
+              : `<span style="font-size:9px;font-weight:600;background:var(--green-lt);color:var(--green);border:1px solid var(--green-bd);padding:1px 7px;border-radius:20px;letter-spacing:.5px">✓ Using server defaults</span>`
+            }
+          </div>
+
+          <!-- Base Costs -->
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g3);margin-bottom:8px">Base Costs</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px">
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--g3)">
+              UK base cost (%)
+              ${inp("ps-base-uk", bc.uk.toFixed(4))}
+            </label>
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--g3)">
+              International / ROW (%)
+              ${inp("ps-base-intl", bc.international.toFixed(4))}
+            </label>
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--g3)">
+              Wespell cost (p/tx)
+              ${inp("ps-base-wespell", bc.wespell.toFixed(4), "0.0001")}
+            </label>
+          </div>
+
+          <!-- Global Rules -->
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g3);margin-bottom:8px">Global Rules</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px">
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--g3)">
+              Min margin (%)
+              ${inp("ps-rule-minmargin", gr.minMargin.toFixed(2))}
+            </label>
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--g3)">
+              Undercut multiplier
+              ${inp("ps-rule-undercut", gr.undercutMultiplier.toFixed(2))}
+            </label>
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--g3)">
+              Rate floor (%)
+              ${inp("ps-rule-floor", gr.rateFloor.toFixed(2))}
+            </label>
+          </div>
+
+          <!-- Volume Margins -->
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g3);margin-bottom:8px">Volume-Based Margins</div>
+          <div class="lf-op-ptable-wrap" style="margin-bottom:18px">
+            <table style="width:100%;border-collapse:collapse">
+              <thead><tr>
+                <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--brand);border-bottom:1px solid var(--brand-bd);background:var(--brand-lt)">Volume band</th>
+                <th style="text-align:right;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--brand);border-bottom:1px solid var(--brand-bd);background:var(--brand-lt)">Margin added (%)</th>
+              </tr></thead>
+              <tbody>
+                ${gr.volumeMargins.map((t, i) => `
+                <tr>
+                  <td style="padding:8px 12px;font-size:12px;color:var(--g3);border-bottom:1px solid var(--g6)">
+                    ${i === 0 ? "Under £50k / mo" : i === 1 ? "£50k – £200k / mo" : "£200k+ / mo"}
+                  </td>
+                  <td style="padding:8px 12px;border-bottom:1px solid var(--g6);text-align:right">
+                    ${inp("ps-vmarg-" + i, t.margin.toFixed(2))}
+                  </td>
+                </tr>`).join("")}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Fixed Fee Tiers -->
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g3);margin-bottom:8px">Fixed Fee Tiers</div>
+          <div class="lf-op-ptable-wrap" style="margin-bottom:18px">
+            <table style="width:100%;border-collapse:collapse">
+              <thead><tr>
+                <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--brand);border-bottom:1px solid var(--brand-bd);background:var(--brand-lt)">Volume band</th>
+                <th style="text-align:right;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--brand);border-bottom:1px solid var(--brand-bd);background:var(--brand-lt)">Fixed fee (p/tx)</th>
+              </tr></thead>
+              <tbody>
+                ${gr.fixedFeeTiers.map((t, i) => `
+                <tr>
+                  <td style="padding:8px 12px;font-size:12px;color:var(--g3);border-bottom:1px solid var(--g6)">
+                    ${i === 0 ? "Under £100k / mo" : i === 1 ? "£100k – £200k / mo" : "£200k+ / mo"}
+                  </td>
+                  <td style="padding:8px 12px;border-bottom:1px solid var(--g6);text-align:right">
+                    ${inp("ps-ftier-" + i, t.fee.toFixed(0), "1", "1")}
+                  </td>
+                </tr>`).join("")}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pricing Profiles -->
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g3);margin-bottom:8px">Pricing Profiles</div>
+          <div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap">
+            ${profileCol("aggressive",   s.profiles.aggressive,   derived.aggressive)}
+            ${profileCol("standard",     s.profiles.standard,     derived.standard)}
+            ${profileCol("conservative", s.profiles.conservative, derived.conservative)}
+          </div>
+
+          <!-- Apply + Reset -->
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <button id="ps-apply" style="background:var(--brand);color:var(--white);border:none;padding:9px 20px;border-radius:var(--r);font-size:13px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer">
+              ✓ Apply Changes
+            </button>
+            ${isModified ? `
+            <button id="ps-reset" style="background:var(--white);color:var(--g3);border:1.5px solid var(--g5);padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer">
+              ↺ Reset to Defaults
+            </button>` : ""}
+            <span style="font-size:11px;color:var(--g3)" id="ps-status"></span>
+          </div>
+
+          <!-- Logic rules (read-only) -->
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g3);margin:16px 0 8px">Active Logic Rules</div>
+          <div style="border-top:1px solid var(--g6)">
+            ${["Manual intl % always overrides CSV-detected intl %",
+               "CSV intl detection uses card issue country column only",
+               "CSV intl detection requires ≥80% country coverage",
+               "Blended rate only shown when real intl data exists",
+               "Blended rate suppressed at 0% and 100% international",
+               "Unknown or missing profile defaults to Standard"]
+              .map(t => `<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--g6);font-size:12px">
+                <span style="color:var(--green);font-size:13px;flex-shrink:0">✓</span>
+                <span style="color:var(--black);line-height:1.4">${t}</span>
+              </div>`).join("")}
+          </div>
+        </div>`;
+    }
+
+    // ── Apply Pricing Engine Settings ──────────────────────────
+    // Reads all input values from the panel, validates them,
+    // stores to this._localPricingSettings, and triggers recalculation.
+    _applyPricingSettings() {
+      const g = id => document.getElementById(id);
+      const v = id => parseFloat(g(id)?.value);
+
+      // Validate all inputs — must be finite positive numbers
+      const ids = [
+        "ps-base-uk","ps-base-intl","ps-base-wespell",
+        "ps-rule-minmargin","ps-rule-undercut","ps-rule-floor",
+        "ps-aggressive-margin","ps-aggressive-mindom","ps-aggressive-minintl","ps-aggressive-split",
+        "ps-standard-margin",  "ps-standard-mindom",  "ps-standard-minintl",  "ps-standard-split",
+        "ps-conservative-margin","ps-conservative-mindom","ps-conservative-minintl","ps-conservative-split",
+        "ps-vmarg-0","ps-vmarg-1","ps-vmarg-2",
+        "ps-ftier-0","ps-ftier-1","ps-ftier-2",
+      ];
+      for (const id of ids) {
+        const val = v(id);
+        if (!Number.isFinite(val) || val < 0) {
+          const el = g(id);
+          if (el) { el.style.borderColor = "var(--red)"; setTimeout(() => el.style.borderColor = "var(--g5)", 2000); }
+          const status = g("ps-status");
+          if (status) status.textContent = "⚠ Please fix invalid values before applying.";
+          return;
+        }
+      }
+
+      // Build settings object — same structure as getPricingSettings()
+      this._localPricingSettings = {
+        baseCosts: {
+          uk:            v("ps-base-uk"),
+          eea:           1.60,   // EEA not editable yet — keep default
+          international: v("ps-base-intl"),
+          wespell:       v("ps-base-wespell"),
+        },
+        profiles: {
+          aggressive: {
+            targetMargin:     v("ps-aggressive-margin"),
+            minDomestic:      v("ps-aggressive-mindom"),
+            minInternational: v("ps-aggressive-minintl"),
+            splitThreshold:   v("ps-aggressive-split") / 100,
+          },
+          standard: {
+            targetMargin:     v("ps-standard-margin"),
+            minDomestic:      v("ps-standard-mindom"),
+            minInternational: v("ps-standard-minintl"),
+            splitThreshold:   v("ps-standard-split") / 100,
+          },
+          conservative: {
+            targetMargin:     v("ps-conservative-margin"),
+            minDomestic:      v("ps-conservative-mindom"),
+            minInternational: v("ps-conservative-minintl"),
+            splitThreshold:   v("ps-conservative-split") / 100,
+          },
+        },
+        globalRules: {
+          minMargin:          v("ps-rule-minmargin"),
+          undercutMultiplier: v("ps-rule-undercut"),
+          rateFloor:          v("ps-rule-floor"),
+          volumeMargins: [
+            { maxVol: 50000,    margin: v("ps-vmarg-0") },
+            { maxVol: 200000,   margin: v("ps-vmarg-1") },
+            { maxVol: Infinity, margin: v("ps-vmarg-2") },
+          ],
+          fixedFeeTiers: [
+            { maxVol: 100000,   fee: v("ps-ftier-0") },
+            { maxVol: 200000,   fee: v("ps-ftier-1") },
+            { maxVol: Infinity, fee: v("ps-ftier-2") },
+          ],
+          fixedFeeMinimum: v("ps-ftier-0"),  // minimum = smallest fee tier
+          gatewayFeeTiers: [                  // gateway costs unchanged — not editable yet
+            { maxVol: 100000,   fee: 0.10 },
+            { maxVol: 200000,   fee: 0.08 },
+            { maxVol: Infinity, fee: 0.05 },
+          ],
+        },
+        intlRules: {
+          manualOverride:           true,
+          countryCoverageThreshold: 0.80,
+        },
+        blendedRules: {
+          suppressAtZero:    true,
+          suppressAtHundred: true,
+        },
+      };
+
+      // Invalidate cached result — next recalc will use new settings
+      this.pricingResult = null;
+
+      // ── Persist to DB via API ───────────────────────────────────
+      const status = document.getElementById("ps-status");
+      if (status) status.textContent = "Saving…";
+
+      fetch("/api/settings", {
+        method:  "PUT",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(this._localPricingSettings),
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            // Server echoes back the live settings — update local copy to match DB
+            this._localPricingSettings = data.settings;
+            this.pricingResult = null;
+            this._render();
+            const s = document.getElementById("ps-status");
+            if (s) { s.textContent = "✓ Saved to server"; setTimeout(() => { if(s) s.textContent = ""; }, 3000); }
+          } else {
+            const s = document.getElementById("ps-status");
+            if (s) s.textContent = "⚠ Save failed: " + (data.error || "unknown error");
+          }
+        })
+        .catch(err => {
+          const s = document.getElementById("ps-status");
+          if (s) s.textContent = "⚠ Network error — changes applied locally only";
+          // Keep _localPricingSettings so the override still works in memory
+          this._render();
+        });
+    }
+
+    // ── Load pricing settings from API ─────────────────────────
+    // Called once when Step 10 renders. Populates _localPricingSettings
+    // with whatever the server currently has (DB or defaults).
+    // This ensures the admin panel always shows live values.
+    async _loadPricingSettings() {
+      try {
+        const resp = await fetch("/api/settings");
+        const data = await resp.json();
+        if (data.success && data.settings) {
+          this._localPricingSettings = data.settings;
+          // Re-render panel with loaded values — don't invalidate pricingResult
+          // (settings were just loaded, they haven't changed)
+          const panel = document.querySelector(".lf-op-section[data-ps-panel]");
+          if (panel) {
+            // If the panel is already in the DOM, rebuild just the settings section
+            this._render();
+          }
+        }
+      } catch (e) {
+        // Silently fail — panel will show hardcoded DEFAULTS, which is correct behaviour
+      }
+    }
 
     // ── Rejection screen ───────────────────────────────────
     _buildRejected() {
@@ -1523,6 +1887,20 @@
       q("lf-mark-kyb")?.addEventListener("click",   () => this._markKYB());
 
       q("lf-apply-override")?.addEventListener("click", () => this._applyPricingOverride());
+
+      // ── Pricing Engine Settings buttons ───────────────────────
+      q("ps-apply")?.addEventListener("click", () => this._applyPricingSettings());
+      q("ps-reset")?.addEventListener("click", () => {
+        this._localPricingSettings = null;
+        this.pricingResult = null;
+        this._loadPricingSettings();
+      });
+
+      // Load live settings from server when Step 10 is rendered
+      // Only fetch if _localPricingSettings hasn't been populated yet this session
+      if (!this._localPricingSettings) {
+        this._loadPricingSettings();
+      }
 
       // ── Pricing profile selector ───────────────────────────
       q("lf-pricing-profile")?.addEventListener("change", (e) => {
@@ -2595,6 +2973,9 @@
             csv_debit_frac_is_real: (csvDebitFrac > 0 && csvDebitFrac <= 1),
             // Pricing profile — admin-selectable, defaults to standard
             pricing_profile: this.lead.pricingProfile || "standard",
+            // Settings override — sends local admin edits to the engine.
+            // null when no changes applied — server uses getPricingSettings() defaults.
+            settings_override: this._localPricingSettings || null,
           }),
         });
         const data = await resp.json();
