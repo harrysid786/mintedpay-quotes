@@ -39,6 +39,12 @@ db.exec(`
     created_at  TEXT,
     updated_at  TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS settings (
+    key        TEXT PRIMARY KEY,
+    value      TEXT NOT NULL,
+    updated_at TEXT
+  );
 `);
 
 // ── Migration: add columns if upgrading from older schema ─────
