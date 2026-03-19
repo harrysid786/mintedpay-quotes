@@ -253,7 +253,7 @@ function decidePricingMode(intlFrac, blendedRate, profileName, settings) {
 // acquirerMarkup is volume-tiered (Adyen commercial structure).
 // Interchange and scheme fees are pass-through.
 //
-function calculateRegionalRates(wespellCost, profileName, settings, vol) {
+function calculateRegionalRates(wespellCost, profileName, settings, vol, debitFrac) {
   if (!settings) settings = getPricingSettings();
   if (!vol) vol = 0;
   const profile  = settings.profiles[profileName] || settings.profiles.standard;
@@ -261,9 +261,10 @@ function calculateRegionalRates(wespellCost, profileName, settings, vol) {
   // Volume-tiered Adyen acquirer markup
   const acquirerMarkup = getAcquirerMarkup(vol);
 
-  // UK blended interchange: mix of debit (0.20%) and credit (0.30%)
-  // Use 70% debit as the UK domestic default (conservative, reflects typical UK mix)
-  const ukBlendedInterchange = (0.70 * INTERCHANGE.ukDebit) + (0.30 * INTERCHANGE.ukCredit);
+  // UK blended interchange: use real debitFrac when provided; fall back to 70/30 default
+  const df = (debitFrac !== undefined && debitFrac !== null && debitFrac > 0 && debitFrac <= 1)
+    ? debitFrac : 0.70;
+  const ukBlendedInterchange = (df * INTERCHANGE.ukDebit) + ((1 - df) * INTERCHANGE.ukCredit);
 
   // True cost per region (full IC++ pass-through + acquirer + platform)
   const trueUkCost            = trueCostForBucket(ukBlendedInterchange, acquirerMarkup, wespellCost);
@@ -365,10 +366,9 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
   const gatewayFee  = gatewayTier.fee;
 
   const wespellCost = settings.baseCosts.wespell;
-  const costFixed   = gatewayFee + wespellCost;
 
   // ── 2b. REGIONAL RATES — uses selected profile ────────────────
-  const regional = calculateRegionalRates(wespellCost, profileName, settings, vol);
+  const regional = calculateRegionalRates(wespellCost, profileName, settings, vol, debitFrac);
 
   // ── 2c. BLENDED RATE — only when real mix data exists ─────────
   // calculateBlendedRate returns null when only the hardcoded default is available.
