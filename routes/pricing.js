@@ -59,7 +59,14 @@ const PRICING_PROFILES = {
 const INTERCHANGE = {
   ukDebit:   0.20,   // UK-issued debit (regulated, ~0.20%)
   ukCredit:  0.30,   // UK-issued credit (~0.30%)
-  intl:      1.50,   // Non-UK issued cards (EEA ~0.80%, RoW ~1.50–2.50%, blended ~1.50%)
+  // ── International rates — three levels of granularity ────────
+  // Use intlEEA / intlRoW / intlMixed when intlRegion is known.
+  // Fall back to intl (conservative blended) when region is unknown.
+  intlEEA:   0.80,   // EEA-issued cards only (EU/EEA merchants, ~0.80%)
+  intlRoW:   1.50,   // Rest-of-world issued cards (~1.50–2.50%, blended ~1.50%)
+  intlMixed: 1.15,   // Mixed EEA + RoW (blended mid-point)
+  intl:      1.50,   // Conservative fallback — used when region is unknown
+                     // and always for public worst-case overrides
 };
 
 // Scheme fees (pass-through, Visa/MC network assessment, approximate)
@@ -91,56 +98,19 @@ const PAYMENT_METHOD_COSTS = {
 // ═══ COST ENGINE HELPERS ═══════════════════════════════════════
 
 // ── Adyen gateway fee per transaction (GBP) ──────────────────
-// Based on monthly transaction count.
-// Tiers: 0–100k → £0.10 | 100k–200k → £0.08 | 200k+ → £0.05
-const ADYEN_GATEWAY_FEE_TIERS = [
-  { maxTxns: 100000,   feeGBP: 0.10 },
-  { maxTxns: 200000,   feeGBP: 0.08 },
-  { maxTxns: Infinity, feeGBP: 0.05 },
-];
+// Fixed at £0.10 per transaction — highest standard rate.
+// Tiered pricing removed: the quote builder cannot know which band
+// our total platform volume sits in at any given time, so we always
+// cost at the worst-case rate to ensure no quote is loss-making.
+const ADYEN_GATEWAY_FLAT_FEE_GBP = 0.10;
 
-function getAdyenGatewayFeePerTx(txnsMonthly) {
-  const tier = ADYEN_GATEWAY_FEE_TIERS.find(t => txnsMonthly <= t.maxTxns)
-            || ADYEN_GATEWAY_FEE_TIERS[ADYEN_GATEWAY_FEE_TIERS.length - 1];
-  return tier.feeGBP;
-}
-
-// ── Adyen acquiring markup — true progressive waterfall ───────
-// Waterfall by monthly card volume (GBP):
-//   First £10M  at 0.20%
-//   Next  £20M  at 0.16%  (£10M–£30M)
-//   Next  £20M  at 0.12%  (£30M–£50M)
-//   Above £50M  at 0.10%
-//
-// Returns monthly GBP cost and effective % for transparency.
-const ADYEN_MARKUP_WATERFALL = [
-  { upTo: 10_000_000,  pct: 0.20 },
-  { upTo: 30_000_000,  pct: 0.16 },
-  { upTo: 50_000_000,  pct: 0.12 },
-  { upTo: Infinity,    pct: 0.10 },
-];
-
-function getAdyenMarkupWaterfallCost(volumeMonthly) {
-  // Returns total monthly GBP cost of the waterfall markup.
-  let remaining = volumeMonthly;
-  let totalCost = 0;
-  let prevBand  = 0;
-  for (const band of ADYEN_MARKUP_WATERFALL) {
-    const bandSize = band.upTo === Infinity ? remaining : Math.min(remaining, band.upTo - prevBand);
-    if (bandSize <= 0) break;
-    totalCost += (bandSize * band.pct) / 100;
-    remaining -= bandSize;
-    prevBand   = band.upTo;
-    if (remaining <= 0) break;
-  }
-  return Math.round(totalCost * 100) / 100;
-}
-
-function getAdyenMarkupEffectivePct(volumeMonthly) {
-  // Effective blended markup % across the whole volume.
-  if (!volumeMonthly || volumeMonthly <= 0) return 0;
-  return Math.round((getAdyenMarkupWaterfallCost(volumeMonthly) / volumeMonthly) * 10000) / 100;
-}
+// ── Adyen acquiring markup ────────────────────────────────────
+// Fixed at 0.20% — the first-band rate, which is the highest.
+// Waterfall pricing removed: the quote builder cannot know our total
+// platform volume across all merchants at quote time, so we always
+// cost at 0.20% to ensure every quote covers our actual Adyen cost.
+// Actual cost will be equal to or lower than this as platform volume grows.
+const ADYEN_MARKUP_FLAT_PCT = 0.20;
 
 // ── Wespell per-transaction fee helpers ──────────────────────
 // Wespell charges a per-tx fee in EUR, tiered by monthly tx count.
@@ -195,10 +165,14 @@ function fixedCostToRatePct(fixedPerTxGBP, txnsMonthly, grossMonthly) {
 //   intlFrac       — 0–1 fraction of international cards (null = unknown)
 //   eurGbpRate     — EUR/GBP FX rate (default DEFAULT_EUR_GBP_RATE)
 //   paymentMethod  — optional string from PAYMENT_METHOD_COSTS keys
+//   intlRegion     — "eea" | "row" | "mixed" | null
+//                    When intlFrac > 0 and intlRegion is known, uses the
+//                    specific interchange rate instead of the blended 1.50%.
+//                    null → falls back to INTERCHANGE.intl (conservative).
 //
 // Returns structured cost breakdown — see inline comments on fields.
 //
-function buildCostEngine(vol, cnt, debitFrac, intlFrac, eurGbpRate, paymentMethod) {
+function buildCostEngine(vol, cnt, debitFrac, intlFrac, eurGbpRate, paymentMethod, intlRegion) {
   eurGbpRate    = eurGbpRate    || DEFAULT_EUR_GBP_RATE;
   paymentMethod = paymentMethod || "card";
   const methodCost = PAYMENT_METHOD_COSTS[paymentMethod] || PAYMENT_METHOD_COSTS.card;
@@ -206,12 +180,12 @@ function buildCostEngine(vol, cnt, debitFrac, intlFrac, eurGbpRate, paymentMetho
   const txnsMonthly = cnt;
   const avgTxGBP    = cnt > 0 ? vol / cnt : 0;
 
-  // ── Adyen acquiring markup (waterfall) ────────────────────
-  const adyenMarkupMonthlyCostGBP = getAdyenMarkupWaterfallCost(vol);
-  const adyenMarkupPctEffective   = getAdyenMarkupEffectivePct(vol);
+  // ── Adyen acquiring markup ────────────────────────────────────
+  const adyenMarkupMonthlyCostGBP = Math.round((ADYEN_MARKUP_FLAT_PCT / 100) * vol * 100) / 100;
+  const adyenMarkupPctEffective   = ADYEN_MARKUP_FLAT_PCT;
 
-  // ── Adyen gateway fee ─────────────────────────────────────
-  const adyenGatewayFeePerTxGBP   = getAdyenGatewayFeePerTx(txnsMonthly);
+  // ── Adyen gateway fee ─────────────────────────────────────────
+  const adyenGatewayFeePerTxGBP     = ADYEN_GATEWAY_FLAT_FEE_GBP;
   const adyenGatewayFeePctEffective = fixedCostToRatePct(adyenGatewayFeePerTxGBP, txnsMonthly, vol);
 
   // ── Interchange (IC++) — card path only ──────────────────
@@ -221,11 +195,20 @@ function buildCostEngine(vol, cnt, debitFrac, intlFrac, eurGbpRate, paymentMetho
   if (methodCost.type === "ic_plus_plus") {
     const df = (debitFrac !== null && debitFrac > 0 && debitFrac <= 1) ? debitFrac : 0.70;
     const ukBlendedInterchange = (df * INTERCHANGE.ukDebit) + ((1 - df) * INTERCHANGE.ukCredit);
+
+    // Resolve the international interchange rate.
+    // When intlRegion is known, use the specific rate; otherwise fall back
+    // to INTERCHANGE.intl (1.50% conservative blended).
+    const intlRate = intlRegion === "eea"   ? INTERCHANGE.intlEEA
+                   : intlRegion === "row"   ? INTERCHANGE.intlRoW
+                   : intlRegion === "mixed" ? INTERCHANGE.intlMixed
+                   : INTERCHANGE.intl;  // null / unknown → conservative fallback
+
     if (intlFrac !== null && intlFrac > 0 && intlFrac < 1) {
       const domFrac = 1 - intlFrac;
-      interchangePct = (domFrac * ukBlendedInterchange) + (intlFrac * INTERCHANGE.intl);
+      interchangePct = (domFrac * ukBlendedInterchange) + (intlFrac * intlRate);
     } else if (intlFrac === 1) {
-      interchangePct = INTERCHANGE.intl;
+      interchangePct = intlRate;
     } else {
       interchangePct = ukBlendedInterchange;
     }
@@ -290,8 +273,8 @@ function buildCostEngine(vol, cnt, debitFrac, intlFrac, eurGbpRate, paymentMetho
     costBreakdown: {
       interchange:  `${Math.round(interchangePct * 100) / 100}%`,
       schemeFees:   `${Math.round(schemeFeePct   * 100) / 100}%`,
-      adyenMarkup:  `${Math.round(adyenMarkupPctEffective * 100) / 100}% (effective, waterfall)`,
-      adyenGateway: `£${adyenGatewayFeePerTxGBP.toFixed(3)}/tx (${Math.round(adyenGatewayFeePctEffective * 100) / 100}% eff.)`,
+      adyenMarkup:  `${Math.round(adyenMarkupPctEffective * 100) / 100}% (flat — worst-case)`,
+      adyenGateway: `£${adyenGatewayFeePerTxGBP.toFixed(3)}/tx (${Math.round(adyenGatewayFeePctEffective * 100) / 100}% eff.) — flat`,
       wespell:      `€${wespellActualPerTxEUR.toFixed(5)}/tx → £${wespellActualPerTxGBP.toFixed(5)}/tx [${wespellModeUsed}]`,
       total:        `${effectiveTotalCostPct}% effective`,
     },
@@ -586,7 +569,7 @@ function decidePricingMode(intlFrac, blendedRate, profileNameOrObj, settings) {
 //   sellRate       = max(trueCost + profile.targetMargin, profile.minRate)
 //
 // All values are percentage points (e.g. 0.20 = 0.20%, not 0.002).
-// acquirerMarkupPct comes directly from the waterfall helper — no legacy tier lookup.
+// acquirerMarkupPct is the flat worst-case rate (ADYEN_MARKUP_FLAT_PCT = 0.20%).
 // wespellCost is the effective wespell % from buildCostEngine (already in pct points).
 //
 function calculateRegionalRates(wespellCost, profileName, settings, vol, debitFrac) {
@@ -594,9 +577,8 @@ function calculateRegionalRates(wespellCost, profileName, settings, vol, debitFr
   if (!vol) vol = 0;
   const profile  = settings.profiles[profileName] || settings.profiles.standard;
 
-  // Adyen acquiring markup — effective % from true progressive waterfall
-  // Returns a percentage-point value (e.g. 0.20 for 0.20%).
-  const acquirerMarkupPct = getAdyenMarkupEffectivePct(vol);
+  // Adyen acquiring markup — flat worst-case rate
+  const acquirerMarkupPct = ADYEN_MARKUP_FLAT_PCT;
 
   // UK blended interchange: use real debitFrac when provided; fall back to 70/30 default
   const df = (debitFrac !== undefined && debitFrac !== null && debitFrac > 0 && debitFrac <= 1)
@@ -791,7 +773,11 @@ function computeWarningFlags(params) {
 // profileName        — "aggressive" | "standard" | "conservative" | "acquisition" | "acquisition_plus".
 //                     Defaults to "standard".
 // settingsOverride   — optional settings object from admin UI. null = use getPricingSettings().
-function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsReal, profileName, settingsOverride) {
+// intlRegion         — "eea" | "row" | "mixed" | null
+//                      When supplied, overrides the blended 1.50% international interchange
+//                      with the specific regional rate. null = conservative 1.50% fallback.
+//                      Ignored for acquisition_plus (always uses worst-case 1.50%).
+function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsReal, profileName, settingsOverride, intlRegion) {
   if (intlFrac === undefined) intlFrac = null;
   if (csvDebitFracIsReal === undefined) csvDebitFracIsReal = false;
 
@@ -820,7 +806,7 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
   // Worst-case overrides for public quotes:
   //   interchangePct          = INTERCHANGE.intl  (1.50% — highest tier)
   //   schemeFeePct            = SCHEME_FEE         (0.13%)
-  //   adyenGatewayFeePerTxGBP = £0.10              (standard card gateway)
+  //   adyenGatewayFeePerTxGBP = £0.10              (flat worst-case — matches ADYEN_GATEWAY_FLAT_FEE_GBP)
   //   wespellActualPerTxEUR   = €0.05              (<=50k txn tier — highest)
   //   wespellModeUsed         = "base"
   //   debitFrac / intlFrac    = ignored for cost basis
@@ -829,7 +815,7 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
   // NOTE: payment_method is NOT yet wired through the request body.
   // Hardcoded to "card" until request handling is extended (future step).
   const paymentMethod = "card";
-  const provisionalCostEngine = buildCostEngine(vol, cnt, debitFrac, intlFrac, eurGbpRate, paymentMethod);
+  const provisionalCostEngine = buildCostEngine(vol, cnt, debitFrac, intlFrac, eurGbpRate, paymentMethod, intlRegion);
 
   // ── Worst-case override for acquisition_plus ──────────────
   // Override the tiered/mix-weighted values with hardcoded maximums so the
@@ -866,7 +852,7 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
         const worstCaseBreakdown = {
           interchange:  `${PUBLIC_WORST_CASE_INTERCHANGE_PCT}% (worst-case: intl)`,
           schemeFees:   `${SCHEME_FEE}%`,
-          adyenMarkup:  `${Math.round(provisionalCostEngine.adyenMarkupPctEffective * 100) / 100}% (effective, waterfall)`,
+          adyenMarkup:  `${Math.round(provisionalCostEngine.adyenMarkupPctEffective * 100) / 100}% (flat — worst-case)`,
           adyenGateway: `£${PUBLIC_WORST_CASE_GATEWAY_GBP.toFixed(3)}/tx (${Math.round(PUBLIC_WORST_CASE_GATEWAY_PCT * 100) / 100}% eff.)`,
           wespell:      `€${PUBLIC_WORST_CASE_WESPELL_EUR.toFixed(5)}/tx → £${(PUBLIC_WORST_CASE_WESPELL_GBP).toFixed(5)}/tx [base, worst-case]`,
           total:        `${PUBLIC_WORST_CASE_EFFECTIVE_TOTAL}% effective (worst-case)`,
@@ -1186,6 +1172,10 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
     wespell_repriced_after_quote: wespellRepricedAfterQuote,
     warning_flags:                warningFlags,
     is_public_profile:            isPublicProfile,
+    // ── International region ───────────────────────────────────
+    // Echoed back for transparency. null when not supplied.
+    // Note: acquisition_plus always uses worst-case 1.50% regardless of this value.
+    intl_region:                  isPublicProfile ? null : (intlRegion || null),
     // ── International data quality flags ──────────────────────
     // intl_mix_status distinguishes three cases:
     //   "real_international" — intlFrac > 0: real mix data, both rates calculated
@@ -1213,7 +1203,7 @@ function generateQuoteId() {
 // ── POST /api/calculate_quote ─────────────────────────────────
 router.post("/", (req, res) => {
   try {
-    const { merchant_name, merchant_email, monthly_volume, transaction_count, current_fees, debit_frac, intl_frac, csv_debit_frac_is_real, pricing_profile, settings_override } = req.body;
+    const { merchant_name, merchant_email, monthly_volume, transaction_count, current_fees, debit_frac, intl_frac, csv_debit_frac_is_real, pricing_profile, settings_override, intl_region } = req.body;
 
     if (!merchant_email) {
       return res.status(400).json({ error: "Email address is required" });
@@ -1241,6 +1231,12 @@ router.post("/", (req, res) => {
     // CSV card-mix detection, not from the hardcoded 0.70 default.
     const csvDebitFracIsReal = csv_debit_frac_is_real === true || csv_debit_frac_is_real === "true";
 
+    // intlRegion: optional — "eea" | "row" | "mixed" | null.
+    // Determines which international interchange rate is used for admin quotes.
+    // Ignored for acquisition_plus (always uses worst-case 1.50%).
+    const VALID_INTL_REGIONS = ["eea", "row", "mixed"];
+    const intlRegion = VALID_INTL_REGIONS.includes(intl_region) ? intl_region : null;
+
     // profileName: validate against resolved settings, default to "standard".
     // Use override settings for validation if provided.
     const resolvedSettings = (settings_override && typeof settings_override === "object" && settings_override.profiles)
@@ -1252,7 +1248,7 @@ router.post("/", (req, res) => {
       ? "acquisition_plus"
       : (effectiveSettings.profiles[pricing_profile] ? pricing_profile : "standard");
 
-    const result = calculateQuote(vol, cnt, debitFrac, cur, intlFrac, csvDebitFracIsReal, profileName, resolvedSettings);
+    const result = calculateQuote(vol, cnt, debitFrac, cur, intlFrac, csvDebitFracIsReal, profileName, resolvedSettings, intlRegion);
     if (!result) {
       return res.status(400).json({ error: "Unable to calculate rate with the provided data" });
     }
@@ -1292,8 +1288,9 @@ router.post("/", (req, res) => {
          vol, cnt, avgTx, cur, debitFrac, intlFrac, addons,
          sell_uk_rate, sell_international_rate, blended_rate,
          current_uk_rate, current_intl_rate, pricing_mode, split_is_primary,
-         has_real_international_data, is_domestic_only_confirmed, intl_mix_status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         has_real_international_data, is_domestic_only_confirmed, intl_mix_status,
+         intl_region)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       quote_id,
       merchant_name || "",
@@ -1324,7 +1321,8 @@ router.post("/", (req, res) => {
       result.split_is_primary        ? 1 : 0,
       result.has_real_international_data  ? 1 : 0,
       result.is_domestic_only_confirmed   ? 1 : 0,
-      result.intl_mix_status              ?? null
+      result.intl_mix_status              ?? null,
+      result.intl_region                  ?? null
     );
 
     // Zoho push moved to /api/leads/:id/push-zoho — no longer auto-fires on calculate
@@ -1375,6 +1373,7 @@ router.post("/", (req, res) => {
       has_real_international_data:  result.has_real_international_data,
       is_domestic_only_confirmed:   result.is_domestic_only_confirmed,
       intl_mix_status:              result.intl_mix_status,
+      intl_region:                  result.intl_region,
       fallback_international_rate:  result.fallback_international_rate,
     });
 
