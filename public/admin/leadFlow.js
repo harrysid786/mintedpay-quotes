@@ -101,6 +101,12 @@
       subtitle: "Help us understand the risk profile",
       fields: [
         { name: "intlPercentage",  label: "International Transactions (%)", type: "number", required: true, placeholder: "0", min: 0, max: 100 },
+        { name: "intlRegion", label: "International Card Region", type: "select", options: [
+          { value: "",      label: "— Unknown / Not sure —" },
+          { value: "eea",   label: "Mostly EEA / Europe (0.80% interchange)" },
+          { value: "mixed", label: "Mixed EEA + Rest of World (1.15% blended)" },
+          { value: "row",   label: "Mostly Rest of World (1.50% interchange)" },
+        ], hint: "Used to price international transactions more accurately. Leave unknown if unsure — defaults to conservative 1.50%." },
         { name: "refundRate",      label: "Refund Rate (%) — optional",     type: "number", placeholder: "e.g. 2.5", min: 0 },
         { name: "chargebackRate",  label: "Chargeback Rate (%) — optional", type: "number", placeholder: "e.g. 0.5", min: 0 },
         { name: "holdsFunds",      label: "Does the business hold customer funds?", type: "select", options: [
@@ -124,7 +130,23 @@
       title: "Current Setup",
       subtitle: "Who do they process with today?",
       fields: [
-        { name: "currentProvider",     label: "Current Payment Provider", type: "text", placeholder: "e.g. Stripe, Worldpay, PayPal, Adyen..." },
+        { name: "currentProvider", label: "Current Payment Provider", type: "select", options: [
+          { value: "",             label: "— Select provider —" },
+          { value: "stripe",       label: "Stripe" },
+          { value: "shopify",      label: "Shopify Payments" },
+          { value: "square",       label: "Square" },
+          { value: "worldpay",     label: "WorldPay" },
+          { value: "barclaycard",  label: "Barclaycard" },
+          { value: "adyen",        label: "Adyen" },
+          { value: "sumup",        label: "SumUp" },
+          { value: "zettle",       label: "Zettle / iZettle" },
+          { value: "takepayments", label: "Takepayments" },
+          { value: "paypal",       label: "PayPal / Braintree" },
+          { value: "elavon",       label: "Elavon" },
+          { value: "paymentsense", label: "Paymentsense" },
+          { value: "other",        label: "Other" },
+          { value: "none",         label: "None / processing directly" },
+        ]},
         { name: "currentMonthlyFees",  label: "Current Monthly Processing Fees (£) — optional", type: "number", placeholder: "e.g. 850", min: 0,
           hint: "If known, enter what the merchant pays per month. Used to calculate savings." },
         { name: "painPoints",          label: "Pain Points / Reason for Switching — optional", type: "textarea", placeholder: "What issues are they facing with their current provider?" },
@@ -165,6 +187,7 @@
       fields: [
         { name: "monthlyVolume",       label: "Monthly Processing Volume (£)", type: "number", required: true, placeholder: "e.g. 50000", min: 0 },
         { name: "avgTransactionValue", label: "Average Transaction Value (£)",  type: "number", required: true, placeholder: "e.g. 45",    min: 0 },
+        { name: "_avgTicketWarning", label: "", type: "avg-ticket-warning" },
       ],
     },
     {
@@ -241,6 +264,10 @@
       this.overlay       = document.getElementById("lead-flow");
       this.quoteGenerated = false;
       this.isSubmitting   = false;
+      // Local pricing settings — null means use server defaults.
+      // Populated when admin edits values in the Pricing Engine Settings panel.
+      // Temporary: not persisted to DB yet.
+      this._localPricingSettings = null;
     }
 
     // ── Public: open (new or resume or show overview) ─────────
@@ -256,7 +283,6 @@
         this.leadId  = existingLead.id;
         this.showingOverview = true;
         this.currentStep = 1;
-        this.quoteGenerated = !!existingLead.quote_id;
       } else {
         this.lead       = { brand: "minted" };
         this.leadId     = null;
@@ -296,6 +322,7 @@
       } else {
         this.overlay.innerHTML = this._buildLayout();
       }
+      this._injectStyles();
       this._bindEvents();
       if (!this.showingOverview && this.currentStep === 10 && !this.pricingResult && !this.isRejected) {
         this._calculateOutput();
@@ -541,6 +568,9 @@
                   <div class="ov-card-body">
                     ${row("Intl Transactions",
                         !empty(lead.intlPercentage) ? lead.intlPercentage + "%" : "")}
+                    ${row("Intl Region",
+                        ({eea:"Mostly EEA / Europe",mixed:"Mixed EEA + RoW",row:"Mostly Rest of World"}[lead.intlRegion]) || null,
+                        { hideEmpty: true })}
                     ${row("Refund Rate",
                         !empty(lead.refundRate) ? lead.refundRate + "%" : "")}
                     ${row("Chargeback Rate",
@@ -564,7 +594,13 @@
                     ${row("Monthly Volume",    vol   > 0 ? fmtCurrency(vol)   : "")}
                     ${row("Avg Transaction",   avgTx > 0 ? fmtCurrency(avgTx) : "")}
                     ${row("Est. Transactions", txCnt > 0 ? txCnt.toLocaleString("en-GB") + " / mo" : "", { hideEmpty: true })}
-                    ${row("Current Provider",  lead.currentProvider)}
+                    ${row("Current Provider", ({
+                        stripe:"Stripe", shopify:"Shopify Payments", square:"Square",
+                        worldpay:"WorldPay", barclaycard:"Barclaycard", adyen:"Adyen",
+                        sumup:"SumUp", zettle:"Zettle / iZettle", takepayments:"Takepayments",
+                        paypal:"PayPal / Braintree", elavon:"Elavon", paymentsense:"Paymentsense",
+                        other:"Other", none:"None / direct"
+                      }[lead.currentProvider]) || lead.currentProvider)}
                     ${row("Current Monthly Fees", lead.currentMonthlyFees ? "£" + parseFloat(lead.currentMonthlyFees).toLocaleString("en-GB", {minimumFractionDigits:2,maximumFractionDigits:2}) : null, { hideEmpty: true })}
                     ${row("Platform",          fmtPlatform(lead.platform))}
                     ${row("Accounting",        lead.accountingSoftware, { hideEmpty: true })}
@@ -949,6 +985,20 @@
               }).join("")}
             </div>
           </div>`;
+      } else if (f.type === "avg-ticket-warning") {
+        const vol = parseFloat(this.lead.monthlyVolume) || 0;
+        const avg = parseFloat(this.lead.avgTransactionValue) || 0;
+        if (avg > 0 && avg < 15) {
+          const fixedPct = ((0.143 / avg) * 100).toFixed(1);
+          return `
+            <div class="lf-avg-ticket-warning" id="lf-avg-ticket-warning">
+              ⚠️ <strong>Low average ticket (£${avg.toFixed(2)})</strong> — our fixed costs (~£0.14/tx) represent
+              <strong>${fixedPct}%</strong> of this transaction value.
+              Competitive pricing is difficult below £15 avg ticket.
+              Consider the <strong>Acquisition</strong> profile and review margin carefully.
+            </div>`;
+        }
+        return "";
       } else {
         const minA = f.min !== undefined ? `min="${f.min}"` : "";
         const maxA = f.max !== undefined ? `max="${f.max}"` : "";
@@ -1140,72 +1190,21 @@
               </div>
             </div>
 
-            <!-- Rate comparison — driven by pricing_mode so headline always matches table -->
-            ${(() => {
-              const sellUkH   = p.sell_uk_rate            ? parseFloat(p.sell_uk_rate)            : null;
-              const sellIntlH = p.sell_international_rate ? parseFloat(p.sell_international_rate) : null;
-              const blendedH  = p.blended_rate            ? parseFloat(p.blended_rate)            : null;
-              const hasRegH   = sellUkH !== null && sellIntlH !== null;
-              const pMode     = p.pricing_mode || "split_indicative";
-              // Show split headline for split_primary and split_indicative; blended only for blended_primary
-              const showSplitHeadline = hasRegH && pMode !== "blended_primary";
-
-              if (showSplitHeadline) {
-                // Split is primary — show UK / International rates as the headline
-                // intlFracH used only for blended footnote display
-                const manualPct = parseFloat(this.lead.intlPercentage);
-                const csvIntl   = this.lead.csvIntlFrac != null ? parseFloat(this.lead.csvIntlFrac) : null;
-                const intlFracH = Number.isFinite(manualPct) && manualPct >= 0 && manualPct <= 100
-                  ? manualPct / 100
-                  : (csvIntl !== null ? csvIntl : null);
-                return `
-              <div class="lf-op-rate-compare" style="grid-template-columns:${curRate !== null ? '1fr auto 1fr' : '1fr'}">
-                ${curRate !== null ? `
-                <div class="lf-op-rate-block lf-op-rate-current">
-                  <div class="lf-op-rate-lbl">Currently paying</div>
-                  <div class="lf-op-rate-big" style="color:var(--red)">${curRate.toFixed(2)}<span class="lf-op-rate-pct">%</span></div>
-                  <div class="lf-op-rate-sub">effective rate on submitted data</div>
-                </div>
-                <div class="lf-op-rate-arrow">→</div>` : ""}
-                <div class="lf-op-rate-block lf-op-rate-mp${curRate === null ? " lf-op-rate-solo" : ""}">
-                  <div class="lf-op-rate-lbl">MintedPay rate</div>
-                  <div style="display:flex;flex-direction:column;gap:8px;margin:8px 0 4px">
-                    <div style="display:flex;justify-content:space-between;align-items:baseline">
-                      <span style="font-size:11px;font-weight:700;color:var(--g3)">UK Cards</span>
-                      <span style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--brand)">${sellUkH.toFixed(2)}<span style="font-size:13px">%</span> <span style="font-size:11px;color:var(--g3)">+ ${simFixed}p</span></span>
-                    </div>
-                    <div style="height:1px;background:var(--g6)"></div>
-                    <div style="display:flex;justify-content:space-between;align-items:baseline">
-                      <span style="font-size:11px;font-weight:700;color:var(--g3)">International</span>
-                      <span style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--brand)">${sellIntlH.toFixed(2)}<span style="font-size:13px">%</span> <span style="font-size:11px;color:var(--g3)">+ ${simFixed}p</span></span>
-                    </div>
-                  </div>
-                  ${blendedH !== null && intlFracH !== null && intlFracH > 0 && intlFracH < 1 ? `
-                  <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--g6);font-size:10px;color:var(--g3)">
-                    Estimated blended rate: <strong style="color:var(--g2)">${blendedH.toFixed(2)}%</strong>
-                    <span style="margin-left:4px">(based on ${Math.round(intlFracH*100)}% international)</span>
-                  </div>` : ""}
-                </div>
-              </div>`;
-              }
-
-              // blended_primary or no regional rates — show single blended rate
-              return `
-              <div class="lf-op-rate-compare">
-                ${curRate !== null ? `
-                <div class="lf-op-rate-block lf-op-rate-current">
-                  <div class="lf-op-rate-lbl">Currently paying</div>
-                  <div class="lf-op-rate-big" style="color:var(--red)">${curRate.toFixed(2)}<span class="lf-op-rate-pct">%</span></div>
-                  <div class="lf-op-rate-sub">effective rate on submitted data</div>
-                </div>
-                <div class="lf-op-rate-arrow">→</div>` : ""}
-                <div class="lf-op-rate-block lf-op-rate-mp${curRate === null ? " lf-op-rate-solo" : ""}">
-                  <div class="lf-op-rate-lbl">MintedPay rate</div>
-                  <div class="lf-op-rate-big" style="color:var(--brand)">${simRate.toFixed(2)}<span class="lf-op-rate-pct">%</span></div>
-                  <div class="lf-op-rate-sub">+ <strong>${simFixed}p</strong> fixed fee per transaction</div>
-                </div>
-              </div>`;
-            })()}
+            <!-- Rate comparison (mirrors quote.html) -->
+            <div class="lf-op-rate-compare">
+              ${curRate !== null ? `
+              <div class="lf-op-rate-block lf-op-rate-current">
+                <div class="lf-op-rate-lbl">Currently paying</div>
+                <div class="lf-op-rate-big" style="color:var(--red)">${curRate.toFixed(2)}<span class="lf-op-rate-pct">%</span></div>
+                <div class="lf-op-rate-sub">effective rate on submitted data</div>
+              </div>
+              <div class="lf-op-rate-arrow">→</div>` : ""}
+              <div class="lf-op-rate-block lf-op-rate-mp${curRate === null ? " lf-op-rate-solo" : ""}">
+                <div class="lf-op-rate-lbl">MintedPay rate</div>
+                <div class="lf-op-rate-big" style="color:var(--brand)">${simRate.toFixed(2)}<span class="lf-op-rate-pct">%</span></div>
+                <div class="lf-op-rate-sub">+ <strong>${simFixed}p</strong> fixed fee per transaction</div>
+              </div>
+            </div>
 
             ${mSave > 0 ? `
             <div class="lf-op-save-banner">
@@ -1239,7 +1238,7 @@
               <div class="lf-op-analytic">
                 <div class="lf-op-analytic-lbl">Intl Transactions</div>
                 <div class="lf-op-analytic-val">${this.lead.intlPercentage !== undefined && this.lead.intlPercentage !== "" ? this.lead.intlPercentage + "%" : "—"}</div>
-                <div class="lf-op-analytic-sub">of volume</div>
+                <div class="lf-op-analytic-sub">${({eea:"EEA / Europe",mixed:"Mixed EEA + RoW",row:"Rest of World"}[this.lead.intlRegion]) || "region unknown"}</div>
               </div>
               <div class="lf-op-analytic">
                 <div class="lf-op-analytic-lbl">Chargeback Rate</div>
@@ -1384,132 +1383,16 @@
               <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Current Rate</div><div class="lf-op-snap-val" style="color:${curRate !== null ? (curRate < 1 ? "var(--green)" : curRate < 2.2 ? "var(--amber)" : "var(--red)") : "var(--g4)"}">${curRate !== null ? curRate.toFixed(2) + "%" : "—"}</div></div>
             </div>` : ""}
 
-            <!-- Pricing table — driven by pricing_mode to stay in sync with headline -->
-            ${(() => {
-              const sellUk   = p.sell_uk_rate            ? parseFloat(p.sell_uk_rate)            : null;
-              const sellIntl = p.sell_international_rate ? parseFloat(p.sell_international_rate) : null;
-              const blended  = p.blended_rate            ? parseFloat(p.blended_rate)            : null;
-              const hasRegional = sellUk !== null && sellIntl !== null;
-              const pMode       = p.pricing_mode || "split_indicative";
-              // Show split rows for split_primary and split_indicative
-              const showSplit   = hasRegional && pMode !== "blended_primary";
-              // intlFrac still needed for blended footnote and current cost breakdown
-              const manualIntlPct = parseFloat(this.lead.intlPercentage);
-              const csvIntlFrac   = this.lead.csvIntlFrac != null ? parseFloat(this.lead.csvIntlFrac) : null;
-              const intlFrac = Number.isFinite(manualIntlPct) && manualIntlPct >= 0 && manualIntlPct <= 100
-                ? manualIntlPct / 100
-                : (csvIntlFrac !== null ? csvIntlFrac : null);
-              const hasIntlData = intlFrac !== null && intlFrac > 0 && intlFrac < 1;
-
-              // Current cost split — from API response
-              const curUkRate   = p.current_uk_rate   != null ? parseFloat(p.current_uk_rate)   : null;
-              const curIntlRate = p.current_intl_rate != null ? parseFloat(p.current_intl_rate) : null;
-
-              // Determine which current cost breakdown to show based on intlFrac
-              const curBreakdown = (() => {
-                if (curRate === null) return '';  // no fee data at all
-
-                if (intlFrac === 0) {
-                  // 100% domestic
-                  return `
-            <div style="margin-bottom:10px;padding:10px 12px;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:var(--r)">
-              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--red);margin-bottom:8px">Current Cost (UK Domestic Only)</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-                <div style="text-align:center">
-                  <div style="font-size:9px;color:var(--g3);margin-bottom:2px">UK Domestic</div>
-                  <div style="font-size:16px;font-weight:700;color:var(--red)">${curUkRate !== null ? curUkRate.toFixed(2) : curRate.toFixed(2)}%</div>
-                </div>
-                <div style="text-align:center">
-                  <div style="font-size:9px;color:var(--g3);margin-bottom:2px">Blended</div>
-                  <div style="font-size:16px;font-weight:700;color:var(--red)">${curRate.toFixed(2)}%</div>
-                </div>
-              </div>
-              <div style="font-size:9px;color:var(--g3);margin-top:6px">No international volume reported — all transactions treated as UK domestic. Blended rate is from statement.</div>
-            </div>`;
-                }
-
-                if (intlFrac === 1) {
-                  // 100% international
-                  return `
-            <div style="margin-bottom:10px;padding:10px 12px;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:var(--r)">
-              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--red);margin-bottom:8px">Current Cost (International Only)</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-                <div style="text-align:center">
-                  <div style="font-size:9px;color:var(--g3);margin-bottom:2px">International</div>
-                  <div style="font-size:16px;font-weight:700;color:var(--red)">${curIntlRate !== null ? curIntlRate.toFixed(2) : curRate.toFixed(2)}%</div>
-                </div>
-                <div style="text-align:center">
-                  <div style="font-size:9px;color:var(--g3);margin-bottom:2px">Blended</div>
-                  <div style="font-size:16px;font-weight:700;color:var(--red)">${curRate.toFixed(2)}%</div>
-                </div>
-              </div>
-              <div style="font-size:9px;color:var(--g3);margin-top:6px">No UK domestic volume reported — all transactions treated as international. Blended rate is from statement.</div>
-            </div>`;
-                }
-
-                if (intlFrac !== null && curUkRate !== null && curIntlRate !== null) {
-                  // Mixed — show all three
-                  return `
-            <div style="margin-bottom:10px;padding:10px 12px;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:var(--r)">
-              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--red);margin-bottom:8px">Current Cost Breakdown (Estimated from Statement)</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-                <div style="text-align:center">
-                  <div style="font-size:9px;color:var(--g3);margin-bottom:2px">UK Domestic</div>
-                  <div style="font-size:16px;font-weight:700;color:var(--red)">${curUkRate.toFixed(2)}%</div>
-                </div>
-                <div style="text-align:center">
-                  <div style="font-size:9px;color:var(--g3);margin-bottom:2px">International</div>
-                  <div style="font-size:16px;font-weight:700;color:var(--red)">${curIntlRate.toFixed(2)}%</div>
-                </div>
-                <div style="text-align:center">
-                  <div style="font-size:9px;color:var(--g3);margin-bottom:2px">Blended</div>
-                  <div style="font-size:16px;font-weight:700;color:var(--red)">${curRate.toFixed(2)}%</div>
-                </div>
-              </div>
-              <div style="font-size:9px;color:var(--g3);margin-top:6px">UK and international figures are estimates based on ${Math.round(intlFrac*100)}% international mix and IC++ cost ratios. Blended is from statement.</div>
-            </div>`;
-                }
-
-                // No reliable intl data — blended only
-                return `
-            <div style="margin-bottom:10px;padding:10px 12px;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:var(--r)">
-              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--red);margin-bottom:8px">Current Effective Rate</div>
-              <div style="text-align:center;padding:4px 0">
-                <div style="font-size:9px;color:var(--g3);margin-bottom:2px">Blended</div>
-                <div style="font-size:20px;font-weight:700;color:var(--red)">${curRate.toFixed(2)}%</div>
-              </div>
-              <div style="font-size:9px;color:var(--g3);margin-top:6px">No international mix data — UK/international estimate not available. Blended is from statement.</div>
-            </div>`;
-              })();
-
-              return `
-            ${curBreakdown}
+            <!-- Pricing table -->
             <div class="lf-op-ptable-wrap">
               <table class="lf-op-ptable">
                 <thead><tr><th>Transaction Type</th><th>Rate</th><th>Notes</th></tr></thead>
                 <tbody>
-                  ${showSplit ? `
-                  <tr>
-                    <td>UK Cards${pMode === "split_indicative" ? ' <span style="font-size:10px;color:var(--g3);font-weight:400">(indicative)</span>' : ''}</td>
-                    <td class="lf-op-ptable-rate">${sellUk.toFixed(2)}% + ${simFixed}p per transaction</td>
-                    <td class="lf-op-ptable-note">UK-issued Visa &amp; Mastercard debit and credit</td>
-                  </tr>
-                  <tr>
-                    <td>International Cards${pMode === "split_indicative" ? ' <span style="font-size:10px;color:var(--g3);font-weight:400">(indicative)</span>' : ''}</td>
-                    <td class="lf-op-ptable-rate">${sellIntl.toFixed(2)}% + ${simFixed}p per transaction</td>
-                    <td class="lf-op-ptable-note">Non-UK issued cards — EEA and Rest of World</td>
-                  </tr>
-                  ${blended !== null && hasIntlData ? `
-                  <tr style="background:var(--g7)">
-                    <td style="color:var(--g3);font-size:11px">Estimated Blended Rate</td>
-                    <td class="lf-op-ptable-rate" style="color:var(--g3);font-size:11px">${blended.toFixed(2)}% + ${simFixed}p</td>
-                    <td class="lf-op-ptable-note">Weighted estimate based on ${Math.round(intlFrac*100)}% international</td>
-                  </tr>` : ''}` : `
                   <tr>
                     <td>All Cards (Blended)</td>
-                    <td class="lf-op-ptable-rate">${blended !== null ? blended.toFixed(2) : simRate.toFixed(2)}% + ${simFixed}p per transaction</td>
+                    <td class="lf-op-ptable-rate">${simRate.toFixed(2)}% + ${simFixed}p per transaction</td>
                     <td class="lf-op-ptable-note">Single blended rate, Visa &amp; Mastercard debit and credit</td>
-                  </tr>`}
+                  </tr>
                   <tr id="lf-qp-amex-row">
                     <td>American Express</td>
                     <td class="lf-op-ptable-rate" style="color:var(--red)" id="lf-qp-amex-val">3.50% + 20p per transaction</td>
@@ -1533,8 +1416,6 @@
                 </tbody>
               </table>
             </div>
-            <div style="margin-top:8px;font-size:10px;color:var(--g3)">Includes interchange, scheme fees (Visa/Mastercard), Adyen acquiring markup, processing fee, and MintedPay margin.</div>`;
-            })()}
           </div>
 
           <!-- ══ E: ADMIN ACTIONS ══ -->
@@ -1543,9 +1424,8 @@
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--g6)">
               <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);white-space:nowrap">Pricing Profile</label>
               <select id="lf-pricing-profile" style="border:1px solid var(--g5);border-radius:var(--r);padding:6px 10px;font-size:12px;font-family:'Inter',sans-serif;background:var(--white);color:var(--black);cursor:pointer;outline:none">
-                <option value="acquisition"  ${(this.lead.pricingProfile || "standard") === "acquisition"  ? "selected" : ""}>Acquisition (Indicative)</option>
-                <option value="aggressive"   ${(this.lead.pricingProfile || "standard") === "aggressive"   ? "selected" : ""}>Aggressive</option>
-                <option value="standard"     ${(this.lead.pricingProfile || "standard") === "standard"     ? "selected" : ""}>Standard</option>
+                <option value="aggressive" ${(this.lead.pricingProfile || "standard") === "aggressive" ? "selected" : ""}>Aggressive</option>
+                <option value="standard"   ${(this.lead.pricingProfile || "standard") === "standard"   ? "selected" : ""}>Standard</option>
                 <option value="conservative" ${(this.lead.pricingProfile || "standard") === "conservative" ? "selected" : ""}>Conservative</option>
               </select>
               <span style="font-size:10px;color:var(--g3)">Changes pricing on recalculate</span>
@@ -1577,11 +1457,370 @@
             </div>` : ""}
           </div>
 
+          <!-- ══ F: PRICING ENGINE SETTINGS (READ-ONLY) ══ -->
+          ${this._buildPricingEnginePanel()}
 
         </div>
       `;
     }
 
+
+    // ── Pricing Engine Settings — editable, in-memory only ────────
+    // Values sourced from _localPricingSettings when set, otherwise from
+    // the hardcoded defaults matching routes/pricing.js exactly.
+    // Changes are temporary — no DB persistence yet.
+    _buildPricingEnginePanel() {
+
+      // ── Default constants (mirrors routes/pricing.js) ─────────────────────
+      const DEFAULTS = {
+        baseCosts: { uk: 1.10, eea: 1.60, international: 2.60, wespell: 0.0435 },
+        profiles: {
+          aggressive:   { targetMargin: 0.20, minDomestic: 1.40, minInternational: 2.50, splitThreshold: 0.40 },
+          standard:     { targetMargin: 0.30, minDomestic: 1.60, minInternational: 3.00, splitThreshold: 0.35 },
+          conservative: { targetMargin: 0.45, minDomestic: 1.90, minInternational: 3.20, splitThreshold: 0.30 },
+        },
+        globalRules: {
+          minMargin: 0.30, undercutMultiplier: 0.80, rateFloor: 1.30,
+          volumeMargins:  [{ maxVol:50000, margin:0.60 }, { maxVol:200000, margin:0.40 }, { maxVol:Infinity, margin:0.25 }],
+          fixedFeeTiers:  [{ maxVol:100000, fee:10 }, { maxVol:200000, fee:8 }, { maxVol:Infinity, fee:5 }],
+        },
+      };
+
+      // Use local overrides when set, otherwise defaults
+      const s  = this._localPricingSettings || DEFAULTS;
+      const bc = s.baseCosts;
+      const gr = s.globalRules;
+      const isModified = this._localPricingSettings !== null;
+
+      // ── Derived sell rates (same formula as server) ───────────────────────
+      const sellRate = (base, wespell, margin, floor) =>
+        Math.ceil(Math.max(base + wespell + margin, floor) * 100) / 100;
+
+      const derived = {};
+      for (const [name, p] of Object.entries(s.profiles)) {
+        derived[name] = {
+          uk:   sellRate(bc.uk,            bc.wespell, p.targetMargin, p.minDomestic),
+          intl: sellRate(bc.international, bc.wespell, p.targetMargin, p.minInternational),
+        };
+      }
+
+      // ── Input helper ──────────────────────────────────────────────────────
+      const inp = (id, val, step = "0.01", min = "0") =>
+        `<input id="${id}" type="number" step="${step}" min="${min}" value="${val}"
+          style="width:80px;padding:4px 7px;border:1.5px solid var(--g5);border-radius:var(--r);
+                 font-size:12px;font-family:'Inter',sans-serif;text-align:right;outline:none"
+          onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--g5)'">`;
+
+      // ── Profile column builder ────────────────────────────────────────────
+      const profileCol = (name, p, d) => {
+        const isStd = name === "standard";
+        return `
+          <div style="background:var(--g8);border:1px solid var(--g6);border-radius:var(--r);overflow:hidden;flex:1;min-width:160px">
+            <div style="background:${isStd ? "var(--brand)" : "var(--g6)"};padding:8px 12px">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${isStd ? "var(--white)" : "var(--g3)"}">
+                ${name.charAt(0).toUpperCase() + name.slice(1)}${isStd ? " ✦ Default" : ""}
+              </div>
+            </div>
+            <div style="padding:10px 12px;display:flex;flex-direction:column;gap:8px">
+              <label style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--g3)">
+                Target margin
+                ${inp("ps-" + name + "-margin", p.targetMargin.toFixed(2))}
+              </label>
+              <label style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--g3)">
+                Min domestic
+                ${inp("ps-" + name + "-mindom", p.minDomestic.toFixed(2))}
+              </label>
+              <label style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--g3)">
+                Min international
+                ${inp("ps-" + name + "-minintl", p.minInternational.toFixed(2))}
+              </label>
+              <label style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--g3)">
+                Split threshold %
+                ${inp("ps-" + name + "-split", (p.splitThreshold * 100).toFixed(0), "1", "0")}
+              </label>
+              <div style="margin-top:4px;padding-top:8px;border-top:1px solid var(--g6)">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--brand);margin-bottom:4px">Derived sell rates</div>
+                <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px">
+                  <span style="color:var(--g3)">UK</span>
+                  <strong id="ps-${name}-sell-uk" style="color:var(--brand)">${d.uk.toFixed(2)}%</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:11px">
+                  <span style="color:var(--g3)">International</span>
+                  <strong id="ps-${name}-sell-intl" style="color:var(--brand)">${d.intl.toFixed(2)}%</strong>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      };
+
+      return `
+        <div class="lf-op-section" style="border-left:3px solid var(--brand)" data-ps-panel="1">
+          <div class="lf-op-section-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            ⚙ Pricing Engine Settings
+            ${isModified
+              ? `<span style="font-size:9px;font-weight:600;background:#fef3c7;color:#b45309;border:1px solid #fde68a;padding:1px 7px;border-radius:20px;letter-spacing:.5px">⚠ Changes are temporary (not saved)</span>`
+              : `<span style="font-size:9px;font-weight:600;background:var(--green-lt);color:var(--green);border:1px solid var(--green-bd);padding:1px 7px;border-radius:20px;letter-spacing:.5px">✓ Using server defaults</span>`
+            }
+          </div>
+
+          <!-- Base Costs -->
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g3);margin-bottom:8px">Base Costs</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px">
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--g3)">
+              UK base cost (%)
+              ${inp("ps-base-uk", bc.uk.toFixed(4))}
+            </label>
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--g3)">
+              International / ROW (%)
+              ${inp("ps-base-intl", bc.international.toFixed(4))}
+            </label>
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--g3)">
+              Wespell cost (p/tx)
+              ${inp("ps-base-wespell", bc.wespell.toFixed(4), "0.0001")}
+            </label>
+          </div>
+
+          <!-- Global Rules -->
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g3);margin-bottom:8px">Global Rules</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px">
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--g3)">
+              Min margin (%)
+              ${inp("ps-rule-minmargin", gr.minMargin.toFixed(2))}
+            </label>
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--g3)">
+              Undercut multiplier
+              ${inp("ps-rule-undercut", gr.undercutMultiplier.toFixed(2))}
+            </label>
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--g3)">
+              Rate floor (%)
+              ${inp("ps-rule-floor", gr.rateFloor.toFixed(2))}
+            </label>
+          </div>
+
+          <!-- Volume Margins -->
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g3);margin-bottom:8px">Volume-Based Margins</div>
+          <div class="lf-op-ptable-wrap" style="margin-bottom:18px">
+            <table style="width:100%;border-collapse:collapse">
+              <thead><tr>
+                <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--brand);border-bottom:1px solid var(--brand-bd);background:var(--brand-lt)">Volume band</th>
+                <th style="text-align:right;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--brand);border-bottom:1px solid var(--brand-bd);background:var(--brand-lt)">Margin added (%)</th>
+              </tr></thead>
+              <tbody>
+                ${gr.volumeMargins.map((t, i) => `
+                <tr>
+                  <td style="padding:8px 12px;font-size:12px;color:var(--g3);border-bottom:1px solid var(--g6)">
+                    ${i === 0 ? "Under £50k / mo" : i === 1 ? "£50k – £200k / mo" : "£200k+ / mo"}
+                  </td>
+                  <td style="padding:8px 12px;border-bottom:1px solid var(--g6);text-align:right">
+                    ${inp("ps-vmarg-" + i, t.margin.toFixed(2))}
+                  </td>
+                </tr>`).join("")}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Fixed Fee Tiers -->
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g3);margin-bottom:8px">Fixed Fee Tiers</div>
+          <div class="lf-op-ptable-wrap" style="margin-bottom:18px">
+            <table style="width:100%;border-collapse:collapse">
+              <thead><tr>
+                <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--brand);border-bottom:1px solid var(--brand-bd);background:var(--brand-lt)">Volume band</th>
+                <th style="text-align:right;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--brand);border-bottom:1px solid var(--brand-bd);background:var(--brand-lt)">Fixed fee (p/tx)</th>
+              </tr></thead>
+              <tbody>
+                ${gr.fixedFeeTiers.map((t, i) => `
+                <tr>
+                  <td style="padding:8px 12px;font-size:12px;color:var(--g3);border-bottom:1px solid var(--g6)">
+                    ${i === 0 ? "Under £100k / mo" : i === 1 ? "£100k – £200k / mo" : "£200k+ / mo"}
+                  </td>
+                  <td style="padding:8px 12px;border-bottom:1px solid var(--g6);text-align:right">
+                    ${inp("ps-ftier-" + i, t.fee.toFixed(0), "1", "1")}
+                  </td>
+                </tr>`).join("")}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pricing Profiles -->
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g3);margin-bottom:8px">Pricing Profiles</div>
+          <div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap">
+            ${profileCol("aggressive",   s.profiles.aggressive,   derived.aggressive)}
+            ${profileCol("standard",     s.profiles.standard,     derived.standard)}
+            ${profileCol("conservative", s.profiles.conservative, derived.conservative)}
+          </div>
+
+          <!-- Apply + Reset -->
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <button id="ps-apply" style="background:var(--brand);color:var(--white);border:none;padding:9px 20px;border-radius:var(--r);font-size:13px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer">
+              ✓ Apply Changes
+            </button>
+            ${isModified ? `
+            <button id="ps-reset" style="background:var(--white);color:var(--g3);border:1.5px solid var(--g5);padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer">
+              ↺ Reset to Defaults
+            </button>` : ""}
+            <span style="font-size:11px;color:var(--g3)" id="ps-status"></span>
+          </div>
+
+          <!-- Logic rules (read-only) -->
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g3);margin:16px 0 8px">Active Logic Rules</div>
+          <div style="border-top:1px solid var(--g6)">
+            ${["Manual intl % always overrides CSV-detected intl %",
+               "CSV intl detection uses card issue country column only",
+               "CSV intl detection requires ≥80% country coverage",
+               "Blended rate only shown when real intl data exists",
+               "Blended rate suppressed at 0% and 100% international",
+               "Unknown or missing profile defaults to Standard"]
+              .map(t => `<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--g6);font-size:12px">
+                <span style="color:var(--green);font-size:13px;flex-shrink:0">✓</span>
+                <span style="color:var(--black);line-height:1.4">${t}</span>
+              </div>`).join("")}
+          </div>
+        </div>`;
+    }
+
+    // ── Apply Pricing Engine Settings ──────────────────────────
+    // Reads all input values from the panel, validates them,
+    // stores to this._localPricingSettings, and triggers recalculation.
+    _applyPricingSettings() {
+      const g = id => document.getElementById(id);
+      const v = id => parseFloat(g(id)?.value);
+
+      // Validate all inputs — must be finite positive numbers
+      const ids = [
+        "ps-base-uk","ps-base-intl","ps-base-wespell",
+        "ps-rule-minmargin","ps-rule-undercut","ps-rule-floor",
+        "ps-aggressive-margin","ps-aggressive-mindom","ps-aggressive-minintl","ps-aggressive-split",
+        "ps-standard-margin",  "ps-standard-mindom",  "ps-standard-minintl",  "ps-standard-split",
+        "ps-conservative-margin","ps-conservative-mindom","ps-conservative-minintl","ps-conservative-split",
+        "ps-vmarg-0","ps-vmarg-1","ps-vmarg-2",
+        "ps-ftier-0","ps-ftier-1","ps-ftier-2",
+      ];
+      for (const id of ids) {
+        const val = v(id);
+        if (!Number.isFinite(val) || val < 0) {
+          const el = g(id);
+          if (el) { el.style.borderColor = "var(--red)"; setTimeout(() => el.style.borderColor = "var(--g5)", 2000); }
+          const status = g("ps-status");
+          if (status) status.textContent = "⚠ Please fix invalid values before applying.";
+          return;
+        }
+      }
+
+      // Build settings object — same structure as getPricingSettings()
+      this._localPricingSettings = {
+        baseCosts: {
+          uk:            v("ps-base-uk"),
+          eea:           1.60,   // EEA not editable yet — keep default
+          international: v("ps-base-intl"),
+          wespell:       v("ps-base-wespell"),
+        },
+        profiles: {
+          aggressive: {
+            targetMargin:     v("ps-aggressive-margin"),
+            minDomestic:      v("ps-aggressive-mindom"),
+            minInternational: v("ps-aggressive-minintl"),
+            splitThreshold:   v("ps-aggressive-split") / 100,
+          },
+          standard: {
+            targetMargin:     v("ps-standard-margin"),
+            minDomestic:      v("ps-standard-mindom"),
+            minInternational: v("ps-standard-minintl"),
+            splitThreshold:   v("ps-standard-split") / 100,
+          },
+          conservative: {
+            targetMargin:     v("ps-conservative-margin"),
+            minDomestic:      v("ps-conservative-mindom"),
+            minInternational: v("ps-conservative-minintl"),
+            splitThreshold:   v("ps-conservative-split") / 100,
+          },
+        },
+        globalRules: {
+          minMargin:          v("ps-rule-minmargin"),
+          undercutMultiplier: v("ps-rule-undercut"),
+          rateFloor:          v("ps-rule-floor"),
+          volumeMargins: [
+            { maxVol: 50000,    margin: v("ps-vmarg-0") },
+            { maxVol: 200000,   margin: v("ps-vmarg-1") },
+            { maxVol: Infinity, margin: v("ps-vmarg-2") },
+          ],
+          fixedFeeTiers: [
+            { maxVol: 100000,   fee: v("ps-ftier-0") },
+            { maxVol: 200000,   fee: v("ps-ftier-1") },
+            { maxVol: Infinity, fee: v("ps-ftier-2") },
+          ],
+          fixedFeeMinimum: v("ps-ftier-0"),  // minimum = smallest fee tier
+          gatewayFeeTiers: [                  // gateway costs unchanged — not editable yet
+            { maxVol: 100000,   fee: 0.10 },
+            { maxVol: 200000,   fee: 0.08 },
+            { maxVol: Infinity, fee: 0.05 },
+          ],
+        },
+        intlRules: {
+          manualOverride:           true,
+          countryCoverageThreshold: 0.80,
+        },
+        blendedRules: {
+          suppressAtZero:    true,
+          suppressAtHundred: true,
+        },
+      };
+
+      // Invalidate cached result — next recalc will use new settings
+      this.pricingResult = null;
+
+      // ── Persist to DB via API ───────────────────────────────────
+      const status = document.getElementById("ps-status");
+      if (status) status.textContent = "Saving…";
+
+      fetch("/api/settings", {
+        method:  "PUT",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(this._localPricingSettings),
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            // Server echoes back the live settings — update local copy to match DB
+            this._localPricingSettings = data.settings;
+            this.pricingResult = null;
+            this._render();
+            const s = document.getElementById("ps-status");
+            if (s) { s.textContent = "✓ Saved to server"; setTimeout(() => { if(s) s.textContent = ""; }, 3000); }
+          } else {
+            const s = document.getElementById("ps-status");
+            if (s) s.textContent = "⚠ Save failed: " + (data.error || "unknown error");
+          }
+        })
+        .catch(err => {
+          const s = document.getElementById("ps-status");
+          if (s) s.textContent = "⚠ Network error — changes applied locally only";
+          // Keep _localPricingSettings so the override still works in memory
+          this._render();
+        });
+    }
+
+    // ── Load pricing settings from API ─────────────────────────
+    // Called once when Step 10 renders. Populates _localPricingSettings
+    // with whatever the server currently has (DB or defaults).
+    // This ensures the admin panel always shows live values.
+    async _loadPricingSettings() {
+      try {
+        const resp = await fetch("/api/settings");
+        const data = await resp.json();
+        if (data.success && data.settings) {
+          this._localPricingSettings = data.settings;
+          // Re-render panel with loaded values — don't invalidate pricingResult
+          // (settings were just loaded, they haven't changed)
+          const panel = document.querySelector(".lf-op-section[data-ps-panel]");
+          if (panel) {
+            // If the panel is already in the DOM, rebuild just the settings section
+            this._render();
+          }
+        }
+      } catch (e) {
+        // Silently fail — panel will show hardcoded DEFAULTS, which is correct behaviour
+      }
+    }
 
     // ── Rejection screen ───────────────────────────────────
     _buildRejected() {
@@ -1696,6 +1935,20 @@
 
       q("lf-apply-override")?.addEventListener("click", () => this._applyPricingOverride());
 
+      // ── Pricing Engine Settings buttons ───────────────────────
+      q("ps-apply")?.addEventListener("click", () => this._applyPricingSettings());
+      q("ps-reset")?.addEventListener("click", () => {
+        this._localPricingSettings = null;
+        this.pricingResult = null;
+        this._loadPricingSettings();
+      });
+
+      // Load live settings from server when Step 10 is rendered
+      // Only fetch if _localPricingSettings hasn't been populated yet this session
+      if (!this._localPricingSettings) {
+        this._loadPricingSettings();
+      }
+
       // ── Pricing profile selector ───────────────────────────
       q("lf-pricing-profile")?.addEventListener("change", (e) => {
         this.lead.pricingProfile = e.target.value;
@@ -1742,47 +1995,15 @@
         // Keep range in sync with number input
         if (simRange) simRange.value = sr;
 
-        // Update quote preview pricing table
-        // When split pricing is shown, update the UK and International rows directly
-        // using the stored sell rates from the pricing result (not the simulator rate,
-        // which is a blended adjustment tool — the split rates are fixed by the engine).
-        const sellUkSim   = this.pricingResult.sell_uk_rate            ? parseFloat(this.pricingResult.sell_uk_rate)            : null;
-        const sellIntlSim = this.pricingResult.sell_international_rate ? parseFloat(this.pricingResult.sell_international_rate) : null;
-        const blendedSim  = this.pricingResult.blended_rate            ? parseFloat(this.pricingResult.blended_rate)            : null;
-        const hasRegSim   = sellUkSim !== null && sellIntlSim !== null;
+        // Update quote preview rate
+        const ptRow = document.querySelector(".lf-op-ptable tbody tr:first-child td:nth-child(2)");
+        if (ptRow) ptRow.textContent = sr.toFixed(2) + "% + " + sf + "p per transaction";
 
-        if (hasRegSim) {
-          // Split view: update UK row, International row, and blended row if present
-          const rows = document.querySelectorAll(".lf-op-ptable tbody tr");
-          rows.forEach(row => {
-            const label = row.querySelector("td:first-child")?.textContent?.trim() || "";
-            const rateCell = row.querySelector("td:nth-child(2)");
-            if (!rateCell) return;
-            if (label === "UK Cards") {
-              rateCell.textContent = sellUkSim.toFixed(2) + "% + " + sf + "p per transaction";
-            } else if (label === "International Cards") {
-              rateCell.textContent = sellIntlSim.toFixed(2) + "% + " + sf + "p per transaction";
-            } else if (label === "Estimated Blended Rate" && blendedSim !== null) {
-              rateCell.textContent = blendedSim.toFixed(2) + "% + " + sf + "p";
-            }
-          });
-          // Update split headline (UK / International lines inside .lf-op-rate-mp)
-          const mpBlock = document.querySelector(".lf-op-rate-mp");
-          if (mpBlock) {
-            const ukSpan   = mpBlock.querySelectorAll("[style*='Syne']")[0];
-            const intlSpan = mpBlock.querySelectorAll("[style*='Syne']")[1];
-            if (ukSpan)   ukSpan.innerHTML   = sellUkSim.toFixed(2)   + '<span style="font-size:13px">%</span> <span style="font-size:11px;color:var(--g3)">+ ' + sf + 'p</span>';
-            if (intlSpan) intlSpan.innerHTML = sellIntlSim.toFixed(2) + '<span style="font-size:13px">%</span> <span style="font-size:11px;color:var(--g3)">+ ' + sf + 'p</span>';
-          }
-        } else {
-          // Blended view: update single rate row and headline
-          const ptRow = document.querySelector(".lf-op-ptable tbody tr:first-child td:nth-child(2)");
-          if (ptRow) ptRow.textContent = sr.toFixed(2) + "% + " + sf + "p per transaction";
-          const mpBig = document.querySelector(".lf-op-rate-mp .lf-op-rate-big");
-          if (mpBig) mpBig.innerHTML = sr.toFixed(2) + '<span class="lf-op-rate-pct">%</span>';
-          const mpSub = document.querySelector(".lf-op-rate-mp .lf-op-rate-sub");
-          if (mpSub) mpSub.innerHTML = '+ <strong>' + sf + 'p</strong> fixed fee per transaction';
-        }
+        // Update rate comparison block
+        const mpBig = document.querySelector(".lf-op-rate-mp .lf-op-rate-big");
+        if (mpBig) mpBig.innerHTML = sr.toFixed(2) + '<span class="lf-op-rate-pct">%</span>';
+        const mpSub = document.querySelector(".lf-op-rate-mp .lf-op-rate-sub");
+        if (mpSub) mpSub.innerHTML = '+ <strong>' + sf + 'p</strong> fixed fee per transaction';
 
         // Store sim state so re-renders preserve it
         this.pricingResult._simRate  = sr;
@@ -1868,6 +2089,32 @@
           this._render();
         });
       });
+
+      // ── Step 7: Live avg ticket warning ───────────────────────────
+      const updateAvgTicketWarning = () => {
+        if (this.currentStep !== 7) return;
+        const vol = parseFloat(document.getElementById("lf-monthlyVolume")?.value) || 0;
+        const avg = parseFloat(document.getElementById("lf-avgTransactionValue")?.value) || 0;
+        let warn = document.getElementById("lf-avg-ticket-warning");
+        if (avg > 0 && avg < 15) {
+          const fixedPct = ((0.143 / avg) * 100).toFixed(1);
+          const msg = `⚠️ <strong>Low average ticket (£${avg.toFixed(2)})</strong> — our fixed costs (~£0.14/tx) represent <strong>${fixedPct}%</strong> of this transaction value. Competitive pricing is difficult below £15. Consider the <strong>Acquisition</strong> profile.`;
+          if (!warn) {
+            warn = document.createElement("div");
+            warn.id = "lf-avg-ticket-warning";
+            warn.className = "lf-avg-ticket-warning";
+            const avgField = document.querySelector('[data-field="avgTransactionValue"]');
+            if (avgField) avgField.insertAdjacentElement("afterend", warn);
+          }
+          warn.innerHTML = msg;
+          warn.style.display = "block";
+        } else if (warn) {
+          warn.style.display = "none";
+        }
+      };
+      q("lf-monthlyVolume")?.addEventListener("input", updateAvgTicketWarning);
+      q("lf-avgTransactionValue")?.addEventListener("input", updateAvgTicketWarning);
+      updateAvgTicketWarning();
 
       // Real-time email / website validation (Step 8)
       const emailEl   = q("lf-email");
@@ -2123,7 +2370,6 @@
           this.lead.transactionCount    = "";
           this.lead.currentMonthlyFees  = "";
           this.lead.csvDebitFrac        = "";
-          this.lead.csvIntlFrac         = null;  // reset international detection
           this.lead.csvCurrentRate      = "";
           this.lead.csvCardMix          = "";
           this.lead.csvTierLabel        = "";
@@ -2474,8 +2720,8 @@
 
     // ── Apply Pricing Override ──────────────────────────────
     _applyPricingOverride() {
-      const rateEl  = document.getElementById("lf-sim-rate");
-      const fixedEl = document.getElementById("lf-sim-fixed");
+      const rateEl  = document.getElementById("lf-override-rate");
+      const fixedEl = document.getElementById("lf-override-fixed");
       if (!rateEl || !fixedEl) return;
 
       let newRate  = parseFloat(rateEl.value);
@@ -2506,8 +2752,6 @@
 
       this.pricingResult.rate      = newRate;
       this.pricingResult.fixed_fee = newFixed;
-      this.pricingResult._simRate  = newRate;
-      this.pricingResult._simFixed = newFixed;
       this.lead.processingRate     = newRate;
       this.lead.fixedFee           = newFixed;
       this._scheduleSave();
@@ -2704,6 +2948,27 @@
       this.saveTimeout = setTimeout(() => this._saveNow(), 800);
     }
 
+    _injectStyles() {
+      if (document.getElementById("lf-extra-styles")) return;
+      const style = document.createElement("style");
+      style.id = "lf-extra-styles";
+      style.textContent = `
+        .lf-avg-ticket-warning {
+          background: #fef3c7;
+          border: 1px solid #fcd34d;
+          border-left: 3px solid #d97706;
+          border-radius: 6px;
+          padding: 10px 14px;
+          font-size: 12px;
+          color: #92400e;
+          line-height: 1.5;
+          margin-top: 8px;
+        }
+        .lf-avg-ticket-warning strong { font-weight: 700; color: #78350f; }
+      `;
+      document.head.appendChild(style);
+    }
+
     _saveStatus(state) {
       const el = document.getElementById("lf-save-status");
       if (!el) return;
@@ -2798,10 +3063,16 @@
             debit_frac:             debitFrac,
             // intl_frac: manual % → CSV-derived → null (priority order above)
             intl_frac:              intlFrac,
+            // intl_region: "eea" | "row" | "mixed" | null — from Step 4 dropdown
+            // Selects the right interchange rate. null → falls back to 1.50% conservative.
+            intl_region: this.lead.intlRegion || null,
             // Tell the engine whether debitFrac came from real CSV card-mix detection
             csv_debit_frac_is_real: (csvDebitFrac > 0 && csvDebitFrac <= 1),
             // Pricing profile — admin-selectable, defaults to standard
             pricing_profile: this.lead.pricingProfile || "standard",
+            // Settings override — sends local admin edits to the engine.
+            // null when no changes applied — server uses getPricingSettings() defaults.
+            settings_override: this._localPricingSettings || null,
           }),
         });
         const data = await resp.json();
@@ -2856,17 +3127,6 @@
 
     // ── Action: Generate Quote ────────────────────────────
     async _generateQuote() {
-      // If a quote already exists on the lead, open it directly — no recalculation needed
-      if (this.lead.quote_id && this.quoteGenerated) {
-        window.open(`/quote.html?quote=${this.lead.quote_id}`, "_blank");
-        return;
-      }
-      // If no pricingResult but lead has a quote_id (e.g. overview load), treat as already generated
-      if (!this.pricingResult?.quote_id && this.lead.quote_id) {
-        this.quoteGenerated = true;
-        window.open(`/quote.html?quote=${this.lead.quote_id}`, "_blank");
-        return;
-      }
       if (!this.pricingResult?.quote_id) {
         alert("No quote available. Please wait for the pricing calculation to complete.");
         return;
@@ -2919,8 +3179,7 @@
       }
       if (this.isSubmitting) return;
       this.isSubmitting = true;
-      // Support both Step 10 and Overview button IDs
-      const btn = document.getElementById("lf-push-zoho") || document.getElementById("lf-ov-push-zoho");
+      const btn = document.getElementById("lf-push-zoho");
       if (!btn) { this.isSubmitting = false; return; }
       btn.textContent = "Pushing…";
       btn.disabled    = true;
@@ -2954,8 +3213,7 @@
     // ── Action: Mark KYB Ready ────────────────────────────
     async _markKYB() {
       if (this.lead.status === "kyb_pending") return;
-      // Support both Step 10 and Overview button IDs
-      const btn = document.getElementById("lf-mark-kyb") || document.getElementById("lf-ov-mark-kyb");
+      const btn = document.getElementById("lf-mark-kyb");
       if (btn) { btn.textContent = "Saving…"; btn.disabled = true; }
       try {
         await fetch(`/api/leads/${this.leadId}/kyb`, { method: "POST" });
