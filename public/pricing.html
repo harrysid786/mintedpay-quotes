@@ -1363,4 +1363,25 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("volInput")?.addEventListener("input", checkAvgTicket);
   document.getElementById("cntInput")?.addEventListener("input", checkAvgTicket);
 
-  // Provider
+  // Provider  // Provider selector
+  const sel = document.getElementById("providerInput");
+  if (sel) sel.addEventListener("change", e => showProviderMsg(e.target.value));
+
+  // Industry selector
+  const ind = document.getElementById("industryInput");
+  if (ind) ind.addEventListener("change", e => onIndustryChange(e.target.value));
+
+  // Intl input
+  const intlInp = document.getElementById("intlInput");
+  if (intlInp) intlInp.addEventListener("input", () => {
+    const v = parseFloat(intlInp.value);
+    if (v > 0) {
+      document.getElementById("intlRegionInput").closest(".field").style.display = "";
+    }
+  });
+
+  goStep(1);
+});
+</script>
+</body>
+</html>
