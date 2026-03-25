@@ -197,7 +197,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 
 <div class="hero">
   <h1>See how much you could <em>save</em></h1>
-  <p>Upload your statement or enter your volume — we'll show you what you're paying now and what MintedPay can offer.</p>
+  <p>Upload your statement or enter your volume — we'll show you what you're paying now and what MintedPay can offer. <strong>All rates shown are indicative only</strong> — final pricing is confirmed by our team.</p>
 </div>
 
 <!-- PROGRESS -->
@@ -433,7 +433,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
           </div>
           <div class="rate-arrow">→</div>
           <div class="rate-block mp">
-            <div class="rate-block-label">MintedPay rate</div>
+            <div class="rate-block-label">MintedPay indicative rate</div>
             <div class="rate-big" id="mpRateBig">—</div>
             <div class="rate-small" id="mpRateSub">+ 10p per transaction</div>
           </div>
@@ -494,7 +494,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
       </div>
 
       <div class="indicative-note">
-        These rates are indicative and based on your submitted data. Final pricing is confirmed after a quick review by our team — usually within 24 hours.
+        ⚠️ <strong>These rates are indicative only.</strong> Final pricing is always confirmed in writing after a review of your full processing history, business type, card mix, and risk profile. Rates may change. Nothing here constitutes a formal offer.
       </div>
 
       <div id="providerWin" style="display:none;margin-bottom:16px;padding:12px 16px;background:var(--green-lt);border:1px solid var(--green-bd);border-radius:var(--r);font-size:13px;color:#065f46"></div>
@@ -864,6 +864,31 @@ async function buildStep5() {
   const blended  = p ? parseFloat(p.blended_rate || p.rate)            : null;
   const hasIntl  = p && p.sell_international_rate && parseFloat(p.intl_frac || 0) > 0;
   const displayRate = blended || sellUk;
+
+  // ── Not competitive handling ───────────────────────────────
+  if (p && p.not_competitive) {
+    document.getElementById("step5Loading").style.display = "none";
+    document.getElementById("step5Content").style.display = "block";
+    document.getElementById("step5Btns").style.display    = "flex";
+    document.getElementById("rateCompare").style.display  = "none";
+    document.getElementById("rateOnly").style.display     = "none";
+    const advisory = document.createElement("div");
+    advisory.style.cssText = "background:var(--amber-lt);border:1px solid var(--amber-bd);border-left:3px solid #d97706;border-radius:10px;padding:20px;margin-bottom:20px;text-align:center";
+    const { avgTx } = getVolumeData();
+    advisory.innerHTML = `
+      <div style="font-size:22px;margin-bottom:10px">🤝</div>
+      <div style="font-size:16px;font-weight:600;color:#78350f;margin-bottom:8px">We want to beat your rate — let's talk</div>
+      <div style="font-size:13px;color:#92400e;line-height:1.6">
+        Based on your average transaction value of <strong>£${avgTx.toFixed(2)}</strong>, our standard
+        pricing is slightly higher than what you currently pay. This is typically because our fixed per-transaction
+        costs (gateway + processing fee) represent a larger percentage of lower-value transactions.<br><br>
+        Our team can look at your full picture — volume commitments, product mix, and terminal options — and
+        come back with a tailored proposal. Submit your details and we'll be in touch.
+      </div>`;
+    const content = document.getElementById("step5Content");
+    content.insertBefore(advisory, content.firstChild);
+    return;
+  }
 
   // ── Rate compare
   const hasCurFees = cur > 0;
