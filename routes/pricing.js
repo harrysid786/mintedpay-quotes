@@ -954,14 +954,16 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
   // ════════════════════════════════════════════════════════════
 
   // ── Standard floor check (all profiles) ───────────────────
-  // For acquisition_plus with known fees: provisionalRate is already
-  // max(undercutTarget, costFloor) — only apply rateFloor as absolute minimum.
-  // For all other cases: apply full floor checks.
-  const minAllowedRate = finalCostEngine.effectiveTotalCostPct + rules.minMargin;
+  // For acquisition_plus with known fees: use real cost (provisionalCostEngine)
+  // for the minimum allowed rate — NOT worst-case (finalCostEngine).
+  // Using worst-case here overrides the undercut with a floor that exceeds
+  // the merchant's current rate for domestic-heavy merchants.
+  const realCostForFloor = isPublicProfile
+    ? provisionalCostEngine.effectiveTotalCostPct
+    : finalCostEngine.effectiveTotalCostPct;
+  const minAllowedRate = realCostForFloor + rules.minMargin;
   let quoteRate;
   if (isPublicProfile && curFees && curFees > 0) {
-    // Undercut already incorporates the cost floor — just enforce the absolute rate floor
-    // and ensure we never quote below true cost + minimum margin
     quoteRate = Math.max(provisionalRate, minAllowedRate, rules.rateFloor);
   } else {
     quoteRate = Math.max(provisionalRate, minAllowedRate, rules.rateFloor);
@@ -996,8 +998,8 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
       }
     }
 
-    // Re-check floor after shortfall adjustment
-    const adjustedMin = finalCostEngine.effectiveTotalCostPct + rules.minMargin;
+    // Re-check floor after shortfall adjustment — use real cost for acquisition_plus
+    const adjustedMin = realCostForFloor + rules.minMargin;
     if (quoteRate < adjustedMin) quoteRate = Math.ceil(adjustedMin * 100) / 100;
   }
 
