@@ -893,8 +893,12 @@ async function buildStep5() {
     document.getElementById("mpRateSubOnly").textContent = "+ " + fixed + "p per transaction";
   }
 
-  // ── Breakdown table
-  document.getElementById("bdUk").textContent = sellUk ? fmtRate(sellUk) + " + " + fixed + "p/tx" : "—";
+  // ── Breakdown table — always show the same rate as the comparison box ──
+  // displayRate is the rate shown in the big comparison box (blended or UK sell).
+  // The breakdown row must show this same value — not sell_uk_rate which can
+  // be a different (lower) admin-profile rate and would contradict what the
+  // merchant sees in the comparison.
+  document.getElementById("bdUk").textContent = displayRate ? fmtRate(displayRate) + " + " + fixed + "p/tx" : "—";
   if (hasIntl) {
     document.getElementById("bdIntlRow").style.display = "";
     document.getElementById("bdIntl").textContent = fmtRate(sellIntl) + " + " + fixed + "p/tx";
