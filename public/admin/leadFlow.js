@@ -1199,7 +1199,7 @@
               </div>
             </div>
 
-            <!-- Rate comparison (mirrors quote.html) -->
+            <!-- Rate comparison -->
             <div class="lf-op-rate-compare">
               ${curRate !== null ? `
               <div class="lf-op-rate-block lf-op-rate-current">
@@ -1212,6 +1212,24 @@
                 <div class="lf-op-rate-lbl">MintedPay rate</div>
                 <div class="lf-op-rate-big" style="color:var(--brand)">${simRate.toFixed(2)}<span class="lf-op-rate-pct">%</span></div>
                 <div class="lf-op-rate-sub">+ <strong>${simFixed}p</strong> fixed fee per transaction</div>
+                ${(() => {
+                  const ukR   = p.sell_uk_rate            ? parseFloat(p.sell_uk_rate)            : null;
+                  const intlR = p.sell_international_rate ? parseFloat(p.sell_international_rate) : null;
+                  const frac  = p.intl_frac               ? parseFloat(p.intl_frac)               : 0;
+                  const hasI  = ukR !== null && intlR !== null && frac > 0;
+                  if (!hasI) return '';
+                  return `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--g6);display:flex;flex-direction:column;gap:3px;font-size:11px">
+                    <div style="display:flex;justify-content:space-between">
+                      <span style="color:var(--g3)">UK cards</span>
+                      <span style="font-weight:700;color:var(--brand)">${ukR.toFixed(2)}% + ${simFixed}p</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between">
+                      <span style="color:var(--g3)">International cards</span>
+                      <span style="font-weight:700;color:var(--brand)">${intlR.toFixed(2)}% + ${simFixed}p</span>
+                    </div>
+                    <div style="color:var(--g4);font-size:10px;margin-top:2px">${Math.round(frac*100)}% intl card mix</div>
+                  </div>`;
+                })()}
               </div>
             </div>
 
