@@ -891,16 +891,21 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
 
   if (isPublicProfile) {
     // acquisition_plus: undercut logic when fees known
-    // Uses a multiplier undercut (0.80×) to ensure a meaningful saving vs current provider,
-    // not a fixed bps which can produce trivially small savings or be overridden by the floor.
-    // The dynamic cost floor protects against loss — max(undercutTarget, costFloor) is applied.
+    // Uses a multiplier undercut (0.80×) to ensure a meaningful saving vs current provider.
+    //
+    // IMPORTANT: The cost floor uses provisionalCostEngine (real debitFrac/intlFrac cost)
+    // NOT finalCostEngineBase (worst-case 1.50% IC). The worst-case is only used for
+    // Phase D margin safety. Using worst-case here causes the floor to exceed the
+    // merchant's current rate for domestic-heavy merchants (e.g. UK charity at 1.94%
+    // where worst-case floor = 2.21%) — quoting MORE than they currently pay.
     if (curFees && curFees > 0) {
       currentRate = (curFees / vol) * 100;
       // Target = 80% of current rate — meaningful saving regardless of current rate level
       const undercutTarget = currentRate * 0.80;
-      // Cost floor = worst-case true cost + min margin + floor buffer
-      // This ensures we never quote below cost even with a high undercut target
-      const costFloor = provisionalCostRate + rules.minMargin + 0.10; // 0.10 = FLOOR_BUFFER constant
+      // Cost floor uses REAL cost (provisionalCostEngine), not worst-case
+      // This prevents the floor from exceeding the merchant's current fees
+      const realCostRate = provisionalCostEngine.effectiveTotalCostPct;
+      const costFloor = realCostRate + rules.minMargin + 0.10; // 0.10 = FLOOR_BUFFER constant
       provisionalRate = Math.max(undercutTarget, costFloor);
     } else {
       // No fee data: cost + margin tier (unchanged)
