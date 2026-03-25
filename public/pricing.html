@@ -604,6 +604,8 @@ function goStep(n) {
   currentStep = n;
   updateProgress(n);
   window.scrollTo({ top: 0, behavior: "smooth" });
+  // Trigger step-specific builds
+  if (n === 5) buildStep5();
 }
 
 function updateProgress(n) {
@@ -938,13 +940,6 @@ async function buildStep5() {
   document.getElementById("step5Loading").style.display = "none";
   document.getElementById("step5Content").style.display = "block";
   document.getElementById("step5Btns").style.display    = "flex";
-}
-
-// Override goStep to trigger step 5 build
-const _origGoStep = goStep;
-function goStep(n) {
-  _origGoStep(n);
-  if (n === 5) buildStep5();
 }
 
 // ═══════════════════════════════════════════════════════════
