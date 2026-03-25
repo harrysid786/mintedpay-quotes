@@ -66,6 +66,7 @@ if (!cols.includes("split_is_primary"))       db.exec("ALTER TABLE quotes ADD CO
 if (!cols.includes("has_real_international_data")) db.exec("ALTER TABLE quotes ADD COLUMN has_real_international_data INTEGER DEFAULT 0");
 if (!cols.includes("is_domestic_only_confirmed"))  db.exec("ALTER TABLE quotes ADD COLUMN is_domestic_only_confirmed  INTEGER DEFAULT 0");
 if (!cols.includes("intl_mix_status"))              db.exec("ALTER TABLE quotes ADD COLUMN intl_mix_status              TEXT");
+if (!cols.includes("intl_region"))                  db.exec("ALTER TABLE quotes ADD COLUMN intl_region                  TEXT");
 
 // ── Migration: leads table columns (safe additive) ───────────
 const leadCols = db.pragma("table_info(leads)").map(c => c.name);
@@ -76,5 +77,6 @@ if (!leadCols.includes("notes"))       db.exec("ALTER TABLE leads ADD COLUMN not
 if (!leadCols.includes("assigned_to")) db.exec("ALTER TABLE leads ADD COLUMN assigned_to TEXT DEFAULT ''");
 if (!leadCols.includes("activity"))    db.exec("ALTER TABLE leads ADD COLUMN activity    TEXT DEFAULT '[]'");
 if (!leadCols.includes("brand"))       db.exec("ALTER TABLE leads ADD COLUMN brand       TEXT DEFAULT 'minted'");
+if (!leadCols.includes("intl_region")) db.exec("ALTER TABLE leads ADD COLUMN intl_region TEXT DEFAULT NULL");
 
 module.exports = db;
