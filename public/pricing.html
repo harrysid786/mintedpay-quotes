@@ -630,6 +630,9 @@ const BRANDS = {
   }
 };
 const ACTIVE_BRAND = window.location.hostname.includes("ummah") ? BRANDS.ummah : BRANDS.minted;
+// API always points to MintedPay backend — single database for all brands
+const API_BASE = "https://mintedpay-quotes.onrender.com";
+
 function applyBrand() {
   const b = ACTIVE_BRAND;
   document.body.classList.add("brand-" + b.key);
@@ -796,7 +799,7 @@ async function calcPricing() {
   const intlRegion = intlRegionMap.hasOwnProperty(intlRegionRaw) ? intlRegionMap[intlRegionRaw] : null;
 
   try {
-    const res = await fetch("/api/calculate_quote", {
+    const res = await fetch(API_BASE + "/api/calculate_quote", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1082,7 +1085,7 @@ async function submitLead() {
   };
 
   try {
-    const res = await fetch("/api/leads", {
+    const res = await fetch(API_BASE + "/api/leads", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify(leadPayload),
