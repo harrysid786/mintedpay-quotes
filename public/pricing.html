@@ -303,7 +303,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
       </select>
       <div id="industryBlockMsg" class="hidden" style="margin-top:12px;background:var(--red-lt);border:1px solid var(--red-bd);border-left:3px solid var(--red);border-radius:8px;padding:14px 16px;font-size:13px;color:var(--red);line-height:1.6">
         <strong>We're unable to accept applications from this business type.</strong><br>
-        This is based on requirements from our payment network partners. If you believe this is an error, please <a href="mailto:sales@mintedpay.com" style="color:var(--red)">contact our team</a>.
+        This is based on requirements from our payment network partners. If you believe this is an error, please <a href="/cdn-cgi/l/email-protection#2655474a4355664b4f4852434256475f0845494b" style="color:var(--red)">contact our team</a>.
       </div>
     </div>
 
@@ -512,16 +512,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
           <span>What's included</span><span>Rate</span>
         </div>
         <div class="rate-breakdown-row">
-          <span class="rate-breakdown-key">UK card transactions</span>
+          <span class="rate-breakdown-key">UK cards <span id="bdUkSub" style="font-size:11px;color:var(--mute);font-weight:400"></span></span>
           <span class="rate-breakdown-val" id="bdUk">—</span>
         </div>
         <div class="rate-breakdown-row" id="bdIntlRow" style="display:none">
-          <span class="rate-breakdown-key">International cards</span>
+          <span class="rate-breakdown-key">International cards <span id="bdIntlSub" style="font-size:11px;color:var(--mute);font-weight:400"></span></span>
           <span class="rate-breakdown-val" id="bdIntl">—</span>
-        </div>
-        <div class="rate-breakdown-row" id="bdBlendedRow" style="display:none">
-          <span class="rate-breakdown-key">Blended rate (est.)</span>
-          <span class="rate-breakdown-val" id="bdBlended" style="color:var(--brand)">—</span>
         </div>
         <div class="rate-breakdown-row">
           <span class="rate-breakdown-key">Fixed fee per transaction</span>
@@ -624,7 +620,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
   MintedPay · Nova Advisory Limited · <a href="https://www.mintedpay.com">www.mintedpay.com</a>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ═══════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════
@@ -960,13 +956,20 @@ async function buildStep5() {
   if (hasCurFees && displayRate) {
     const mpMonthlyCost = vol * displayRate / 100 + cnt * fixed / 100;
     const saving        = Math.max(0, cur - mpMonthlyCost);
-    // All-in equivalent: total MP monthly cost expressed as % of volume
+    // All-in equivalent always uses displayRate (blended if intl, UK rate if domestic)
     const mpAllInEff    = (mpMonthlyCost / vol * 100).toFixed(2);
     document.getElementById("curRateBig").textContent  = effRate.toFixed(2) + "%";
     document.getElementById("curRateSub").textContent  = "effective rate (£" + cur.toFixed(0) + "/mo)";
-    document.getElementById("mpRateBig").textContent   = fmtRate(displayRate);
-    document.getElementById("mpRateSub").textContent   = "+ " + fixed + "p per transaction";
-    document.getElementById("mpAllInPct").textContent  = mpAllInEff + "% all-in";
+    // Comparison box headline: show UK rate when intl exists (cleaner — like Stripe)
+    // All-in sub-label uses blended so merchant can still compare apples-to-apples
+    const mpHeadlineRate = hasIntl ? baseRate : displayRate;
+    document.getElementById("mpRateBig").textContent   = fmtRate(mpHeadlineRate);
+    document.getElementById("mpRateSub").textContent   = hasIntl
+      ? "+ " + fixed + "p/tx  ·  UK cards"
+      : "+ " + fixed + "p per transaction";
+    document.getElementById("mpAllInPct").textContent  = hasIntl
+      ? mpAllInEff + "% all-in on your volume mix"
+      : mpAllInEff + "% all-in";
 
     if (saving > 0) {
       document.getElementById("saveMonthly").textContent = fmt2(saving);
@@ -976,23 +979,43 @@ async function buildStep5() {
       document.getElementById("savingBanner").style.display = "none";
     }
   } else if (!hasCurFees && displayRate) {
-    document.getElementById("mpRateBigOnly").textContent = fmtRate(displayRate);
-    document.getElementById("mpRateSubOnly").textContent = "+ " + fixed + "p per transaction";
+    document.getElementById("mpRateBigOnly").textContent = fmtRate(hasIntl ? baseRate : displayRate);
+    document.getElementById("mpRateSubOnly").textContent = hasIntl
+      ? "+ " + fixed + "p/tx  ·  UK cards"
+      : "+ " + fixed + "p per transaction";
   }
 
-  // ── Breakdown table — always show the same rate as the comparison box ──
-  // displayRate is the rate shown in the big comparison box (blended or UK sell).
-  // The breakdown row must show this same value — not sell_uk_rate which can
-  // be a different (lower) admin-profile rate and would contradict what the
-  // merchant sees in the comparison.
-  document.getElementById("bdUk").textContent = displayRate ? fmtRate(displayRate) + " + " + fixed + "p/tx" : "—";
-  if (hasIntl) {
+  // ── Breakdown table
+  // UK row always shows baseRate (the UK-only quoted rate, p.rate).
+  // Intl row shows separately when merchant has international traffic.
+  // Blended is removed from the table — it only appears in the comparison
+  // box as an all-in equivalent so the merchant can compare vs current rate.
+  // This matches how Stripe presents pricing: two clean rows, no confusion.
+
+  const intlRegionRaw = document.getElementById("intlRegionInput")?.value || "";
+  const intlRegionLabels = {
+    "uk":      "UK-issued cards only",
+    "eea":     "EEA / European cards",
+    "uk_eea":  "EEA / European cards",
+    "mixed":   "non-UK cards (EEA + worldwide)",
+    "row":     "non-UK cards (worldwide)",
+    "":        "non-UK issued cards",
+  };
+
+  // UK row — always the baseRate (p.rate), never blended
+  document.getElementById("bdUk").textContent = baseRate ? fmtRate(baseRate) + " + " + fixed + "p/tx" : "—";
+  // Sub-label: if UK only, confirm it; if has intl, clarify it's UK cards only
+  const bdUkSub = document.getElementById("bdUkSub");
+  if (bdUkSub) bdUkSub.textContent = hasIntl ? "(UK-issued cards only)" : "";
+
+  // Intl row — only shown when merchant has international traffic
+  if (hasIntl && sellIntl) {
     document.getElementById("bdIntlRow").style.display = "";
     document.getElementById("bdIntl").textContent = fmtRate(sellIntl) + " + " + fixed + "p/tx";
-  }
-  if (blended && hasIntl) {
-    document.getElementById("bdBlendedRow").style.display = "";
-    document.getElementById("bdBlended").textContent = fmtRate(blended) + " + " + fixed + "p";
+    const bdIntlSub = document.getElementById("bdIntlSub");
+    if (bdIntlSub) bdIntlSub.textContent = "(" + (intlRegionLabels[intlRegionRaw] || "non-UK issued cards") + ")";
+  } else {
+    document.getElementById("bdIntlRow").style.display = "none";
   }
 
   // ── Provider win message
@@ -1045,9 +1068,9 @@ async function submitLead() {
   const _blended    = (_hasIntl && _sellUk && _sellIntl)
     ? Math.ceil(((1 - parseFloat(p.intl_frac)) * _sellUk + parseFloat(p.intl_frac) * _sellIntl) * 100) / 100
     : null;
-  // displayRate = the rate shown in Step 5's big comparison box
+  // displayRate = blended for all-in comparison; indRate = baseRate (UK rate) for the formal quote
   const displayRate = _blended || (p ? parseFloat(p.rate) : null);
-  const indRate     = displayRate;
+  const indRate     = p ? parseFloat(p.rate) : null;  // always UK rate for lead/confirmation
   const indFixed    = p ? (p.fixed_fee || 10) : 10;
   const effRate     = cur > 0 && vol > 0 ? ((cur / vol) * 100).toFixed(2) : null;
   const mpMonthlyCost = indRate ? (vol * parseFloat(indRate) / 100 + cnt * indFixed / 100) : null;
@@ -1340,9 +1363,4 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("volInput")?.addEventListener("input", checkAvgTicket);
   document.getElementById("cntInput")?.addEventListener("input", checkAvgTicket);
 
-  // Provider dropdown
-  document.getElementById("providerInput")?.addEventListener("change", e => showProviderMsg(e.target.value));
-});
-</script>
-</body>
-</html>
+  // Provider
