@@ -427,12 +427,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
             <div class="rate-block-label">You currently pay</div>
             <div class="rate-big" id="curRateBig">—</div>
             <div class="rate-small" id="curRateSub">effective rate</div>
+            <div class="rate-small" id="curRateIncludes" style="margin-top:6px;font-size:11px;opacity:.75">includes all fees, fixed charges &amp; markup</div>
           </div>
           <div class="rate-arrow">→</div>
           <div class="rate-block mp">
             <div class="rate-block-label">MintedPay indicative rate</div>
             <div class="rate-big" id="mpRateBig">—</div>
             <div class="rate-small" id="mpRateSub">+ 10p per transaction</div>
+            <div class="rate-small" id="mpRateAllIn" style="margin-top:6px;font-size:11px;opacity:.75">≈ <span id="mpAllInPct">—</span> all-in on your volume</div>
           </div>
         </div>
         <div class="saving-banner" id="savingBanner">
@@ -876,10 +878,13 @@ async function buildStep5() {
   if (hasCurFees && displayRate) {
     const mpMonthlyCost = vol * displayRate / 100 + cnt * fixed / 100;
     const saving        = Math.max(0, cur - mpMonthlyCost);
+    // All-in equivalent: total MP monthly cost expressed as % of volume
+    const mpAllInEff    = (mpMonthlyCost / vol * 100).toFixed(2);
     document.getElementById("curRateBig").textContent  = effRate.toFixed(2) + "%";
     document.getElementById("curRateSub").textContent  = "effective rate (£" + cur.toFixed(0) + "/mo)";
     document.getElementById("mpRateBig").textContent   = fmtRate(displayRate);
     document.getElementById("mpRateSub").textContent   = "+ " + fixed + "p per transaction";
+    document.getElementById("mpAllInPct").textContent  = mpAllInEff + "% all-in";
 
     if (saving > 0) {
       document.getElementById("saveMonthly").textContent = fmt2(saving);
