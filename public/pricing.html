@@ -97,6 +97,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 .csv-summary-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--brand);margin-bottom:8px}
 .csv-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
 .csv-row-k{color:var(--slate)}.csv-row-v{font-weight:700;color:var(--ink)}
+.csv-rate-highlight{font-weight:700;color:var(--red)!important;font-size:15px!important}
 .card-mix-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin:8px 0 6px;background:var(--line)}
 .card-mix-bar div{height:100%}
 .card-mix-legend{display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--slate)}
@@ -104,18 +105,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 .card-mix-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
 .csv-error{background:var(--red-lt);border:1px solid var(--red-bd);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--red);display:none}
 
-/* ── CURRENT COST BREAKDOWN (Step 4) ── */
-.breakdown-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:20px}
-.breakdown-cell{background:var(--white);padding:16px 18px}
-.breakdown-cell.full{grid-column:1/-1}
-.breakdown-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mute);margin-bottom:4px}
-.breakdown-value{font-family:'Syne',sans-serif;font-size:24px;font-weight:800}
-.breakdown-value.red{color:var(--red)}
-.breakdown-value.slate{color:var(--slate)}
-.breakdown-sub{font-size:11px;color:var(--mute);margin-top:2px}
-
-
-/* ── RATE RESULT (Step 5) ── */
+/* ── RATE RESULT (Step 4) ── */
 .rate-compare{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:20px}
 .rate-block{border-radius:var(--r);padding:20px;text-align:center}
 .rate-block.current{background:var(--red-lt);border:1px solid var(--red-bd)}
@@ -151,7 +141,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading p{font-size:14px;color:var(--slate)}
 
-/* ── CONFIRMATION (Step 6) ── */
+/* ── ELIGIBILITY CHECKBOX ── */
+.eligibility-check{background:var(--wash);border:1.5px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-top:18px}
+.eligibility-check label{display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--slate);line-height:1.5}
+.eligibility-check input[type=checkbox]{margin-top:2px;flex-shrink:0;width:16px;height:16px;accent-color:var(--brand);cursor:pointer}
+.eligibility-check label span{color:var(--ink)}
+
+/* ── CONFIRMATION (Step 5 done) ── */
 .confirm-icon{font-size:52px;text-align:center;margin-bottom:16px}
 .confirm-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;text-align:center;margin-bottom:10px;letter-spacing:-.3px}
 .confirm-sub{font-size:15px;color:var(--slate);text-align:center;line-height:1.6;margin-bottom:24px}
@@ -182,8 +178,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
   .rate-compare{grid-template-columns:1fr;gap:8px}
   .rate-arrow{transform:rotate(90deg)}
   .saving-banner{flex-direction:column;align-items:flex-start}
-  .breakdown-grid{grid-template-columns:1fr}
-  .breakdown-cell.full{grid-column:1}
   .trust-row{flex-direction:column;align-items:center;gap:4px}
 }
 </style>
@@ -199,8 +193,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 
 <!-- PROGRESS -->
 <div class="progress-wrap">
-  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:16%"></div></div>
-  <div class="progress-label" id="progressLabel">Step 1 of 6</div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:20%"></div></div>
+  <div class="progress-label" id="progressLabel">Step 1 of 5</div>
 </div>
 
 <div class="card">
@@ -208,7 +202,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 
   <!-- ═══ STEP 1: Business details ═══ -->
   <div id="step1" class="step active">
-    <div class="step-label">Step 1 of 6</div>
+    <div class="step-label">Step 1 of 5</div>
     <div class="step-title">Tell us about your business</div>
     <div class="step-sub">We'll use this to personalise your quote and follow up with you.</div>
 
@@ -231,9 +225,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
     </div>
   </div>
 
-  <!-- ═══ STEP 2: Merchant type ═══ -->
+  <!-- ═══ STEP 2: Merchant type + industry ═══ -->
   <div id="step2" class="step">
-    <div class="step-label">Step 2 of 6</div>
+    <div class="step-label">Step 2 of 5</div>
     <div class="step-title">How do you take payments?</div>
     <div class="step-sub">This helps us calculate the right rate for your business model.</div>
 
@@ -268,7 +262,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
       <label>What industry are you in? <span class="req">*</span></label>
       <select id="industryInput" class="field-select" onchange="onIndustryChange(this.value)">
         <option value="">— Select your industry —</option>
-        <optgroup label="✓ Standard">
+        <optgroup label="Standard">
           <option value="retail|allowed">Retail / e-commerce</option>
           <option value="food|allowed">Food &amp; hospitality (restaurant, café, takeaway)</option>
           <option value="software|allowed">Software / SaaS / digital products</option>
@@ -280,7 +274,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
           <option value="home|allowed">Home services &amp; trades</option>
           <option value="other_allowed|allowed">Other standard business</option>
         </optgroup>
-        <optgroup label="⚠ Requires review">
+        <optgroup label="Requires additional review">
           <option value="travel|restricted">Travel (flights, hotels, tour operators)</option>
           <option value="financial|restricted">Financial services (FX, money transfer, investment)</option>
           <option value="crypto|restricted">Crypto / digital assets / NFTs</option>
@@ -292,19 +286,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
           <option value="supplements|restricted">Supplements / CBD / nutraceuticals</option>
           <option value="property|restricted">Real estate / property</option>
         </optgroup>
-        <optgroup label="✗ Not eligible">
-          <option value="adult|prohibited">Adult content / sexual services</option>
-          <option value="weapons|prohibited">Weapons / firearms / ammunition / explosives</option>
-          <option value="drugs|prohibited">Drugs / controlled substances / paraphernalia</option>
-          <option value="scams|prohibited">Pyramid schemes / investment scams / get-rich-quick</option>
-          <option value="hate|prohibited">Hate speech / violence / extremism content</option>
-          <option value="counterfeit|prohibited">Counterfeit / replica goods</option>
-        </optgroup>
       </select>
-      <div id="industryBlockMsg" class="hidden" style="margin-top:12px;background:var(--red-lt);border:1px solid var(--red-bd);border-left:3px solid var(--red);border-radius:8px;padding:14px 16px;font-size:13px;color:var(--red);line-height:1.6">
-        <strong>We're unable to accept applications from this business type.</strong><br>
-        This is based on requirements from our payment network partners. If you believe this is an error, please <a href="/cdn-cgi/l/email-protection#2655474a4355664b4f4852434256475f0845494b" style="color:var(--red)">contact our team</a>.
-      </div>
+    </div>
+
+    <!-- Change 1: Eligibility declaration checkbox replaces "Not eligible" optgroup -->
+    <div class="eligibility-check">
+      <label>
+        <input type="checkbox" id="eligibilityCheck" onchange="updateStep2Btn()">
+        <span>I confirm that my business does not operate in any prohibited sectors, including adult content, firearms, controlled substances, counterfeit goods, or services that facilitate illegal activity.</span>
+      </label>
     </div>
 
     <div class="btn-row">
@@ -315,9 +305,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 
   <!-- ═══ STEP 3: Volume / CSV ═══ -->
   <div id="step3" class="step">
-    <div class="step-label">Step 3 of 6</div>
+    <div class="step-label">Step 3 of 5</div>
     <div class="step-title">Your processing volume</div>
-    <div class="step-sub">Upload a statement for the most accurate analysis, or enter your numbers manually.</div>
+    <!-- Change 6: Improved sub-heading copy -->
+    <div class="step-sub">Upload your most recent processing statement for an accurate analysis, or enter your figures manually.</div>
 
     <div class="tabs">
       <button class="tab on" id="tabUpload" onclick="switchTab('upload')">📄 Upload Statement</button>
@@ -351,7 +342,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
         <div class="csv-row"><span class="csv-row-k">Monthly Volume</span><span class="csv-row-v" id="csvVol">—</span></div>
         <div class="csv-row"><span class="csv-row-k">Avg Transaction</span><span class="csv-row-v" id="csvAvg">—</span></div>
         <div id="csvFeeRow" class="csv-row" style="display:none"><span class="csv-row-k">Current Fees</span><span class="csv-row-v" id="csvFees">—</span></div>
-        <div id="csvRateRow" class="csv-row" style="display:none"><span class="csv-row-k">Effective Rate</span><span class="csv-row-v" id="csvRate" style="font-weight:700">—</span></div>
+        <!-- Change 7: Effective rate styled prominently in red -->
+        <div id="csvRateRow" class="csv-row" style="display:none"><span class="csv-row-k">Effective Rate</span><span class="csv-row-v csv-rate-highlight" id="csvRate">—</span></div>
         <div id="cardMixArea" class="hidden" style="margin-top:8px">
           <div class="csv-row"><span class="csv-row-k">Card Mix</span><span class="csv-row-v" id="csvDebit">—</span></div>
           <div class="card-mix-bar" id="mixBar"></div>
@@ -382,23 +374,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
     </div>
 
     <!-- Shared extra questions -->
+    <!-- Change 5: Provider moved above international fields -->
     <div style="margin-top:8px" id="extraFields">
-      <div class="field">
-        <label>% of transactions from international customers <span style="font-weight:400;color:var(--mute)">(optional)</span></label>
-        <input type="number" id="intlInput" placeholder="e.g. 20" min="0" max="100" step="1">
-        <div class="field-hint">Leave blank if unknown — we'll use a conservative assumption.</div>
-      </div>
-      <div class="field">
-        <label>Where are your customers based? <span style="font-weight:400;color:var(--mute)">(optional)</span></label>
-        <select id="intlRegionInput" class="field-select">
-          <option value="uk">Mostly UK</option>
-          <option value="eea">Mostly Europe / EEA</option>
-          <option value="uk_eea">Mix of UK + Europe</option>
-          <option value="mixed">Mix of UK + Worldwide</option>
-          <option value="row">Mostly international (rest of world)</option>
-          <option value="">Unknown / not sure</option>
-        </select>
-      </div>
       <div class="field">
         <label>Who do you currently process with? <span style="font-weight:400;color:var(--mute)">(optional)</span></label>
         <select id="providerInput" class="field-select">
@@ -418,53 +395,44 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
         </select>
         <div class="provider-msg" id="providerMsg"></div>
       </div>
+      <div class="field">
+        <label>% of transactions from international customers <span style="font-weight:400;color:var(--mute)">(optional)</span></label>
+        <input type="number" id="intlInput" placeholder="e.g. 20" min="0" max="100" step="1">
+        <div class="field-hint">Leave blank if unknown — we'll use a conservative assumption.</div>
+      </div>
+      <!-- Changes 2, 3, 4: Cleaned up label, blank default, removed "Mostly" -->
+      <div class="field">
+        <label>Where are your customers based? <span style="font-weight:400;color:var(--mute)">(optional)</span></label>
+        <select id="intlRegionInput" class="field-select">
+          <option value="">— Select customer base —</option>
+          <option value="uk">Primarily United Kingdom</option>
+          <option value="eea">Primarily Europe / EEA</option>
+          <option value="uk_eea">Mix of UK and Europe</option>
+          <option value="mixed">Mix of UK and Worldwide</option>
+          <option value="row">Primarily international (rest of world)</option>
+        </select>
+      </div>
     </div>
 
+    <!-- Change 7: CTA updated to "See our rate →" -->
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
-      <button class="btn btn-primary" onclick="step3Next()" style="margin-left:auto">Calculate →</button>
+      <button class="btn btn-primary" onclick="step3Next()" style="margin-left:auto">See our rate →</button>
     </div>
   </div>
 
-  <!-- ═══ STEP 4: Current cost breakdown ═══ -->
+  <!-- ═══ STEP 4 (was 5): MintedPay rate ═══ -->
   <div id="step4" class="step">
-    <div class="step-label">Step 4 of 6</div>
-    <div class="step-title">What you're paying now</div>
-    <div class="step-sub" id="step4Sub">Here's a breakdown of your current processing costs.</div>
-
-    <div id="step4Loading" class="loading">
-      <div class="spinner"></div>
-      <p>Analysing your data…</p>
-    </div>
-
-    <div id="step4Content" style="display:none">
-      <div class="breakdown-grid" id="breakdownGrid">
-        <!-- filled by JS -->
-      </div>
-
-      <div id="noFeesNote" class="warn-box hidden">
-        ⚠️ You didn't provide current fees, so we can't show what you're paying now — but we can still show you our indicative rate below.
-      </div>
-    </div>
-
-    <div class="btn-row" id="step4Btns" style="display:none">
-      <button class="btn btn-secondary" onclick="goStep(3)">← Back</button>
-      <button class="btn btn-primary" onclick="goStep(5)" style="margin-left:auto">See our rate →</button>
-    </div>
-  </div>
-
-  <!-- ═══ STEP 5: MintedPay rate ═══ -->
-  <div id="step5" class="step">
-    <div class="step-label">Step 5 of 6</div>
+    <div class="step-label">Step 4 of 5</div>
     <div class="step-title">Your MintedPay rate</div>
     <div class="step-sub">Here's what we can offer you — based on your actual processing data.</div>
 
-    <div id="step5Loading" class="loading">
+    <div id="step4Loading" class="loading">
       <div class="spinner"></div>
-      <p id="step5LoadMsg">Calculating your personalised rate…</p>
+      <p id="step4LoadMsg">Calculating your personalised rate…</p>
     </div>
 
-    <div id="step5Content" style="display:none">
+    <div id="step4Content" style="display:none">
       <!-- Rate compare: current vs MintedPay (only shown if fees known) -->
       <div id="rateCompare" style="display:none">
         <div class="rate-compare">
@@ -537,31 +505,35 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
         </div>
       </div>
 
-      <div class="indicative-note">
-        ⚠️ <strong>These rates are indicative only.</strong> Final pricing is always confirmed in writing after a review of your full processing history, business type, card mix, and risk profile. Rates may change. Nothing here constitutes a formal offer.
-      </div>
-
       <div id="restrictedAdvisory" class="hidden" style="background:var(--amber-lt);border:1px solid var(--amber-bd);border-left:3px solid #d97706;border-radius:8px;padding:14px 16px;font-size:13px;color:#92400e;line-height:1.6;margin-bottom:16px">
         ⚠️ <strong>Your industry requires additional review.</strong> We can provide an indicative rate but our team will need to verify your documentation before confirming final pricing. One of our specialists will be in touch after you submit.
       </div>
 
       <div id="providerWin" style="display:none;margin-bottom:16px;padding:12px 16px;background:var(--green-lt);border:1px solid var(--green-bd);border-radius:var(--r);font-size:13px;color:#065f46"></div>
+
+      <!-- Change 9: Indicative disclaimer moved above CTA -->
+      <div class="indicative-note">
+        ⚠️ <strong>These rates are indicative only.</strong> Final pricing is always confirmed in writing after a review of your full processing history, business type, card mix, and risk profile. Rates may change. Nothing here constitutes a formal offer.
+      </div>
     </div>
 
-    <div class="btn-row" id="step5Btns" style="display:none">
-      <button class="btn btn-secondary" onclick="goStep(4)">← Back</button>
-      <button class="btn btn-primary" onclick="goStep(6)" style="margin-left:auto">Get my confirmed rate →</button>
+    <!-- Change 8: CTA renamed to "Request my confirmed rate →" -->
+    <div class="btn-row" id="step4Btns" style="display:none">
+      <button class="btn btn-secondary" onclick="goStep(3)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(5)" style="margin-left:auto">Request my confirmed rate →</button>
     </div>
   </div>
 
-  <!-- ═══ STEP 6: Lead capture + submit ═══ -->
-  <div id="step6" class="step">
-    <div class="step-label">Step 6 of 6</div>
-    <div class="step-title">Almost there</div>
-    <div class="step-sub">Confirm your details and one of our team will be in touch to confirm your rate and get you set up.</div>
+  <!-- ═══ STEP 5 (was 6): Confirm details + submit ═══ -->
+  <div id="step5" class="step">
+    <!-- Change 10: Renamed title -->
+    <div class="step-label">Step 5 of 5</div>
+    <div class="step-title">Confirm your details</div>
+    <!-- Change 11: Improved sub-text -->
+    <div class="step-sub">Review your information and submit — one of our specialists will confirm your rate within one business day.</div>
 
     <div id="confirmDetails" style="background:var(--wash);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:20px">
-      <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mute);margin-bottom:8px">Confirm your details</div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mute);margin-bottom:8px">Your details</div>
       <div class="field" style="margin-bottom:12px">
         <label>Your name <span class="req">*</span></label>
         <input type="text" id="contactName" placeholder="Jane Smith" autocomplete="name">
@@ -583,7 +555,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
     <div id="submitError" style="display:none;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:var(--r);padding:12px 14px;font-size:13px;color:var(--red);margin-bottom:16px"></div>
 
     <div class="btn-row">
-      <button class="btn btn-secondary" onclick="goStep(5)">← Back</button>
+      <button class="btn btn-secondary" onclick="goStep(4)">← Back</button>
       <button class="btn btn-primary" id="submitBtn" onclick="submitLead()" style="margin-left:auto">Submit my enquiry →</button>
     </div>
   </div>
@@ -591,9 +563,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
   <!-- ═══ CONFIRMATION ═══ -->
   <div id="stepDone" class="step">
     <div class="confirm-icon">✅</div>
-    <div class="confirm-title">You're on the list!</div>
+    <!-- Change 12: Renamed from "You're on the list!" -->
+    <div class="confirm-title">Enquiry received</div>
     <div class="confirm-sub">
-      One of our payment specialists will review your data and be in touch within <strong>24 hours</strong> to confirm your rate and walk you through the next steps.
+      One of our payment specialists will review your submission and be in touch within <strong>one business day</strong> to confirm your rate and walk you through the next steps.
     </div>
     <div class="confirm-summary" id="confirmSummary">
       <!-- filled by JS -->
@@ -624,11 +597,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 // ═══════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════
-let csvData   = null;
+let csvData       = null;
 let pricingResult = null;
 let selectedType  = "";
 let currentStep   = 1;
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 5; // Updated: Step 4 (cost breakdown) removed
 
 const PROVIDER_MSGS = {
   stripe:      "Businesses switching from Stripe typically reduce processing costs by 20–30%.",
@@ -653,11 +626,11 @@ function goStep(n) {
   updateProgress(n);
   window.scrollTo({ top: 0, behavior: "smooth" });
   // Trigger step-specific builds
-  if (n === 5) buildStep5();
+  if (n === 4) buildStep4();
 }
 
 function updateProgress(n) {
-  const fill = document.getElementById("progressFill");
+  const fill  = document.getElementById("progressFill");
   const label = document.getElementById("progressLabel");
   if (n === "done") {
     fill.style.width = "100%";
@@ -694,7 +667,7 @@ function step1Next() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// STEP 2: Merchant type
+// STEP 2: Merchant type + industry + eligibility
 // ═══════════════════════════════════════════════════════════
 function selectType(t) {
   selectedType = t;
@@ -705,31 +678,26 @@ function selectType(t) {
 }
 
 function onIndustryChange(val) {
-  const [, status] = (val || "").split("|");
-  const blockMsg = document.getElementById("industryBlockMsg");
-  const btn = document.getElementById("step2Btn");
-  if (status === "prohibited") {
-    blockMsg.classList.remove("hidden");
-    btn.disabled = true;
-  } else {
-    blockMsg.classList.add("hidden");
-    updateStep2Btn();
-  }
+  // No prohibited status in dropdown anymore — just update button state
+  updateStep2Btn();
 }
 
 function updateStep2Btn() {
-  const industryVal = document.getElementById("industryInput")?.value || "";
-  const [, status] = industryVal.split("|");
-  const btn = document.getElementById("step2Btn");
-  btn.disabled = !selectedType || !industryVal || status === "prohibited";
+  const industryVal    = document.getElementById("industryInput")?.value || "";
+  const eligibilityOk  = document.getElementById("eligibilityCheck")?.checked || false;
+  const btn            = document.getElementById("step2Btn");
+  // Require: merchant type selected + industry selected + eligibility confirmed
+  btn.disabled = !selectedType || !industryVal || !eligibilityOk;
 }
 
 function step2Next() {
-  if (!selectedType) { showError("Please select your business type."); return; }
+  if (!selectedType) { showError("Please select how you take payments."); return; }
   const industryVal = document.getElementById("industryInput")?.value || "";
   if (!industryVal) { showError("Please select your industry."); return; }
-  const [, status] = industryVal.split("|");
-  if (status === "prohibited") { showError("We are unable to accept applications from this business type."); return; }
+  if (!document.getElementById("eligibilityCheck")?.checked) {
+    showError("Please confirm your business eligibility to continue.");
+    return;
+  }
   goStep(3);
 }
 
@@ -767,82 +735,14 @@ async function step3Next() {
     if (!vol || vol <= 0) { showError("Please enter your monthly card volume."); return; }
     if (!cnt || cnt <= 0) { showError("Please enter your number of transactions."); return; }
   }
-  // Move to step 4 — show current cost breakdown, then trigger API call
-  goStep(4);
-  await buildStep4();
-}
-
-// ═══════════════════════════════════════════════════════════
-// STEP 4: Current cost breakdown
-// ═══════════════════════════════════════════════════════════
-async function buildStep4() {
-  document.getElementById("step4Loading").style.display = "block";
-  document.getElementById("step4Content").style.display = "none";
-  document.getElementById("step4Btns").style.display = "none";
-
-  const { vol, cnt, cur, debitFrac, intlFrac, avgTx } = getVolumeData();
-
-  // Short pause for UX
-  await new Promise(r => setTimeout(r, 800));
-
-  const grid  = document.getElementById("breakdownGrid");
-  const noFee = document.getElementById("noFeesNote");
-
-  const fmtK  = n => { const a = Math.abs(n); if (a >= 1e6) return "£" + (a/1e6).toFixed(2)+"m"; if (a >= 1e3) return "£" + (a/1e3).toFixed(1)+"k"; return "£"+a.toFixed(2); };
-  const fmt2  = n => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-  const hasFees = cur > 0;
-  const effRate = hasFees ? ((cur / vol) * 100).toFixed(2) : null;
-  const perTx   = hasFees && cnt > 0 ? (cur / cnt).toFixed(3) : null;
-
-  noFee.classList.toggle("hidden", hasFees);
-
-  if (hasFees) {
-    grid.innerHTML = `
-      <div class="breakdown-cell">
-        <div class="breakdown-label">Monthly volume</div>
-        <div class="breakdown-value slate">${fmtK(vol)}</div>
-      </div>
-      <div class="breakdown-cell">
-        <div class="breakdown-label">Transactions / mo</div>
-        <div class="breakdown-value slate">${Math.round(cnt).toLocaleString("en-GB")}</div>
-      </div>
-      <div class="breakdown-cell">
-        <div class="breakdown-label">Avg transaction</div>
-        <div class="breakdown-value slate">${fmt2(avgTx)}</div>
-      </div>
-      <div class="breakdown-cell">
-        <div class="breakdown-label">Current monthly fees</div>
-        <div class="breakdown-value red">${fmt2(cur)}</div>
-      </div>
-      <div class="breakdown-cell full">
-        <div class="breakdown-label">Effective rate (fees ÷ volume)</div>
-        <div class="breakdown-value red">${effRate}%</div>
-        <div class="breakdown-sub">You're paying ${fmt2(cur)} for every ${fmtK(vol)} processed${perTx ? ` — that's ${perTx}p per transaction on average` : ""}</div>
-      </div>`;
-  } else {
-    grid.innerHTML = `
-      <div class="breakdown-cell">
-        <div class="breakdown-label">Monthly volume</div>
-        <div class="breakdown-value slate">${fmtK(vol)}</div>
-      </div>
-      <div class="breakdown-cell">
-        <div class="breakdown-label">Avg transaction</div>
-        <div class="breakdown-value slate">${fmt2(avgTx)}</div>
-      </div>`;
-    bar.innerHTML = "";
-  }
-
-  document.getElementById("step4Loading").style.display = "none";
-  document.getElementById("step4Content").style.display = "block";
-  document.getElementById("step4Btns").style.display = "flex";
-
-  // Kick off pricing API call in background while merchant reads step 4
+  // Kick off pricing API call in background while merchant moves to rate step
   calcPricing();
+  // Go directly to Step 4 (rate display — old Step 5)
+  goStep(4);
 }
 
 // ═══════════════════════════════════════════════════════════
-// PRICING API CALL (runs in background during step 4)
+// PRICING API CALL (runs in background after Step 3)
 // ═══════════════════════════════════════════════════════════
 async function calcPricing() {
   const { vol, cnt, cur, debitFrac, intlFrac } = getVolumeData();
@@ -855,15 +755,15 @@ async function calcPricing() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        merchant_name:  document.getElementById("bizName").value.trim() || "Enquiry",
-        merchant_email: document.getElementById("bizEmail").value.trim(),
-        monthly_volume:  vol,
+        merchant_name:     document.getElementById("bizName").value.trim() || "Enquiry",
+        merchant_email:    document.getElementById("bizEmail").value.trim(),
+        monthly_volume:    vol,
         transaction_count: cnt,
-        current_fees:    cur,
-        debit_frac:      debitFrac,
-        intl_frac:       intlFrac,
-        intl_region:     intlRegion,
-        pricing_profile: "acquisition_plus",
+        current_fees:      cur,
+        debit_frac:        debitFrac,
+        intl_frac:         intlFrac,
+        intl_region:       intlRegion,
+        pricing_profile:   "acquisition_plus",
       }),
     });
     const data = await res.json();
@@ -876,20 +776,19 @@ async function calcPricing() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// STEP 5: Show MintedPay rate
+// STEP 4 (was Step 5): Show MintedPay rate
 // ═══════════════════════════════════════════════════════════
-async function buildStep5() {
-  document.getElementById("step5Loading").style.display = "block";
-  document.getElementById("step5Content").style.display = "none";
-  document.getElementById("step5Btns").style.display = "none";
+async function buildStep4() {
+  document.getElementById("step4Loading").style.display = "block";
+  document.getElementById("step4Content").style.display = "none";
+  document.getElementById("step4Btns").style.display = "none";
 
-  // Wait for pricing result (may already be ready from background fetch)
+  // Poll for pricing result (may already be ready from background fetch)
   const msgs = ["Calculating your rate…", "Comparing against your data…", "Preparing your quote…"];
   let mi = 0;
-  const msgEl = document.getElementById("step5LoadMsg");
+  const msgEl  = document.getElementById("step4LoadMsg");
   const msgInt = setInterval(() => { mi = (mi + 1) % msgs.length; msgEl.textContent = msgs[mi]; }, 1200);
 
-  // Poll up to 8s for result
   let waited = 0;
   while (!pricingResult && waited < 8000) {
     await new Promise(r => setTimeout(r, 300));
@@ -901,36 +800,30 @@ async function buildStep5() {
   if (!pricingResult) await calcPricing();
 
   const { vol, cnt, cur, avgTx } = getVolumeData();
-  const fmt2 = n => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt2    = n => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtRate = r => parseFloat(r).toFixed(2) + "%";
 
-  const p = pricingResult;
+  const p     = pricingResult;
   const fixed = p ? (p.fixed_fee || 10) : 10;
 
-  // For the public tool (acquisition_plus), p.rate IS the correct quoted rate.
-  // p.sell_uk_rate is the admin engine's UK sell rate — a completely different
-  // calculation — and must NOT be used here. It causes the display to show
-  // 0.72% instead of 1.62%.
-  // If international traffic exists, blend UK rate with intl rate.
-  const hasIntl    = p && p.sell_international_rate && parseFloat(p.intl_frac || 0) > 0;
-  const sellIntl   = p ? parseFloat(p.sell_international_rate || 0) : null;
-  const baseRate   = p ? parseFloat(p.rate) : null;  // always p.rate for public profile
-  const blended    = (hasIntl && baseRate && sellIntl)
+  // p.rate is the correct public quoted rate for acquisition_plus profile.
+  const hasIntl   = p && p.sell_international_rate && parseFloat(p.intl_frac || 0) > 0;
+  const sellIntl  = p ? parseFloat(p.sell_international_rate || 0) : null;
+  const baseRate  = p ? parseFloat(p.rate) : null;
+  const blended   = (hasIntl && baseRate && sellIntl)
     ? Math.ceil(((1 - parseFloat(p.intl_frac)) * baseRate + parseFloat(p.intl_frac) * sellIntl) * 100) / 100
     : null;
   const displayRate = blended || baseRate;
-  const sellUk     = baseRate;  // for breakdown table reference
 
-  // ── Not competitive handling ───────────────────────────────
+  // ── Not competitive handling ─────────────────────────────
   if (p && p.not_competitive) {
-    document.getElementById("step5Loading").style.display = "none";
-    document.getElementById("step5Content").style.display = "block";
-    document.getElementById("step5Btns").style.display    = "flex";
+    document.getElementById("step4Loading").style.display = "none";
+    document.getElementById("step4Content").style.display = "block";
+    document.getElementById("step4Btns").style.display    = "flex";
     document.getElementById("rateCompare").style.display  = "none";
     document.getElementById("rateOnly").style.display     = "none";
     const advisory = document.createElement("div");
     advisory.style.cssText = "background:var(--amber-lt);border:1px solid var(--amber-bd);border-left:3px solid #d97706;border-radius:10px;padding:20px;margin-bottom:20px;text-align:center";
-    const { avgTx } = getVolumeData();
     advisory.innerHTML = `
       <div style="font-size:22px;margin-bottom:10px">🤝</div>
       <div style="font-size:16px;font-weight:600;color:#78350f;margin-bottom:8px">We want to beat your rate — let's talk</div>
@@ -941,12 +834,12 @@ async function buildStep5() {
         Our team can look at your full picture — volume commitments, product mix, and terminal options — and
         come back with a tailored proposal. Submit your details and we'll be in touch.
       </div>`;
-    const content = document.getElementById("step5Content");
+    const content = document.getElementById("step4Content");
     content.insertBefore(advisory, content.firstChild);
     return;
   }
 
-  // ── Rate compare
+  // ── Rate compare ─────────────────────────────────────────
   const hasCurFees = cur > 0;
   const effRate    = hasCurFees ? (cur / vol * 100) : null;
 
@@ -956,18 +849,17 @@ async function buildStep5() {
   if (hasCurFees && displayRate) {
     const mpMonthlyCost = vol * displayRate / 100 + cnt * fixed / 100;
     const saving        = Math.max(0, cur - mpMonthlyCost);
-    // All-in equivalent always uses displayRate (blended if intl, UK rate if domestic)
     const mpAllInEff    = (mpMonthlyCost / vol * 100).toFixed(2);
-    document.getElementById("curRateBig").textContent  = effRate.toFixed(2) + "%";
-    document.getElementById("curRateSub").textContent  = "effective rate (£" + cur.toFixed(0) + "/mo)";
-    // Comparison box headline: show UK rate when intl exists (cleaner — like Stripe)
-    // All-in sub-label uses blended so merchant can still compare apples-to-apples
+
+    document.getElementById("curRateBig").textContent = effRate.toFixed(2) + "%";
+    document.getElementById("curRateSub").textContent = "effective rate (£" + cur.toFixed(0) + "/mo)";
+
     const mpHeadlineRate = hasIntl ? baseRate : displayRate;
-    document.getElementById("mpRateBig").textContent   = fmtRate(mpHeadlineRate);
-    document.getElementById("mpRateSub").textContent   = hasIntl
+    document.getElementById("mpRateBig").textContent  = fmtRate(mpHeadlineRate);
+    document.getElementById("mpRateSub").textContent  = hasIntl
       ? "+ " + fixed + "p/tx  ·  UK cards"
       : "+ " + fixed + "p per transaction";
-    document.getElementById("mpAllInPct").textContent  = hasIntl
+    document.getElementById("mpAllInPct").textContent = hasIntl
       ? mpAllInEff + "% all-in on your volume mix"
       : mpAllInEff + "% all-in";
 
@@ -985,30 +877,21 @@ async function buildStep5() {
       : "+ " + fixed + "p per transaction";
   }
 
-  // ── Breakdown table
-  // UK row always shows baseRate (the UK-only quoted rate, p.rate).
-  // Intl row shows separately when merchant has international traffic.
-  // Blended is removed from the table — it only appears in the comparison
-  // box as an all-in equivalent so the merchant can compare vs current rate.
-  // This matches how Stripe presents pricing: two clean rows, no confusion.
-
+  // ── Breakdown table ──────────────────────────────────────
   const intlRegionRaw = document.getElementById("intlRegionInput")?.value || "";
   const intlRegionLabels = {
-    "uk":      "UK-issued cards only",
-    "eea":     "EEA / European cards",
-    "uk_eea":  "EEA / European cards",
-    "mixed":   "non-UK cards (EEA + worldwide)",
-    "row":     "non-UK cards (worldwide)",
-    "":        "non-UK issued cards",
+    "uk":     "UK-issued cards only",
+    "eea":    "EEA / European cards",
+    "uk_eea": "EEA / European cards",
+    "mixed":  "non-UK cards (EEA + worldwide)",
+    "row":    "non-UK cards (worldwide)",
+    "":       "non-UK issued cards",
   };
 
-  // UK row — always the baseRate (p.rate), never blended
   document.getElementById("bdUk").textContent = baseRate ? fmtRate(baseRate) + " + " + fixed + "p/tx" : "—";
-  // Sub-label: if UK only, confirm it; if has intl, clarify it's UK cards only
   const bdUkSub = document.getElementById("bdUkSub");
   if (bdUkSub) bdUkSub.textContent = hasIntl ? "(UK-issued cards only)" : "";
 
-  // Intl row — only shown when merchant has international traffic
   if (hasIntl && sellIntl) {
     document.getElementById("bdIntlRow").style.display = "";
     document.getElementById("bdIntl").textContent = fmtRate(sellIntl) + " + " + fixed + "p/tx";
@@ -1018,34 +901,42 @@ async function buildStep5() {
     document.getElementById("bdIntlRow").style.display = "none";
   }
 
-  // ── Provider win message
+  // ── Provider win message ─────────────────────────────────
   const provider = document.getElementById("providerInput").value;
   const winMsg   = PROVIDER_MSGS[provider] || "";
   const winEl    = document.getElementById("providerWin");
   if (winMsg) { winEl.textContent = "💡 " + winMsg; winEl.style.display = "block"; }
   else        { winEl.style.display = "none"; }
 
-  // Show restricted industry advisory if applicable
+  // ── Restricted advisory ──────────────────────────────────
   const industryVal = document.getElementById("industryInput")?.value || "";
   const [, industryStatus] = industryVal.split("|");
   const restrictedAdv = document.getElementById("restrictedAdvisory");
   if (restrictedAdv) restrictedAdv.classList.toggle("hidden", industryStatus !== "restricted");
 
-  document.getElementById("step5Loading").style.display = "none";
-  document.getElementById("step5Content").style.display = "block";
-  document.getElementById("step5Btns").style.display    = "flex";
+  document.getElementById("step4Loading").style.display = "none";
+  document.getElementById("step4Content").style.display = "block";
+  document.getElementById("step4Btns").style.display    = "flex";
 }
 
 // ═══════════════════════════════════════════════════════════
-// STEP 6 → SUBMIT LEAD
+// STEP 5 (was 6): SUBMIT LEAD
 // ═══════════════════════════════════════════════════════════
 async function submitLead() {
-  const contactName  = document.getElementById("contactName").value.trim();
-  const email        = document.getElementById("confirmEmail").value.trim();
-  const phone        = document.getElementById("confirmPhone").value.trim();
+  const contactName = document.getElementById("contactName").value.trim();
+  const email       = document.getElementById("confirmEmail").value.trim();
+  const phone       = document.getElementById("confirmPhone").value.trim();
 
-  if (!contactName) { document.getElementById("submitError").textContent = "Please enter your name."; document.getElementById("submitError").style.display = "block"; return; }
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { document.getElementById("submitError").textContent = "Please enter a valid email address."; document.getElementById("submitError").style.display = "block"; return; }
+  if (!contactName) {
+    document.getElementById("submitError").textContent = "Please enter your name.";
+    document.getElementById("submitError").style.display = "block";
+    return;
+  }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    document.getElementById("submitError").textContent = "Please enter a valid email address.";
+    document.getElementById("submitError").style.display = "block";
+    return;
+  }
   document.getElementById("submitError").style.display = "none";
 
   const btn = document.getElementById("submitBtn");
@@ -1053,33 +944,29 @@ async function submitLead() {
   btn.textContent = "Submitting…";
 
   const { vol, cnt, cur, debitFrac, intlFrac, avgTx } = getVolumeData();
-  const intlRegionRaw2 = document.getElementById("intlRegionInput").value || "";
-  const intlRegionMap2 = { "uk": null, "eea": "eea", "uk_eea": "eea", "mixed": "mixed", "row": "row", "": null };
-  const intlRegion = intlRegionMap2.hasOwnProperty(intlRegionRaw2) ? intlRegionMap2[intlRegionRaw2] : null;
-  const provider   = document.getElementById("providerInput").value   || null;
+  const intlRegionRaw = document.getElementById("intlRegionInput").value || "";
+  const intlRegionMap = { "uk": null, "eea": "eea", "uk_eea": "eea", "mixed": "mixed", "row": "row", "": null };
+  const intlRegion = intlRegionMap.hasOwnProperty(intlRegionRaw) ? intlRegionMap[intlRegionRaw] : null;
+  const provider   = document.getElementById("providerInput").value || null;
   const intlPct    = parseFloat(document.getElementById("intlInput").value) || 0;
 
-  // Determine indicative rate for lead notes
-  const p           = pricingResult;
-  // Compute displayRate the same way buildStep5 does — blended if intl, else UK sell
-  const _sellUk     = p ? parseFloat(p.sell_uk_rate || p.rate) : null;
-  const _sellIntl   = p ? parseFloat(p.sell_international_rate || 0) : null;
-  const _hasIntl    = p && p.sell_international_rate && parseFloat(p.intl_frac || 0) > 0;
-  const _blended    = (_hasIntl && _sellUk && _sellIntl)
-    ? Math.ceil(((1 - parseFloat(p.intl_frac)) * _sellUk + parseFloat(p.intl_frac) * _sellIntl) * 100) / 100
+  // Determine indicative rate — same logic as buildStep4
+  const p         = pricingResult;
+  const _sellIntl = p ? parseFloat(p.sell_international_rate || 0) : null;
+  const _hasIntl  = p && p.sell_international_rate && parseFloat(p.intl_frac || 0) > 0;
+  const _blended  = (_hasIntl && p && _sellIntl)
+    ? Math.ceil(((1 - parseFloat(p.intl_frac)) * parseFloat(p.rate) + parseFloat(p.intl_frac) * _sellIntl) * 100) / 100
     : null;
-  // displayRate = blended for all-in comparison; indRate = baseRate (UK rate) for the formal quote
-  const displayRate = _blended || (p ? parseFloat(p.rate) : null);
-  const indRate     = p ? parseFloat(p.rate) : null;  // always UK rate for lead/confirmation
-  const indFixed    = p ? (p.fixed_fee || 10) : 10;
-  const effRate     = cur > 0 && vol > 0 ? ((cur / vol) * 100).toFixed(2) : null;
+  const indRate   = p ? parseFloat(p.rate) : null;  // always UK rate for lead/confirmation
+  const indFixed  = p ? (p.fixed_fee || 10) : 10;
+  const effRate   = cur > 0 && vol > 0 ? ((cur / vol) * 100).toFixed(2) : null;
   const mpMonthlyCost = indRate ? (vol * parseFloat(indRate) / 100 + cnt * indFixed / 100) : null;
-  const saving      = (cur > 0 && mpMonthlyCost) ? Math.max(0, cur - mpMonthlyCost) : null;
+  const saving    = (cur > 0 && mpMonthlyCost) ? Math.max(0, cur - mpMonthlyCost) : null;
 
-    // Industry qualification
-    const _industryRaw    = document.getElementById("industryInput")?.value || "";
-    const [_industryKey, _industryStatus] = _industryRaw.split("|");
-    const _industryLabel  = document.getElementById("industryInput")?.selectedOptions[0]?.text || "";
+  // Industry qualification — value format unchanged: "key|status"
+  const _industryRaw   = document.getElementById("industryInput")?.value || "";
+  const [_industryKey, _industryStatus] = _industryRaw.split("|");
+  const _industryLabel = document.getElementById("industryInput")?.selectedOptions[0]?.text || "";
 
   const leadPayload = {
     // Core identity
@@ -1114,7 +1001,7 @@ async function submitLead() {
     csvProcessor:     csvData?.processor || null,
     csvDebitFrac:     csvData?.debitFrac  || null,
     csvIntlFrac:      csvData?.intlFrac   || null,
-    painPoints:       `Submitted via public pricing tool. Merchant type: ${selectedType}.${provider ? " Current provider: " + provider + "." : ""}${saving ? " Indicative saving: £" + saving.toFixed(0) + "/mo." : ""}${_industryLabel ? " Industry: " + _industryLabel + " (" + (_industryStatus||"allowed") + ")." : ""}`,
+    painPoints:       `Submitted via public pricing tool. Merchant type: ${selectedType}.${provider ? " Current provider: " + provider + "." : ""}${saving ? " Indicative saving: £" + saving.toFixed(0) + "/mo." : ""}${_industryLabel ? " Industry: " + _industryLabel + " (" + (_industryStatus || "allowed") + ")." : ""}`,
   };
 
   try {
@@ -1132,7 +1019,7 @@ async function submitLead() {
   } catch (e) {
     btn.disabled = false;
     btn.textContent = "Submit my enquiry →";
-    document.getElementById("submitError").textContent = "Something went wrong. Please try again or email us at sales@minted.com.";
+    document.getElementById("submitError").textContent = "Something went wrong. Please try again or contact our team.";
     document.getElementById("submitError").style.display = "block";
   }
 }
@@ -1144,7 +1031,7 @@ function buildConfirmation(name, email, rate, fixed, saving, vol) {
     <div class="confirm-row"><span class="confirm-row-k">Name</span><span class="confirm-row-v">${name}</span></div>
     <div class="confirm-row"><span class="confirm-row-k">Email</span><span class="confirm-row-v">${email}</span></div>`;
   if (vol > 0) rows += `<div class="confirm-row"><span class="confirm-row-k">Monthly volume</span><span class="confirm-row-v">${fmtK(vol)}</span></div>`;
-  if (rate)   rows += `<div class="confirm-row"><span class="confirm-row-k">Indicative rate</span><span class="confirm-row-v">${parseFloat(rate).toFixed(2)}% + ${fixed}p/tx</span></div>`;
+  if (rate)    rows += `<div class="confirm-row"><span class="confirm-row-k">Indicative rate</span><span class="confirm-row-v">${parseFloat(rate).toFixed(2)}% + ${fixed}p/tx</span></div>`;
   if (saving && saving > 0) rows += `<div class="confirm-row"><span class="confirm-row-k">Est. monthly saving</span><span class="confirm-row-v">${fmt2(saving)}/mo</span></div>`;
   document.getElementById("confirmSummary").innerHTML = rows;
 }
@@ -1189,6 +1076,7 @@ const PROCESSORS = {
   Shopify:      ["shopify","shop_id"],
   Takepayments: ["takepayments"],
 };
+
 function detectProcessor(fileName, headers) {
   const hay = (fileName + " " + headers.join(" ")).toLowerCase();
   for (const [name, kws] of Object.entries(PROCESSORS)) {
@@ -1198,7 +1086,7 @@ function detectProcessor(fileName, headers) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// CSV PARSER (unchanged from existing tool)
+// CSV PARSER (unchanged — all calculation logic preserved)
 // ═══════════════════════════════════════════════════════════
 const CARD_LABELS  = {visa_debit:"Visa Debit",mc_debit:"MC Debit",maestro:"Maestro",visa_credit:"Visa Credit",mc_credit:"MC Credit",amex:"Amex",mixed:"Other"};
 const CARD_COLORS  = {visa_debit:"#2563eb",mc_debit:"#7c3aed",maestro:"#0891b2",visa_credit:"#ea580c",mc_credit:"#dc2626",amex:"#059669",mixed:"#94a3b8"};
@@ -1226,7 +1114,6 @@ function parseCSV(text) {
   const lH   = rawH.map(h=>h.toLowerCase());
   const rows  = lines.slice(1).map(l=>{const c=splitLine(l);const o={};rawH.forEach((h,i)=>o[h]=(c[i]||"").trim());return o}).filter(r=>Object.values(r).some(v=>v));
 
-  // Column map
   const colMap={};
   for(const [f,hints] of Object.entries(HINTS)){
     colMap[f]="";
@@ -1235,7 +1122,6 @@ function parseCSV(text) {
       const multi=h.includes(" ");const m=rawH.find((_,i)=>multi?lH[i]===h:lH[i].includes(h));if(m){colMap[f]=m;break}
     }
   }
-  // Amount priority
   const AP=["gross","amount","total","value","sale","charge","net"];
   const cands=[];for(const h of AP){for(const rh of rawH)if(rh.toLowerCase().includes(h)&&!cands.includes(rh))cands.push(rh)}
   const first=rows[0]||{};colMap.amount=cands.find(h=>pAmt(first[h]))||cands[0]||"";
@@ -1291,8 +1177,8 @@ function handleFile(file) {
       if (result.cur > 0) {
         document.getElementById("csvFees").textContent = fmt2(result.cur);
         document.getElementById("csvFeeRow").style.display = "flex";
+        // Effective rate always shown in red (prominent styling via css-rate-highlight class)
         document.getElementById("csvRate").textContent = result.currentRate.toFixed(2) + "%";
-        document.getElementById("csvRate").style.color = result.currentRate < 1 ? "var(--green)" : result.currentRate < 2.2 ? "var(--amber)" : "var(--red)";
         document.getElementById("csvRateRow").style.display = "flex";
       }
 
@@ -1311,7 +1197,7 @@ function handleFile(file) {
         document.getElementById("cardMixArea").classList.remove("hidden");
       }
 
-      // Processor
+      // Processor detection
       if (result.processor) {
         document.getElementById("processorDetect").textContent = "Detected: " + result.processor + ".";
         const msg = PROVIDER_MSGS[result.processor.toLowerCase()] || "";
@@ -1325,7 +1211,7 @@ function handleFile(file) {
 
       document.getElementById("csvSummary").classList.remove("hidden");
 
-      // Pre-kick pricing API
+      // Pre-kick pricing API as soon as CSV is parsed
       calcPricing();
     } catch(err) {
       showCsvError(err.message || "Could not parse CSV. Please try manual entry.");
@@ -1363,7 +1249,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("volInput")?.addEventListener("input", checkAvgTicket);
   document.getElementById("cntInput")?.addEventListener("input", checkAvgTicket);
 
-  // Provider  // Provider selector
+  // Provider selector
   const sel = document.getElementById("providerInput");
   if (sel) sel.addEventListener("change", e => showProviderMsg(e.target.value));
 
@@ -1371,7 +1257,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const ind = document.getElementById("industryInput");
   if (ind) ind.addEventListener("change", e => onIndustryChange(e.target.value));
 
-  // Intl input
+  // Intl input — show region field when value entered
   const intlInp = document.getElementById("intlInput");
   if (intlInp) intlInp.addEventListener("input", () => {
     const v = parseFloat(intlInp.value);
