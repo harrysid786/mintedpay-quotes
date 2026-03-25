@@ -113,10 +113,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 .breakdown-value.red{color:var(--red)}
 .breakdown-value.slate{color:var(--slate)}
 .breakdown-sub{font-size:11px;color:var(--mute);margin-top:2px}
-.cost-bar{margin-top:16px}
-.cost-bar-label{font-size:12px;font-weight:600;color:var(--slate);margin-bottom:6px;display:flex;justify-content:space-between}
-.cost-bar-track{background:var(--line);border-radius:4px;height:10px;overflow:hidden}
-.cost-bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+
 
 /* ── RATE RESULT (Step 5) ── */
 .rate-compare{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:20px}
@@ -399,7 +396,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
       <div class="breakdown-grid" id="breakdownGrid">
         <!-- filled by JS -->
       </div>
-      <div id="costBar" style="margin-bottom:20px"></div>
+
       <div id="noFeesNote" class="warn-box hidden">
         ⚠️ You didn't provide current fees, so we can't show what you're paying now — but we can still show you our indicative rate below.
       </div>
@@ -484,12 +481,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
           <span class="rate-breakdown-val">10p</span>
         </div>
         <div class="rate-breakdown-row">
-          <span class="rate-breakdown-key">Interchange & scheme fees</span>
-          <span class="rate-breakdown-val" style="color:var(--green)">Passed through at cost</span>
+          <span class="rate-breakdown-key">Setup / onboarding fee</span>
+          <span class="rate-breakdown-val" style="color:var(--green)">None</span>
         </div>
         <div class="rate-breakdown-row">
-          <span class="rate-breakdown-key">Hidden fees / bundled charges</span>
-          <span class="rate-breakdown-val" style="color:var(--green)">None</span>
+          <span class="rate-breakdown-key">Dedicated account manager</span>
+          <span class="rate-breakdown-val" style="color:var(--green)">Included</span>
+        </div>
+        <div class="rate-breakdown-row">
+          <span class="rate-breakdown-key">Support</span>
+          <span class="rate-breakdown-val" style="color:var(--green)">UK-based</span>
         </div>
       </div>
 
@@ -714,7 +715,6 @@ async function buildStep4() {
   await new Promise(r => setTimeout(r, 800));
 
   const grid  = document.getElementById("breakdownGrid");
-  const bar   = document.getElementById("costBar");
   const noFee = document.getElementById("noFeesNote");
 
   const fmtK  = n => { const a = Math.abs(n); if (a >= 1e6) return "£" + (a/1e6).toFixed(2)+"m"; if (a >= 1e3) return "£" + (a/1e3).toFixed(1)+"k"; return "£"+a.toFixed(2); };
@@ -749,32 +749,6 @@ async function buildStep4() {
         <div class="breakdown-value red">${effRate}%</div>
         <div class="breakdown-sub">You're paying ${fmt2(cur)} for every ${fmtK(vol)} processed${perTx ? ` — that's ${perTx}p per transaction on average` : ""}</div>
       </div>`;
-
-    // Simple cost composition bar
-    const ic = 0.23, scheme = 0.13, markup = 0.20, wespell = (0.143 / avgTx) * 100;
-    const mpCost = ic + scheme + markup + wespell;
-    const providerMargin = Math.max(0, parseFloat(effRate) - mpCost);
-    const totalPct = parseFloat(effRate);
-    if (totalPct > 0) {
-      const costPct  = Math.min(100, (mpCost / totalPct) * 100).toFixed(1);
-      const marginPct = Math.min(100, (providerMargin / totalPct) * 100).toFixed(1);
-      bar.innerHTML = `
-        <div style="font-size:12px;font-weight:600;color:var(--slate);margin-bottom:6px;display:flex;justify-content:space-between">
-          <span>Cost breakdown at ${effRate}% effective rate</span>
-        </div>
-        <div class="cost-bar-track">
-          <div style="display:flex;height:10px">
-            <div style="width:${costPct}%;background:var(--brand);border-radius:4px 0 0 4px"></div>
-            <div style="width:${marginPct}%;background:var(--red)"></div>
-          </div>
-        </div>
-        <div style="display:flex;gap:16px;margin-top:6px;font-size:11px;color:var(--slate)">
-          <span><span style="display:inline-block;width:8px;height:8px;background:var(--brand);border-radius:2px;margin-right:4px"></span>Processing cost (~${mpCost.toFixed(2)}%)</span>
-          <span><span style="display:inline-block;width:8px;height:8px;background:var(--red);border-radius:2px;margin-right:4px"></span>Provider margin (~${providerMargin.toFixed(2)}%)</span>
-        </div>`;
-    } else {
-      bar.innerHTML = "";
-    }
   } else {
     grid.innerHTML = `
       <div class="breakdown-cell">
