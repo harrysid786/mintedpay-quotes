@@ -836,12 +836,19 @@ async function buildStep5() {
   const p = pricingResult;
   const fixed = p ? (p.fixed_fee || 10) : 10;
 
-  // Determine displayed rate — use sell_uk_rate as primary for Acq+ (blended if available)
-  const sellUk   = p ? parseFloat(p.sell_uk_rate || p.rate)            : null;
-  const sellIntl = p ? parseFloat(p.sell_international_rate || 0)      : null;
-  const blended  = p ? parseFloat(p.blended_rate || p.rate)            : null;
-  const hasIntl  = p && p.sell_international_rate && parseFloat(p.intl_frac || 0) > 0;
-  const displayRate = blended || sellUk;
+  // For the public tool (acquisition_plus), p.rate IS the correct quoted rate.
+  // p.sell_uk_rate is the admin engine's UK sell rate — a completely different
+  // calculation — and must NOT be used here. It causes the display to show
+  // 0.72% instead of 1.62%.
+  // If international traffic exists, blend UK rate with intl rate.
+  const hasIntl    = p && p.sell_international_rate && parseFloat(p.intl_frac || 0) > 0;
+  const sellIntl   = p ? parseFloat(p.sell_international_rate || 0) : null;
+  const baseRate   = p ? parseFloat(p.rate) : null;  // always p.rate for public profile
+  const blended    = (hasIntl && baseRate && sellIntl)
+    ? Math.ceil(((1 - parseFloat(p.intl_frac)) * baseRate + parseFloat(p.intl_frac) * sellIntl) * 100) / 100
+    : null;
+  const displayRate = blended || baseRate;
+  const sellUk     = baseRate;  // for breakdown table reference
 
   // ── Not competitive handling ───────────────────────────────
   if (p && p.not_competitive) {
@@ -948,7 +955,16 @@ async function submitLead() {
 
   // Determine indicative rate for lead notes
   const p           = pricingResult;
-  const indRate     = p ? (p.blended_rate || p.sell_uk_rate || p.rate || null) : null;
+  // Compute displayRate the same way buildStep5 does — blended if intl, else UK sell
+  const _sellUk     = p ? parseFloat(p.sell_uk_rate || p.rate) : null;
+  const _sellIntl   = p ? parseFloat(p.sell_international_rate || 0) : null;
+  const _hasIntl    = p && p.sell_international_rate && parseFloat(p.intl_frac || 0) > 0;
+  const _blended    = (_hasIntl && _sellUk && _sellIntl)
+    ? Math.ceil(((1 - parseFloat(p.intl_frac)) * _sellUk + parseFloat(p.intl_frac) * _sellIntl) * 100) / 100
+    : null;
+  // displayRate = the rate shown in Step 5's big comparison box
+  const displayRate = _blended || (p ? parseFloat(p.rate) : null);
+  const indRate     = displayRate;
   const indFixed    = p ? (p.fixed_fee || 10) : 10;
   const effRate     = cur > 0 && vol > 0 ? ((cur / vol) * 100).toFixed(2) : null;
   const mpMonthlyCost = indRate ? (vol * parseFloat(indRate) / 100 + cnt * indFixed / 100) : null;
