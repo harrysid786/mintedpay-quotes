@@ -75,8 +75,10 @@ if (!leadCols.includes("decision"))   db.exec("ALTER TABLE leads ADD COLUMN deci
 if (!leadCols.includes("zoho_pushed")) db.exec("ALTER TABLE leads ADD COLUMN zoho_pushed INTEGER DEFAULT 0");
 if (!leadCols.includes("notes"))       db.exec("ALTER TABLE leads ADD COLUMN notes       TEXT DEFAULT '[]'");
 if (!leadCols.includes("assigned_to")) db.exec("ALTER TABLE leads ADD COLUMN assigned_to TEXT DEFAULT ''");
-if (!leadCols.includes("activity"))    db.exec("ALTER TABLE leads ADD COLUMN activity    TEXT DEFAULT '[]'");
-if (!leadCols.includes("brand"))       db.exec("ALTER TABLE leads ADD COLUMN brand       TEXT DEFAULT 'minted'");
-if (!leadCols.includes("intl_region")) db.exec("ALTER TABLE leads ADD COLUMN intl_region TEXT DEFAULT NULL");
+if (!leadCols.includes("activity"))         db.exec("ALTER TABLE leads ADD COLUMN activity         TEXT DEFAULT '[]'");
+if (!leadCols.includes("brand"))            db.exec("ALTER TABLE leads ADD COLUMN brand            TEXT DEFAULT 'minted'");
+if (!leadCols.includes("intl_region"))      db.exec("ALTER TABLE leads ADD COLUMN intl_region      TEXT DEFAULT NULL");
+if (!leadCols.includes("industry"))         db.exec("ALTER TABLE leads ADD COLUMN industry         TEXT DEFAULT NULL");
+if (!leadCols.includes("industry_status"))  db.exec("ALTER TABLE leads ADD COLUMN industry_status  TEXT DEFAULT 'allowed'");
 
 module.exports = db;
