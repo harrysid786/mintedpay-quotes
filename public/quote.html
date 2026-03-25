@@ -559,21 +559,18 @@ function renderQuote(data){
         <div class="qp-rate-block qp-rate-mp${curRate===null?' qp-rate-solo':''}">
           <div class="qp-rate-block-lbl">${brand.name} — ${isIndicative ? 'Indicative Pricing' : 'Estimated Pricing'}</div>
           ${blendedRate !== null ? `
-          <div style="text-align:center;margin:10px 0 6px">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);margin-bottom:4px">Estimated Blended Rate</div>
-            <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--brand);letter-spacing:-1px;line-height:1">${blendedRate.toFixed(2)}<span style="font-size:16px;font-weight:600">%</span> <span style="font-size:13px;font-weight:600;color:var(--g3)">+ ${ftx}p</span></div>
-            <div style="font-size:10px;color:var(--g3);margin-top:4px">per transaction, all-in</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin:10px 0 6px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+              <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3)">UK Cards</span>
+              <span style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--brand);letter-spacing:-1px;line-height:1">${displayUkRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> <span style="font-size:12px;font-weight:600;color:var(--g3)">+ ${ftx}p</span></span>
+            </div>
+            <div style="height:1px;background:var(--g6)"></div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+              <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3)">International Cards</span>
+              <span style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--brand);letter-spacing:-1px;line-height:1">${displayIntlRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> <span style="font-size:12px;font-weight:600;color:var(--g3)">+ ${ftx}p</span></span>
+            </div>
           </div>
-          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--g6);display:flex;flex-direction:column;gap:4px">
-            <div style="display:flex;justify-content:space-between;align-items:baseline">
-              <span style="font-size:11px;color:var(--g3)">UK Cards</span>
-              <span style="font-size:13px;font-weight:700;color:var(--brand)">${displayUkRate.toFixed(2)}% + ${ftx}p</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:baseline">
-              <span style="font-size:11px;color:var(--g3)">International Cards</span>
-              <span style="font-size:13px;font-weight:700;color:var(--brand)">${displayIntlRate.toFixed(2)}% + ${ftx}p</span>
-            </div>
-          </div>` : `
+          <div style="font-size:10px;color:var(--g3);margin-top:2px;padding-top:6px;border-top:1px solid var(--g6)">≈ ${blendedRate.toFixed(2)}% all-in on your card mix · Based on ${Math.round((quoteIntlFrac||0)*100)}% international traffic</div>` : `
           <div style="display:flex;flex-direction:column;gap:10px;margin:10px 0 6px">
             <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
               <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3)">UK Cards</span>
@@ -747,10 +744,10 @@ function renderQuote(data){
           <li>No PCI compliance fees</li>
           <li>Full integration and technical support</li>
         </ul>
-        <div style="margin:16px 0 12px;padding:14px 18px;background:var(--brand-lt);border:1.5px solid var(--brand-bd);border-radius:var(--r)">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--brand);margin-bottom:4px">${blendedRate !== null ? 'Estimated blended rate' : 'Your pricing starts from'}</div>
-          <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--brand);letter-spacing:-0.5px;line-height:1">${(blendedRate !== null ? blendedRate : displayUkRate).toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> + ${ftx}<span style="font-size:14px;font-weight:600">p</span> <span style="font-size:12px;font-weight:400;color:var(--g3)">per transaction</span></div>
-          ${blendedRate !== null ? `<div style="font-size:10px;color:var(--g3);margin-top:4px">Based on your submitted card mix. UK: ${displayUkRate.toFixed(2)}% · International: ${displayIntlRate.toFixed(2)}%</div>` : ''}
+          <div style="margin:16px 0 12px;padding:14px 18px;background:var(--brand-lt);border:1.5px solid var(--brand-bd);border-radius:var(--r)">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--brand);margin-bottom:4px">${blendedRate !== null ? 'UK Card Rate' : 'Your pricing starts from'}</div>
+          <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--brand);letter-spacing:-0.5px;line-height:1">${displayUkRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> + ${ftx}<span style="font-size:14px;font-weight:600">p</span> <span style="font-size:12px;font-weight:400;color:var(--g3)">per transaction</span></div>
+          ${blendedRate !== null ? `<div style="font-size:10px;color:var(--g3);margin-top:4px">International cards: ${displayIntlRate.toFixed(2)}% + ${ftx}p · ≈ ${blendedRate.toFixed(2)}% all-in on your card mix</div>` : ''}
         </div>
         <table class="pricing-breakdown">
           <thead><tr><th>Transaction Type</th><th>Rate</th><th>Notes</th></tr></thead>
