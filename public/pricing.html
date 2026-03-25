@@ -73,6 +73,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 .card-mix-legend{display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--slate)}
 .card-mix-legend span{display:inline-flex;align-items:center;gap:4px}
 .card-mix-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.type-card{border:2px solid var(--border);border-radius:10px;padding:16px 12px;cursor:pointer;transition:all .18s;text-align:center;background:#fff;user-select:none}
+.type-card:hover,.type-card.selected{border-color:var(--brand);background:#f0f4ff}
+.type-card.selected{box-shadow:0 0 0 3px rgba(79,70,229,.15)}
+.type-icon{font-size:24px;margin-bottom:6px}
+.type-label{font-size:13px;font-weight:600;color:#0f172a}
+.type-sub{font-size:11px;color:var(--mute);margin-top:2px}
+.field-select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;color:#0f172a;background:#fff;outline:none;cursor:pointer;transition:border-color .18s;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.field-select:focus{border-color:var(--brand)}
+.warn-box{background:#fef3c7;border:1px solid #fcd34d;border-left:3px solid #d97706;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;line-height:1.5;margin-top:8px}
+.warn-box.hidden{display:none}
+.warn-box strong{font-weight:700;color:#78350f}
+.step-sub{font-size:14px;color:var(--mute);margin-bottom:20px;line-height:1.5}
 .metrics{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:20px}
 .metric{background:var(--white);padding:16px}
 .metric-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mute);margin-bottom:4px}
@@ -111,9 +124,46 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
     <div class="btn-row" style="justify-content:flex-end"><button class="btn btn-primary" onclick="goStep2()">Continue →</button></div>
   </div>
 
+  <!-- STEP 1b — MERCHANT TYPE -->
+  <div id="step1b" class="step">
+    <div class="step-label">Step 2 of 4</div>
+    <div class="step-title">How do you take payments?</div>
+    <div class="step-sub">This helps us price accurately for your business type.</div>
+    <div class="type-grid" id="typeGrid">
+      <div class="type-card" data-type="online" onclick="selectType('online')">
+        <div class="type-icon">🛒</div>
+        <div class="type-label">Online store</div>
+        <div class="type-sub">E-commerce, subscriptions</div>
+      </div>
+      <div class="type-card" data-type="inperson" onclick="selectType('inperson')">
+        <div class="type-icon">🏪</div>
+        <div class="type-label">In-person / retail</div>
+        <div class="type-sub">Card terminal, face-to-face</div>
+      </div>
+      <div class="type-card" data-type="both" onclick="selectType('both')">
+        <div class="type-icon">🌐</div>
+        <div class="type-label">Both</div>
+        <div class="type-sub">Online and in-store</div>
+      </div>
+      <div class="type-card" data-type="other" onclick="selectType('other')">
+        <div class="type-icon">❓</div>
+        <div class="type-label">Not sure</div>
+        <div class="type-sub">We'll work it out</div>
+      </div>
+    </div>
+    <div id="typeWarning" class="warn-box hidden">
+      ⚠️ <strong>Note:</strong> For low average ticket in-person merchants (&lt;£15), our fixed costs
+      can make pricing less competitive. We recommend speaking to our team for a tailored quote.
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep1bNext()" style="margin-left:auto">Continue →</button>
+    </div>
+  </div>
+
   <!-- STEP 2 -->
   <div id="step2" class="step">
-    <div class="step-label">Step 2 of 3</div>
+    <div class="step-label">Step 3 of 4</div>
     <div class="step-title">Your volume</div>
     <div class="tabs">
       <button class="tab on" id="tabUpload" onclick="switchTab('upload')">📄 Upload Statement</button>
@@ -166,6 +216,46 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
       <div class="field"><label>Current monthly processing fees (optional)</label><div class="pfx-wrap"><div class="pfx">£</div><input type="number" id="curInput" placeholder="Leave blank if unknown" min="0" step="0.01"></div><div class="field-hint">If you know what you currently pay, we can show your estimated saving.</div></div>
     </div>
 
+    <div class="field" style="margin-top:16px">
+      <label>% of your transactions from outside the UK <span style="font-weight:400;color:var(--mute)">(optional)</span></label>
+      <input type="number" id="intlInput" placeholder="e.g. 20" min="0" max="100" step="1">
+      <div class="field-hint">If unsure, leave blank or upload a statement for more accurate pricing.</div>
+      <div id="intlConfirm" style="display:none;margin-top:4px;font-size:11px;color:var(--brand);font-weight:500"></div>
+    </div>
+
+    <div class="field">
+      <label>Where are your international customers? <span style="font-weight:400;color:var(--mute)">(optional)</span></label>
+      <select id="intlRegionInput" class="field-select">
+        <option value="">— Unknown / not sure —</option>
+        <option value="eea">Mostly Europe / EEA</option>
+        <option value="mixed">Mix of Europe and worldwide</option>
+        <option value="row">Mostly Rest of World (US, Asia, Middle East etc.)</option>
+      </select>
+      <div class="field-hint">Helps us use the right interchange rate — EEA cards cost less to process.</div>
+    </div>
+
+    <div class="field">
+      <label>Who do you currently process payments with? <span style="font-weight:400;color:var(--mute)">(optional)</span></label>
+      <select id="providerInput" class="field-select">
+        <option value="">— Select current provider —</option>
+        <option value="stripe">Stripe</option>
+        <option value="shopify">Shopify Payments</option>
+        <option value="square">Square</option>
+        <option value="worldpay">WorldPay</option>
+        <option value="barclaycard">Barclaycard</option>
+        <option value="adyen">Adyen</option>
+        <option value="sumup">SumUp</option>
+        <option value="zettle">Zettle / iZettle</option>
+        <option value="takepayments">Takepayments</option>
+        <option value="paypal">PayPal / Braintree</option>
+        <option value="other">Other</option>
+        <option value="none">None yet</option>
+      </select>
+      <div class="field-hint" id="providerMsg" style="display:none;color:var(--brand);font-weight:500"></div>
+    </div>
+
+    <div id="avgTicketWarning" class="warn-box hidden"></div>
+
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
       <button class="btn btn-primary" onclick="goStep3()" style="margin-left:auto">Review →</button>
@@ -174,7 +264,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 
   <!-- STEP 3 -->
   <div id="step3" class="step">
-    <div class="step-label">Step 3 of 3</div>
+    <div class="step-label">Step 4 of 4</div>
     <div class="step-title">Review &amp; generate</div>
     <div id="revTierBadge" style="display:none;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-bottom:12px"></div>
     <div class="metrics">
@@ -182,6 +272,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
       <div class="metric"><div class="metric-label">Transactions</div><div class="metric-value" id="revCnt">—</div></div>
       <div class="metric"><div class="metric-label">Avg Transaction</div><div class="metric-value" id="revAvg">—</div></div>
       <div class="metric" id="revCurBlock"><div class="metric-label">Current Rate</div><div class="metric-value" id="revCur">—</div></div>
+      <div class="metric" id="revIntlBlock" style="display:none"><div class="metric-label">International Transactions</div><div class="metric-value" id="revIntl">—</div></div>
     </div>
     <div id="revProcessorMsg" style="display:none;font-size:12px;color:var(--slate);margin-bottom:14px;line-height:1.5"></div>
     <div style="background:var(--wash);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:20px">
@@ -248,8 +339,9 @@ function fmtK(n){const a=Math.abs(n);if(a>=1e6)return"£"+(a/1e6).toFixed(2)+"m"
 function showError(msg){const b=document.getElementById("errorBox");b.textContent=msg;b.style.display="block";setTimeout(()=>{b.style.display="none"},5000)}
 
 // ═══ NAVIGATION ═══
-function goStep(n){document.querySelectorAll(".step").forEach(s=>s.classList.remove("active"));document.getElementById("step"+n).classList.add("active");document.getElementById("errorBox").style.display="none"}
-function goStep2(){const email=document.getElementById("bizEmail").value.trim();if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){document.getElementById("emailError").style.display="block";return}document.getElementById("emailError").style.display="none";goStep(2)}
+function goStep(n){document.querySelectorAll(".step").forEach(s=>s.classList.remove("active"));const el=document.getElementById("step"+n);if(el)el.classList.add("active");document.getElementById("errorBox").style.display="none"}
+function goStep2(){const email=document.getElementById("bizEmail").value.trim();if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){document.getElementById("emailError").style.display="block";return}document.getElementById("emailError").style.display="none";goStep("1b")}
+function goStep1bNext(){goStep(2)}
 function switchTab(which){document.getElementById("tabUpload").classList.toggle("on",which==="upload");document.getElementById("tabManual").classList.toggle("on",which==="manual");document.getElementById("panelUpload").style.display=which==="upload"?"block":"none";document.getElementById("panelManual").style.display=which==="manual"?"block":"none"}
 
 // ═══ CSV: UPLOAD → AUTO ANALYSE ═══
@@ -410,6 +502,12 @@ function goStep3(){
   document.getElementById("revAvg").textContent=fmtGBP(vol/cnt);
   const curBlock=document.getElementById("revCurBlock");
   if(currentRate){document.getElementById("revCur").textContent=currentRate;curBlock.style.display=""}else{curBlock.style.display="none"}
+  const intlRawRev=parseFloat(document.getElementById("intlInput").value);
+  const intlBlock=document.getElementById("revIntlBlock");
+  if(Number.isFinite(intlRawRev)&&intlRawRev>=0&&intlRawRev<=100){
+    document.getElementById("revIntl").textContent=intlRawRev+"% outside the UK";
+    intlBlock.style.display="";
+  }else{intlBlock.style.display="none"}
   document.getElementById("revName").textContent=document.getElementById("bizName").value||"Your Business";
   document.getElementById("revEmail").textContent=document.getElementById("bizEmail").value;
 
@@ -435,6 +533,51 @@ function goStep3(){
   goStep(3);
 }
 
+// ═══ MERCHANT TYPE ═══
+let selectedType="";
+function selectType(t){
+  selectedType=t;
+  document.querySelectorAll(".type-card").forEach(c=>c.classList.toggle("selected",c.dataset.type===t));
+  const warn=document.getElementById("typeWarning");
+  if(warn)warn.classList.toggle("hidden",t!=="inperson");
+}
+
+// ═══ PROVIDER MESSAGES ═══
+const PROVIDER_MSGS={
+  stripe:"Businesses switching from Stripe typically save 20–30% on processing costs.",
+  shopify:"Shopify charges extra for currency conversion on every international order — we don't.",
+  square:"Square's flat rate doesn't benefit you on low-cost debit cards — IC++ pricing does.",
+  worldpay:"Many WorldPay merchants save significantly when switching to transparent IC++ pricing.",
+  barclaycard:"Barclaycard merchants often reduce fees significantly when switching.",
+  sumup:"SumUp's flat rate can be expensive at higher volumes — IC++ pricing scales better.",
+  paypal:"PayPal's cross-border fees are among the highest — we price internationally at true cost.",
+};
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("providerInput")?.addEventListener("change",function(){
+    const msg=PROVIDER_MSGS[this.value]||"";
+    const el=document.getElementById("providerMsg");
+    if(el){el.textContent=msg;el.style.display=msg?"block":"none";}
+  });
+  document.getElementById("volInput")?.addEventListener("input",checkAvgTicket);
+  document.getElementById("cntInput")?.addEventListener("input",checkAvgTicket);
+});
+
+// ═══ AVG TICKET WARNING ═══
+function checkAvgTicket(){
+  const vol=parseFloat(document.getElementById("volInput")?.value)||0;
+  const cnt=parseFloat(document.getElementById("cntInput")?.value)||0;
+  const avg=cnt>0?vol/cnt:0;
+  const warn=document.getElementById("avgTicketWarning");
+  if(!warn)return;
+  if(avg>0&&avg<15){
+    const fixedPct=((0.143/avg)*100).toFixed(1);
+    warn.innerHTML=`⚠️ <strong>Low average ticket (£${avg.toFixed(2)})</strong> — our fixed costs (~£0.14/tx) represent <strong>${fixedPct}%</strong> of your transaction value. For best results, speak to our team for a tailored quote.`;
+    warn.classList.remove("hidden");
+  }else{
+    warn.classList.add("hidden");
+  }
+}
+
 // ═══ GENERATE ═══
 async function generateQuote(){
   const btn=document.getElementById("generateBtn");btn.disabled=true;
@@ -448,13 +591,18 @@ async function generateQuote(){
   const loadInterval=setInterval(()=>{mi=(mi+1)%msgs.length;loadEl.textContent=msgs[mi]},1800);
 
   const isUpload=csvData!==null&&document.getElementById("tabUpload").classList.contains("on");
+  const intlRaw=parseFloat(document.getElementById("intlInput").value);
+  const intlFrac=(Number.isFinite(intlRaw)&&intlRaw>=0&&intlRaw<=100)?intlRaw/100:null;
   const payload={
     merchant_name:document.getElementById("bizName").value.trim(),
     merchant_email:document.getElementById("bizEmail").value.trim(),
     monthly_volume:isUpload?csvData.vol:parseFloat(document.getElementById("volInput").value),
     transaction_count:isUpload?csvData.cnt:parseFloat(document.getElementById("cntInput").value),
     current_fees:isUpload?(csvData.cur||0):(parseFloat(document.getElementById("curInput").value)||0),
-    debit_frac:isUpload?csvData.debitFrac:0.70
+    debit_frac:isUpload?csvData.debitFrac:0.70,
+    intl_frac:intlFrac,
+    intl_region:(document.getElementById("intlRegionInput")?.value)||null,
+    pricing_profile:"acquisition_plus"
   };
   try{
     const res=await fetch("/api/calculate_quote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
@@ -472,6 +620,18 @@ document.addEventListener("DOMContentLoaded",()=>{
   dz.addEventListener("dragleave",()=>dz.classList.remove("over"));
   dz.addEventListener("drop",e=>{e.preventDefault();dz.classList.remove("over");if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0])});
   fi.addEventListener("change",e=>{if(e.target.files[0])handleFile(e.target.files[0])});
+
+  // International % confirmation line
+  document.getElementById("intlInput").addEventListener("input",function(){
+    const v=parseFloat(this.value);
+    const el=document.getElementById("intlConfirm");
+    if(Number.isFinite(v)&&v>=0&&v<=100){
+      el.textContent="Using "+v+"% international transactions for this estimate";
+      el.style.display="block";
+    }else{
+      el.style.display="none";
+    }
+  });
 });
 </script>
 </body>
