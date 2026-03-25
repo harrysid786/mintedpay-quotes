@@ -890,13 +890,20 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
   let currentRate = null;
 
   if (isPublicProfile) {
-    // acquisition_plus: bps undercut when fees known, else cost + margin band
+    // acquisition_plus: undercut logic when fees known
+    // Uses a multiplier undercut (0.80×) to ensure a meaningful saving vs current provider,
+    // not a fixed bps which can produce trivially small savings or be overridden by the floor.
+    // The dynamic cost floor protects against loss — max(undercutTarget, costFloor) is applied.
     if (curFees && curFees > 0) {
       currentRate = (curFees / vol) * 100;
-      const undercutTier = rules.undercutBpsTiers.find(t => vol <= t.maxVol)
-                        || rules.undercutBpsTiers[rules.undercutBpsTiers.length - 1];
-      provisionalRate = currentRate - (undercutTier.bps / 100);
+      // Target = 80% of current rate — meaningful saving regardless of current rate level
+      const undercutTarget = currentRate * 0.80;
+      // Cost floor = worst-case true cost + min margin + floor buffer
+      // This ensures we never quote below cost even with a high undercut target
+      const costFloor = provisionalCostRate + rules.minMargin + FLOOR_BUFFER;
+      provisionalRate = Math.max(undercutTarget, costFloor);
     } else {
+      // No fee data: cost + margin tier (unchanged)
       const marginTier = rules.acquisitionMarginTiers.find(t => vol <= t.maxVol)
                       || rules.acquisitionMarginTiers[rules.acquisitionMarginTiers.length - 1];
       provisionalRate  = provisionalCostRate + marginTier.margin;
@@ -942,9 +949,19 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
   // ════════════════════════════════════════════════════════════
 
   // ── Standard floor check (all profiles) ───────────────────
+  // For acquisition_plus with known fees: provisionalRate is already
+  // max(undercutTarget, costFloor) — only apply rateFloor as absolute minimum.
+  // For all other cases: apply full floor checks.
   const minAllowedRate = finalCostEngine.effectiveTotalCostPct + rules.minMargin;
-  let quoteRate = Math.max(provisionalRate, minAllowedRate, rules.rateFloor);
-  quoteRate     = Math.ceil(quoteRate * 100) / 100;
+  let quoteRate;
+  if (isPublicProfile && curFees && curFees > 0) {
+    // Undercut already incorporates the cost floor — just enforce the absolute rate floor
+    // and ensure we never quote below true cost + minimum margin
+    quoteRate = Math.max(provisionalRate, minAllowedRate, rules.rateFloor);
+  } else {
+    quoteRate = Math.max(provisionalRate, minAllowedRate, rules.rateFloor);
+  }
+  quoteRate = Math.ceil(quoteRate * 100) / 100;
 
   // ── acquisition_plus: fixed fee protection ─────────────────
   // Merchant always sees a clean 10p fixed fee regardless of true
@@ -1172,6 +1189,12 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
     wespell_repriced_after_quote: wespellRepricedAfterQuote,
     warning_flags:                warningFlags,
     is_public_profile:            isPublicProfile,
+    // ── Competitive flag ──────────────────────────────────────
+    // True when our quoted rate is cheaper than the merchant's current effective rate.
+    // False means the floor bound — we cannot beat their current provider at this avg ticket.
+    // null when no current fees were provided.
+    is_cheaper_than_current:      currentRate !== null ? (quoteRate < currentRate) : null,
+    not_competitive:              currentRate !== null ? (quoteRate >= currentRate) : null,
     // ── International region ───────────────────────────────────
     // Echoed back for transparency. null when not supplied.
     // Note: acquisition_plus always uses worst-case 1.50% regardless of this value.
