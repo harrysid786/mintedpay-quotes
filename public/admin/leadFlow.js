@@ -547,7 +547,9 @@
                   <div class="ov-card-body">
                     ${row("Business Name", lead.businessName)}
                     ${row("Industry", lead.industry
-                        ? lead.industry + (lead.industryDetail ? ` <span class="ov-detail">(${lead.industryDetail})</span>` : "")
+                        ? lead.industry
+                          + (lead.industryStatus === "restricted" ? ` <span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:6px">NEEDS REVIEW</span>` : "")
+                          + (lead.industryDetail ? ` <span class="ov-detail">(${lead.industryDetail})</span>` : "")
                         : "", { html: true })}
                     ${row("Country", lead.country)}
                     ${row("Sales Channels", fmtChannels(lead.salesChannels))}
@@ -1165,6 +1167,13 @@
               <span class="lf-badge ${dBadge}">${r.decision.toUpperCase()}</span>
             </div>
           </div>
+
+          <!-- ══ RESTRICTED INDUSTRY BANNER ══ -->
+          ${this.lead.industryStatus === "restricted" ? `
+          <div style="background:#fef3c7;border:1px solid #fcd34d;border-left:3px solid #d97706;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:#92400e;line-height:1.5">
+            ⚠️ <strong>Restricted industry — manual review required.</strong>
+            This merchant selected <strong>${this.lead.industry || "a restricted industry"}</strong>. Verify business documentation and obtain approval before generating a quote.
+          </div>` : ""}
 
           <!-- ══ A: CUSTOMER OVERVIEW ══ -->
           <div class="lf-op-section">
@@ -3145,7 +3154,25 @@
       try {
         this.quoteGenerated = true;
         this.lead.status = "quoted";
-        await this._saveNow({ status: "quoted" });
+
+        // ── Capture optional fee toggle state from the quote preview panel ──
+        // These values are shown to the agent in Step 10 but never saved unless
+        // we explicitly read them here and persist before opening quote.html.
+        const q = id => document.getElementById(id);
+        const optionalFees = {
+          addAmex:   q("lf-toggle-amex")?.checked  ?? true,
+          amexPct:   parseFloat(q("lf-amex-input")?.value)        || 3.5,
+          amexFixed: parseInt(q("lf-amex-input")?.dataset?.fixed, 10) || 20,
+          addFX:     q("lf-toggle-fx")?.checked    ?? false,
+          fxPct:     parseFloat(q("lf-fx-input")?.value)          || 1.5,
+          addCB:     q("lf-toggle-chargeback")?.checked ?? true,
+          cbAmt:     parseFloat(q("lf-chargeback-input")?.value)  || 15,
+          addRefund: q("lf-toggle-refund")?.checked     ?? true,
+          refAmt:    parseFloat(q("lf-refund-input")?.value)      || 1,
+        };
+        this.lead.optionalFees = optionalFees;
+
+        await this._saveNow({ status: "quoted", optionalFees });
         this.onSaved();
         window.open(`/quote.html?quote=${this.pricingResult.quote_id}`, "_blank");
 
