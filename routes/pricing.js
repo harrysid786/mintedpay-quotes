@@ -900,7 +900,7 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
       const undercutTarget = currentRate * 0.80;
       // Cost floor = worst-case true cost + min margin + floor buffer
       // This ensures we never quote below cost even with a high undercut target
-      const costFloor = provisionalCostRate + rules.minMargin + FLOOR_BUFFER;
+      const costFloor = provisionalCostRate + rules.minMargin + 0.10; // 0.10 = FLOOR_BUFFER constant
       provisionalRate = Math.max(undercutTarget, costFloor);
     } else {
       // No fee data: cost + margin tier (unchanged)
