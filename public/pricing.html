@@ -264,6 +264,49 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
       ⚠️ <strong>Low-ticket terminal note:</strong> If your average transaction is under £15, our fixed processing costs can make it harder to beat your current rate. We'll still show you what we can do — but our team may suggest a bespoke terminal pricing conversation.
     </div>
 
+    <div class="field" style="margin-top:18px">
+      <label>What industry are you in? <span class="req">*</span></label>
+      <select id="industryInput" class="field-select" onchange="onIndustryChange(this.value)">
+        <option value="">— Select your industry —</option>
+        <optgroup label="✓ Standard">
+          <option value="retail|allowed">Retail / e-commerce</option>
+          <option value="food|allowed">Food &amp; hospitality (restaurant, café, takeaway)</option>
+          <option value="software|allowed">Software / SaaS / digital products</option>
+          <option value="charity|allowed">Charity / non-profit</option>
+          <option value="education|allowed">Education &amp; training</option>
+          <option value="professional|allowed">Professional services (law, accounting, consulting)</option>
+          <option value="wellness|allowed">Health &amp; wellness (gym, beauty, physio)</option>
+          <option value="events|allowed">Events &amp; entertainment</option>
+          <option value="home|allowed">Home services &amp; trades</option>
+          <option value="other_allowed|allowed">Other standard business</option>
+        </optgroup>
+        <optgroup label="⚠ Requires review">
+          <option value="travel|restricted">Travel (flights, hotels, tour operators)</option>
+          <option value="financial|restricted">Financial services (FX, money transfer, investment)</option>
+          <option value="crypto|restricted">Crypto / digital assets / NFTs</option>
+          <option value="healthcare|restricted">Healthcare / medical / dental / pharmaceutical</option>
+          <option value="insurance|restricted">Insurance</option>
+          <option value="alcohol|restricted">Alcohol / tobacco / vaping</option>
+          <option value="gambling|restricted">Gambling / gaming / betting</option>
+          <option value="luxury|restricted">Luxury goods / jewellery / high-value items</option>
+          <option value="supplements|restricted">Supplements / CBD / nutraceuticals</option>
+          <option value="property|restricted">Real estate / property</option>
+        </optgroup>
+        <optgroup label="✗ Not eligible">
+          <option value="adult|prohibited">Adult content / sexual services</option>
+          <option value="weapons|prohibited">Weapons / firearms / ammunition / explosives</option>
+          <option value="drugs|prohibited">Drugs / controlled substances / paraphernalia</option>
+          <option value="scams|prohibited">Pyramid schemes / investment scams / get-rich-quick</option>
+          <option value="hate|prohibited">Hate speech / violence / extremism content</option>
+          <option value="counterfeit|prohibited">Counterfeit / replica goods</option>
+        </optgroup>
+      </select>
+      <div id="industryBlockMsg" class="hidden" style="margin-top:12px;background:var(--red-lt);border:1px solid var(--red-bd);border-left:3px solid var(--red);border-radius:8px;padding:14px 16px;font-size:13px;color:var(--red);line-height:1.6">
+        <strong>We're unable to accept applications from this business type.</strong><br>
+        This is based on requirements from our payment network partners. If you believe this is an error, please <a href="mailto:sales@mintedpay.com" style="color:var(--red)">contact our team</a>.
+      </div>
+    </div>
+
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
       <button class="btn btn-primary" id="step2Btn" onclick="step2Next()" style="margin-left:auto" disabled>Continue →</button>
@@ -346,12 +389,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
         <div class="field-hint">Leave blank if unknown — we'll use a conservative assumption.</div>
       </div>
       <div class="field">
-        <label>Where are your international customers? <span style="font-weight:400;color:var(--mute)">(optional)</span></label>
+        <label>Where are your customers based? <span style="font-weight:400;color:var(--mute)">(optional)</span></label>
         <select id="intlRegionInput" class="field-select">
-          <option value="">— Unknown / not sure —</option>
+          <option value="uk">Mostly UK</option>
           <option value="eea">Mostly Europe / EEA</option>
-          <option value="mixed">Mix of Europe and worldwide</option>
-          <option value="row">Mostly Rest of World (US, Asia, Middle East etc.)</option>
+          <option value="uk_eea">Mix of UK + Europe</option>
+          <option value="mixed">Mix of UK + Worldwide</option>
+          <option value="row">Mostly international (rest of world)</option>
+          <option value="">Unknown / not sure</option>
         </select>
       </div>
       <div class="field">
@@ -498,6 +543,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 
       <div class="indicative-note">
         ⚠️ <strong>These rates are indicative only.</strong> Final pricing is always confirmed in writing after a review of your full processing history, business type, card mix, and risk profile. Rates may change. Nothing here constitutes a formal offer.
+      </div>
+
+      <div id="restrictedAdvisory" class="hidden" style="background:var(--amber-lt);border:1px solid var(--amber-bd);border-left:3px solid #d97706;border-radius:8px;padding:14px 16px;font-size:13px;color:#92400e;line-height:1.6;margin-bottom:16px">
+        ⚠️ <strong>Your industry requires additional review.</strong> We can provide an indicative rate but our team will need to verify your documentation before confirming final pricing. One of our specialists will be in touch after you submit.
       </div>
 
       <div id="providerWin" style="display:none;margin-bottom:16px;padding:12px 16px;background:var(--green-lt);border:1px solid var(--green-bd);border-radius:var(--r);font-size:13px;color:#065f46"></div>
@@ -654,13 +703,37 @@ function step1Next() {
 function selectType(t) {
   selectedType = t;
   document.querySelectorAll(".type-card").forEach(c => c.classList.toggle("selected", c.dataset.type === t));
-  document.getElementById("step2Btn").disabled = false;
   const warn = document.getElementById("inpersonWarn");
   warn.classList.toggle("hidden", t !== "inperson");
+  updateStep2Btn();
+}
+
+function onIndustryChange(val) {
+  const [, status] = (val || "").split("|");
+  const blockMsg = document.getElementById("industryBlockMsg");
+  const btn = document.getElementById("step2Btn");
+  if (status === "prohibited") {
+    blockMsg.classList.remove("hidden");
+    btn.disabled = true;
+  } else {
+    blockMsg.classList.add("hidden");
+    updateStep2Btn();
+  }
+}
+
+function updateStep2Btn() {
+  const industryVal = document.getElementById("industryInput")?.value || "";
+  const [, status] = industryVal.split("|");
+  const btn = document.getElementById("step2Btn");
+  btn.disabled = !selectedType || !industryVal || status === "prohibited";
 }
 
 function step2Next() {
   if (!selectedType) { showError("Please select your business type."); return; }
+  const industryVal = document.getElementById("industryInput")?.value || "";
+  if (!industryVal) { showError("Please select your industry."); return; }
+  const [, status] = industryVal.split("|");
+  if (status === "prohibited") { showError("We are unable to accept applications from this business type."); return; }
   goStep(3);
 }
 
@@ -777,7 +850,9 @@ async function buildStep4() {
 // ═══════════════════════════════════════════════════════════
 async function calcPricing() {
   const { vol, cnt, cur, debitFrac, intlFrac } = getVolumeData();
-  const intlRegion = document.getElementById("intlRegionInput").value || null;
+  const intlRegionRaw = document.getElementById("intlRegionInput").value || "";
+  const intlRegionMap = { "uk": null, "eea": "eea", "uk_eea": "eea", "mixed": "mixed", "row": "row", "": null };
+  const intlRegion = intlRegionMap.hasOwnProperty(intlRegionRaw) ? intlRegionMap[intlRegionRaw] : null;
 
   try {
     const res = await fetch("/api/calculate_quote", {
@@ -927,6 +1002,12 @@ async function buildStep5() {
   if (winMsg) { winEl.textContent = "💡 " + winMsg; winEl.style.display = "block"; }
   else        { winEl.style.display = "none"; }
 
+  // Show restricted industry advisory if applicable
+  const industryVal = document.getElementById("industryInput")?.value || "";
+  const [, industryStatus] = industryVal.split("|");
+  const restrictedAdv = document.getElementById("restrictedAdvisory");
+  if (restrictedAdv) restrictedAdv.classList.toggle("hidden", industryStatus !== "restricted");
+
   document.getElementById("step5Loading").style.display = "none";
   document.getElementById("step5Content").style.display = "block";
   document.getElementById("step5Btns").style.display    = "flex";
@@ -949,7 +1030,9 @@ async function submitLead() {
   btn.textContent = "Submitting…";
 
   const { vol, cnt, cur, debitFrac, intlFrac, avgTx } = getVolumeData();
-  const intlRegion = document.getElementById("intlRegionInput").value || null;
+  const intlRegionRaw2 = document.getElementById("intlRegionInput").value || "";
+  const intlRegionMap2 = { "uk": null, "eea": "eea", "uk_eea": "eea", "mixed": "mixed", "row": "row", "": null };
+  const intlRegion = intlRegionMap2.hasOwnProperty(intlRegionRaw2) ? intlRegionMap2[intlRegionRaw2] : null;
   const provider   = document.getElementById("providerInput").value   || null;
   const intlPct    = parseFloat(document.getElementById("intlInput").value) || 0;
 
@@ -969,6 +1052,11 @@ async function submitLead() {
   const effRate     = cur > 0 && vol > 0 ? ((cur / vol) * 100).toFixed(2) : null;
   const mpMonthlyCost = indRate ? (vol * parseFloat(indRate) / 100 + cnt * indFixed / 100) : null;
   const saving      = (cur > 0 && mpMonthlyCost) ? Math.max(0, cur - mpMonthlyCost) : null;
+
+    // Industry qualification
+    const _industryRaw    = document.getElementById("industryInput")?.value || "";
+    const [_industryKey, _industryStatus] = _industryRaw.split("|");
+    const _industryLabel  = document.getElementById("industryInput")?.selectedOptions[0]?.text || "";
 
   const leadPayload = {
     // Core identity
@@ -997,11 +1085,13 @@ async function submitLead() {
     leadSource:       "website",
     status:           "new",
     brand:            "minted",
+    industry:         _industryLabel || null,
+    industryStatus:   _industryStatus || "allowed",
     // Notes from CSV if available
     csvProcessor:     csvData?.processor || null,
     csvDebitFrac:     csvData?.debitFrac  || null,
     csvIntlFrac:      csvData?.intlFrac   || null,
-    painPoints:       `Submitted via public pricing tool. Merchant type: ${selectedType}.${provider ? " Current provider: " + provider + "." : ""}${saving ? " Indicative saving: £" + saving.toFixed(0) + "/mo." : ""}`,
+    painPoints:       `Submitted via public pricing tool. Merchant type: ${selectedType}.${provider ? " Current provider: " + provider + "." : ""}${saving ? " Indicative saving: £" + saving.toFixed(0) + "/mo." : ""}${_industryLabel ? " Industry: " + _industryLabel + " (" + (_industryStatus||"allowed") + ")." : ""}`,
   };
 
   try {
