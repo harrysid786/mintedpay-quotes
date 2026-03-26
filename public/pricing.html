@@ -885,23 +885,68 @@ async function buildStep4() {
     document.getElementById("step4Btns").style.display    = "flex";
     document.getElementById("rateCompare").style.display  = "none";
     document.getElementById("rateOnly").style.display     = "none";
-    const advisory = document.createElement("div");
-    advisory.style.cssText = "background:var(--amber-lt);border:1px solid var(--amber-bd);border-left:3px solid #d97706;border-radius:10px;padding:20px;margin-bottom:20px;text-align:center";
-    advisory.innerHTML = `
-      <div style="font-size:22px;margin-bottom:10px">🤝</div>
-      <div style="font-size:16px;font-weight:600;color:#78350f;margin-bottom:8px">We want to beat your rate — let's talk</div>
-      <div style="font-size:13px;color:#92400e;line-height:1.6">
-        Based on your average transaction value of <strong>£${avgTx.toFixed(2)}</strong>, our standard
-        pricing is slightly higher than what you currently pay. This is typically because our fixed per-transaction
-        costs (gateway + processing fee) represent a larger percentage of lower-value transactions.<br><br>
-        Our team can look at your full picture — volume commitments, product mix, and terminal options — and
-        come back with a tailored proposal. Submit your details and we'll be in touch.
-      </div>`;
-    const content = document.getElementById("step4Content");
-    content.insertBefore(advisory, content.firstChild);
-    // Hide rate breakdown table and indicative note — no quote being shown
-    document.querySelector(".rate-breakdown-list").style.display = "none";
-    document.querySelector(".indicative-note").style.display = "none";
+    document.getElementById("segmentTable").style.display = "none";
+
+    // ── Partial win: some segments competitive, some not ────────────────
+    // Check if segment data exists and any segments ARE competitive
+    var _nc_segs = p.segment_quotes && p.segment_quotes.segments;
+    var _nc_competitive = _nc_segs ? _nc_segs.filter(function(s){ return s.competitive === true; }) : [];
+    var _nc_notComp     = _nc_segs ? _nc_segs.filter(function(s){ return s.competitive === false; }) : [];
+
+    var _nc_content = "";
+
+    if (_nc_segs && _nc_competitive.length > 0) {
+      // Partial win — show competitive segments, explain the rest
+      var _nc_rows = "";
+      _nc_competitive.forEach(function(s) {
+        var ourStr = s.ourFixedFee ? s.ourRate.toFixed(2) + "% + " + s.ourFixedFee + "p" : s.ourRate.toFixed(2) + "%";
+        var savStr = s.saving !== null ? "save £" + s.saving.toFixed(0) + "/mo" : "—";
+        _nc_rows += "<tr>" +
+          "<td style=\"padding:6px 10px;font-size:13px;font-weight:500;color:var(--ink)\">" + s.label + "</td>" +
+          "<td style=\"padding:6px 10px;font-size:13px;color:var(--slate)\">" + s.theirEffRate.toFixed(2) + "%</td>" +
+          "<td style=\"padding:6px 10px;font-size:13px;font-weight:500;color:var(--brand)\">" + ourStr + "</td>" +
+          "<td style=\"padding:6px 10px;font-size:13px;font-weight:500;color:var(--green)\">" + savStr + "</td>" +
+          "</tr>";
+      });
+      _nc_content =
+        "<div style=\"font-size:14px;font-weight:600;color:var(--amber);margin-bottom:8px\">" +
+          "We can beat your rate on most card types" +
+        "</div>" +
+        "<p style=\"font-size:13px;color:#924008;line-height:1.6;margin-bottom:12px\">" +
+          "We are cheaper on your main card types, but cannot beat your current rate across all segments at this stage." +
+        "</p>" +
+        "<table style=\"width:100%;border-collapse:collapse;margin-bottom:12px\">" +
+          "<thead><tr style=\"background:rgba(0,0,0,.04);\"><th style=\"padding:6px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left\">Card type</th><th style=\"padding:6px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left\">Your rate</th><th style=\"padding:6px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left\">Our rate</th><th style=\"padding:6px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left\">Saving</th></tr></thead>" +
+          "<tbody>" + _nc_rows + "</tbody>" +
+        "</table>" +
+        "<p style=\"font-size:12px;color:#924008\">Our specialists will review the full picture and be in touch with a tailored proposal.</p>";
+    } else {
+      // Fully not competitive — clean advisory
+      var _nc_reason = "";
+      if (p.avgTx && p.avgTx < 15) {
+        _nc_reason = "Your average transaction value of £" + p.avgTx.toFixed(2) + " means our per-transaction costs are higher as a percentage — this is a low average ticket size for our current pricing tier.";
+      } else if (p.current_rate && p.current_rate < 1.20) {
+        _nc_reason = "Your current rate of " + p.current_rate.toFixed(2) + "% is already very competitive. We cannot better this at your current volume.";
+      } else {
+        _nc_reason = "Based on your current processing costs, we are not able to offer a cheaper rate at this time.";
+      }
+      _nc_content =
+        "<div style=\"font-size:14px;font-weight:600;color:var(--amber);margin-bottom:8px\">" +
+          "We want to beat your rate — let’s talk" +
+        "</div>" +
+        "<p style=\"font-size:13px;color:#924008;line-height:1.6;margin-bottom:8px\">" + _nc_reason + "</p>" +
+        "<p style=\"font-size:13px;color:#924008;line-height:1.6\">" +
+          "Our specialists will review your account and be in touch directly. Your details have been captured." +
+        "</p>";
+    }
+
+    var _nc_advisory = document.createElement("div");
+    _nc_advisory.style.cssText = "background:var(--amber-lt);border:1px solid var(--amber-bd);border-radius:var(--r);padding:16px;margin-top:12px";
+    _nc_advisory.innerHTML = _nc_content;
+    var _nc_container = document.getElementById("step4Content");
+    _nc_container.querySelectorAll(".nc-advisory").forEach(function(el){ el.remove(); });
+    _nc_advisory.className = "nc-advisory";
+    _nc_container.appendChild(_nc_advisory);
     quoteShown = false;
     return;
   }
