@@ -392,9 +392,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
         <input type="number" id="cntInput" placeholder="e.g. 1200" min="0" step="1">
       </div>
       <div class="field">
-        <label>Current monthly processing fees <span style="font-weight:400;color:var(--mute)">(optional)</span></label>
-        <div class="pfx-wrap"><div class="pfx">£</div><input type="number" id="curInput" placeholder="Leave blank if unknown" min="0" step="0.01"></div>
-        <div class="field-hint">If you know what you pay now, we can show your exact saving.</div>
+        <label>Your current processing rate <span style="font-weight:400;color:var(--mute)">(optional)</span></label>
+        <div class="pfx-wrap"><input type="number" id="curRateInput" placeholder="e.g. 1.75" min="0" max="10" step="0.01"><div class="pfx" style="border-left:1px solid var(--line);border-right:none">%</div></div>
+        <div class="field-hint">Check your contract or most recent statement.</div>
+      </div>
+      <div class="field">
+        <label>Fixed fee per transaction <span style="font-weight:400;color:var(--mute)">(optional)</span></label>
+        <div class="pfx-wrap"><input type="number" id="curFixedInput" placeholder="e.g. 20" min="0" step="1"><div class="pfx" style="border-left:1px solid var(--line);border-right:none">p</div></div>
+        <div class="field-hint">Leave blank if none or unknown.</div>
       </div>
       <div id="avgTicketWarning" class="warn-box hidden"></div>
     </div>
@@ -428,7 +433,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
       </div>
       <!-- Changes 2, 3, 4: Cleaned up label, blank default, removed "Mostly" -->
       <div class="field">
-        <label>Where are your customers based? <span style="font-weight:400;color:var(--mute)">(optional)</span></label>
+        <label>Where are your customers based? <span id="regionRequiredMark" style="font-weight:400;color:var(--mute)">(optional)</span></label>
         <select id="intlRegionInput" class="field-select">
           <option value="">— Select customer base —</option>
           <option value="uk">Primarily United Kingdom</option>
@@ -783,6 +788,12 @@ async function step3Next() {
     if (!vol || vol <= 0) { showError("Please enter your monthly card volume."); return; }
     if (!cnt || cnt <= 0) { showError("Please enter your number of transactions."); return; }
   }
+  // If international % entered, customer base is required
+  const intlVal = parseFloat(document.getElementById("intlInput")?.value) || 0;
+  if (intlVal > 0) {
+    const regionVal = document.getElementById("intlRegionInput")?.value || "";
+    if (!regionVal) { showError("Please select where your customers are based — this helps us calculate your international rate accurately."); return; }
+  }
   // Kick off pricing API call in background while merchant moves to rate step
   calcPricing();
   // Go directly to Step 4 (rate display — old Step 5)
@@ -1081,7 +1092,7 @@ async function submitLead() {
     csvProcessor:     csvData?.processor || null,
     csvDebitFrac:     csvData?.debitFrac  || null,
     csvIntlFrac:      csvData?.intlFrac   || null,
-    painPoints:       `Submitted via public pricing tool. Merchant type: ${selectedType}.${provider ? " Current provider: " + provider + "." : ""}${saving ? " Indicative saving: £" + saving.toFixed(0) + "/mo." : ""}${_industryLabel ? " Industry: " + _industryLabel + " (" + (_industryStatus || "allowed") + ")." : ""}`,
+    painPoints:       `Submitted via public pricing tool. Merchant type: ${selectedType}.${provider ? " Current provider: " + provider + "." : ""}${saving ? " Indicative saving: £" + saving.toFixed(0) + "/mo." : ""}${_industryLabel ? " Industry: " + _industryLabel + " (" + (_industryStatus || "allowed") + ")." : ""}${(parseFloat(document.getElementById("curRateInput")?.value)||0) > 0 ? " Current rate entered: " + document.getElementById("curRateInput").value + "% + " + (document.getElementById("curFixedInput")?.value||"0") + "p/tx." : ""}`,
   };
 
   try {
@@ -1132,7 +1143,12 @@ function getVolumeData() {
   } else {
     vol       = parseFloat(document.getElementById("volInput").value)  || 0;
     cnt       = parseFloat(document.getElementById("cntInput").value)  || 0;
-    cur       = parseFloat(document.getElementById("curInput").value)  || 0;
+    // Calculate cur from % rate + pence fixed fee
+    const curRatePct   = parseFloat(document.getElementById("curRateInput")?.value)  || 0;
+    const curFixedPence = parseFloat(document.getElementById("curFixedInput")?.value) || 0;
+    cur = (curRatePct > 0 || curFixedPence > 0)
+      ? Math.round(((vol * curRatePct / 100) + (cnt * curFixedPence / 100)) * 100) / 100
+      : 0;
     debitFrac = 0.70;
     const intlRaw = parseFloat(document.getElementById("intlInput").value);
     intlFrac  = Number.isFinite(intlRaw) && intlRaw >= 0 && intlRaw <= 100 ? intlRaw / 100 : null;
@@ -1344,8 +1360,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const intlInp = document.getElementById("intlInput");
   if (intlInp) intlInp.addEventListener("input", () => {
     const v = parseFloat(intlInp.value);
+    const regionField = document.getElementById("intlRegionInput").closest(".field");
+    const regionMark  = document.getElementById("regionRequiredMark");
     if (v > 0) {
-      document.getElementById("intlRegionInput").closest(".field").style.display = "";
+      regionField.style.display = "";
+      if(regionMark) regionMark.innerHTML = '<span style="color:var(--brand);margin-left:2px">*</span>';
+    } else {
+      if(regionMark) regionMark.innerHTML = '(optional)';
+      // Reset region if intl cleared
+      document.getElementById("intlRegionInput").value = "";
     }
   });
 
