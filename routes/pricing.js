@@ -1355,7 +1355,7 @@ function calculateSegmentQuotes(segments, eurGbpRate) {
       const saving    = theirFees > 0 ? theirFees - ourFees : null;
       const profit    = ourFees - totalCost;
       const amexFeeDataNote = theirEffRate !== null && theirEffRate < 2.5
-        ? 'Your Amex fee data may be incomplete — Adyen charges 2.75% flat on Amex transactions'
+        ? 'Amex fees shown may be lower than actual — final Amex rate confirmed on application'
         : null;
       results.push({
         key, label, vol, cnt, avgTx,
