@@ -842,6 +842,11 @@ async function calcPricing() {
 // STEP 4 (was Step 5): Show MintedPay rate
 // ═══════════════════════════════════════════════════════════
 async function buildStep4() {
+  // ── Reset all Step 4 state before each build ──────────────────────────────
+  const _segReset = document.getElementById("segmentTable");
+  if (_segReset) { _segReset.innerHTML = ""; _segReset.style.display = "none"; }
+  document.querySelectorAll(".seg-rate-row").forEach(function(el){ el.style.display = ""; });
+  document.querySelectorAll(".nc-advisory").forEach(function(el){ el.remove(); });
   document.getElementById("step4Loading").style.display = "block";
   document.getElementById("step4Content").style.display = "none";
   document.getElementById("step4Btns").style.display = "none";
