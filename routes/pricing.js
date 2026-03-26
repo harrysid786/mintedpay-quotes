@@ -1288,6 +1288,187 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
   };
 }
 
+// ── calculateSegmentQuotes ───────────────────────────────────
+// Derives per-segment quotes when the CSV provides fee data broken
+// down by card type / region.
+//
+// segments: array of objects, each with:
+//   { key, label, vol, cnt, theirFees }
+//   key: 'uk_debit' | 'uk_credit' | 'eea' | 'international' | 'amex'
+//
+// Returns array of segment quote objects for the merchant-facing display.
+// Each segment goes through the same floor/ceiling/target logic independently.
+//
+function calculateSegmentQuotes(segments, eurGbpRate) {
+  eurGbpRate = eurGbpRate || DEFAULT_EUR_GBP_RATE;
+
+  // IC rates per segment
+  const SEGMENT_IC = {
+    uk_debit:      INTERCHANGE.ukDebit,   // 0.20%
+    uk_credit:     INTERCHANGE.ukCredit,  // 0.30%
+    eea:           INTERCHANGE.intlEEA,   // 0.80%
+    international: INTERCHANGE.intlRoW,   // 1.50%
+    amex:          2.75,                  // Amex flat (no IC++ for Amex)
+  };
+
+  // Max fixed fee per segment (higher ticket = can absorb higher fixed fee)
+  const FIXED_FEE_OPTIONS = [20, 15, 10, 5]; // pence, descending
+  const MIN_SAVING_PCT    = 0.10;             // 10% minimum saving threshold
+  const ABS_RATE_FLOOR    = 1.10;             // never quote below 1.10%
+  const UNDERCUT_FACTOR   = 0.75;             // 25% cheaper than their all-in
+
+  const results = [];
+
+  for (const seg of segments) {
+    const { key, label, vol, cnt, theirFees } = seg;
+    if (!vol || vol <= 0 || !cnt || cnt <= 0) continue;
+
+    const avgTx = vol / cnt;
+    const ic    = SEGMENT_IC[key] || INTERCHANGE.intl;
+
+    // Our true cost for this segment
+    const costPct      = ic + SCHEME_FEE + ADYEN_MARKUP_FLAT_PCT;  // %
+    const wespellGBP   = WESPELL_FLAT_FEE_EUR * eurGbpRate;         // £/tx
+    const fixedCostGBP = ADYEN_GATEWAY_FLAT_FEE_GBP + wespellGBP;  // £0.143/tx
+    const totalCost    = vol * (costPct / 100) + cnt * fixedCostGBP;
+
+    // Their effective rate for this segment
+    const theirEffRate = theirFees > 0 && vol > 0 ? (theirFees / vol) * 100 : null;
+
+    // Amex: always quoted as flat % (no fixed fee), just return standard rate
+    if (key === 'amex') {
+      const ourRate    = 3.25;  // our standard Amex rate
+      const ourFees    = vol * (ourRate / 100);
+      const saving     = theirFees > 0 ? theirFees - ourFees : null;
+      const ourCost    = totalCost;
+      const profit     = ourFees - ourCost;
+      results.push({
+        key, label, vol, cnt, avgTx,
+        theirFees:    Math.round(theirFees  * 100) / 100,
+        theirEffRate: theirEffRate ? Math.round(theirEffRate * 100) / 100 : null,
+        ourRate,
+        ourFixedFee:  0,
+        ourFees:      Math.round(ourFees    * 100) / 100,
+        saving:       saving !== null ? Math.round(saving   * 100) / 100 : null,
+        savingPct:    saving !== null && theirFees > 0 ? Math.round(saving / theirFees * 10000) / 100 : null,
+        profit:       Math.round(profit     * 100) / 100,
+        competitive:  theirEffRate !== null ? ourRate < theirEffRate : null,
+        dataNote:     theirEffRate !== null && theirEffRate < ourRate
+                      ? 'Amex interchange is higher — we cost more on this segment'
+                      : null,
+        amexFeeDataNote: theirEffRate !== null && theirEffRate < 2.5
+                      ? 'Your Amex fee data may be incomplete — Stripe standard Amex rate is 3.25%'
+                      : null,
+      });
+      continue;
+    }
+
+    // No fee data for this segment — return indicative rate only
+    if (!theirFees || theirFees <= 0) {
+      const floorPct      = Math.max(((totalCost - cnt * 0.10) / vol) * 100, ABS_RATE_FLOOR);
+      const indicativeRate = Math.ceil((floorPct + 0.20) * 100) / 100;
+      results.push({
+        key, label, vol, cnt, avgTx,
+        theirFees:    0,
+        theirEffRate: null,
+        ourRate:      indicativeRate,
+        ourFixedFee:  10,
+        ourFees:      Math.round((vol * (indicativeRate / 100) + cnt * 0.10) * 100) / 100,
+        saving:       null,
+        savingPct:    null,
+        profit:       null,
+        competitive:  null,
+        noFeeData:    true,
+      });
+      continue;
+    }
+
+    // Try fixed fee options: pick highest where competitive + saving ≥ 10%
+    let bestOption = null;
+    for (const fxP of FIXED_FEE_OPTIONS) {
+      const fxGBP = fxP / 100;
+      // Floor: min % to break even
+      const floorPct = Math.max(((totalCost - cnt * fxGBP) / vol) * 100, ABS_RATE_FLOOR);
+      // Ceiling: max % before merchant pays same as now
+      const ceilPct  = ((theirFees - cnt * fxGBP) / vol) * 100;
+      // All-in floor check
+      const floorAllIn = floorPct + (cnt * fxGBP / vol * 100);
+      if (floorAllIn >= theirEffRate) continue; // not competitive even at floor
+      if (ceilPct <= floorPct) continue;        // no headroom
+      // Target: 25% undercut of their all-in
+      const fixedAsPct   = (cnt * fxGBP / vol) * 100;
+      const targetAllIn  = theirEffRate * UNDERCUT_FACTOR;
+      const targetPct    = targetAllIn - fixedAsPct;
+      const quotedPct    = Math.min(Math.max(targetPct, floorPct), ceilPct - 0.01);
+      const allIn        = quotedPct + fixedAsPct;
+      if (allIn >= theirEffRate) continue;
+      const ourFees      = vol * (quotedPct / 100) + cnt * fxGBP;
+      const saving       = theirFees - ourFees;
+      const savingPct    = saving / theirFees;
+      if (savingPct < MIN_SAVING_PCT) continue;
+      bestOption = { fxP, quotedPct: Math.ceil(quotedPct * 100) / 100, allIn, saving, savingPct, floorPct, ceilPct };
+      break;
+    }
+
+    if (!bestOption) {
+      // Can't beat them at any fixed fee — not competitive for this segment
+      const floorPct10   = Math.max(((totalCost - cnt * 0.10) / vol) * 100, ABS_RATE_FLOOR);
+      const floorAllIn10 = floorPct10 + (cnt * 0.10 / vol * 100);
+      results.push({
+        key, label, vol, cnt, avgTx,
+        theirFees:    Math.round(theirFees    * 100) / 100,
+        theirEffRate: Math.round(theirEffRate * 100) / 100,
+        ourRate:      null,
+        ourFixedFee:  null,
+        ourFees:      null,
+        saving:       null,
+        savingPct:    null,
+        profit:       null,
+        competitive:  false,
+        floorPct:     Math.round(floorPct10  * 100) / 100,
+        floorAllIn:   Math.round(floorAllIn10 * 100) / 100,
+      });
+      continue;
+    }
+
+    const ourFees  = vol * (bestOption.quotedPct / 100) + cnt * (bestOption.fxP / 100);
+    const profit   = ourFees - totalCost;
+    results.push({
+      key, label, vol, cnt, avgTx,
+      theirFees:    Math.round(theirFees              * 100) / 100,
+      theirEffRate: Math.round(theirEffRate            * 100) / 100,
+      ourRate:      bestOption.quotedPct,
+      ourFixedFee:  bestOption.fxP,
+      ourFees:      Math.round(ourFees                * 100) / 100,
+      saving:       Math.round(bestOption.saving       * 100) / 100,
+      savingPct:    Math.round(bestOption.savingPct   * 10000) / 100,
+      profit:       Math.round(profit                 * 100) / 100,
+      competitive:  true,
+      floorPct:     Math.round(bestOption.floorPct    * 100) / 100,
+      ceilPct:      Math.round(bestOption.ceilPct     * 100) / 100,
+    });
+  }
+
+  // Summary totals across all segments
+  const totalTheirFees = results.reduce((s, r) => s + (r.theirFees || 0), 0);
+  const totalOurFees   = results.reduce((s, r) => s + (r.ourFees   || 0), 0);
+  const totalSaving    = totalTheirFees > 0 ? totalTheirFees - totalOurFees : null;
+  const totalProfit    = results.reduce((s, r) => s + (r.profit    || 0), 0);
+
+  return {
+    segments: results,
+    hasSegmentData: results.length > 0,
+    summary: {
+      totalTheirFees: Math.round(totalTheirFees * 100) / 100,
+      totalOurFees:   Math.round(totalOurFees   * 100) / 100,
+      totalSaving:    totalSaving !== null ? Math.round(totalSaving * 100) / 100 : null,
+      totalSavingPct: totalSaving !== null && totalTheirFees > 0
+                      ? Math.round(totalSaving / totalTheirFees * 10000) / 100 : null,
+      totalProfit:    Math.round(totalProfit    * 100) / 100,
+    },
+  };
+}
+
 function generateQuoteId() {
   const year = new Date().getFullYear();
   const rand = Math.floor(Math.random() * 9000) + 1000;
@@ -1297,7 +1478,7 @@ function generateQuoteId() {
 // ── POST /api/calculate_quote ─────────────────────────────────
 router.post("/", (req, res) => {
   try {
-    const { merchant_name, merchant_email, monthly_volume, transaction_count, current_fees, debit_frac, intl_frac, csv_debit_frac_is_real, pricing_profile, settings_override, intl_region } = req.body;
+    const { merchant_name, merchant_email, monthly_volume, transaction_count, current_fees, debit_frac, intl_frac, csv_debit_frac_is_real, pricing_profile, settings_override, intl_region, segment_data } = req.body;
 
     if (!merchant_email) {
       return res.status(400).json({ error: "Email address is required" });
@@ -1345,6 +1526,14 @@ router.post("/", (req, res) => {
     const result = calculateQuote(vol, cnt, debitFrac, cur, intlFrac, csvDebitFracIsReal, profileName, resolvedSettings, intlRegion);
     if (!result) {
       return res.status(400).json({ error: "Unable to calculate rate with the provided data" });
+    }
+
+    // ── Per-segment quotes (when CSV provides segment data) ───────
+    // segment_data: array of { key, label, vol, cnt, theirFees }
+    // e.g. [{ key:'uk_debit', label:'UK Debit', vol:20919, cnt:1780, theirFees:471.16 }, ...]
+    let segmentQuotes = null;
+    if (segment_data && Array.isArray(segment_data) && segment_data.length > 0) {
+      segmentQuotes = calculateSegmentQuotes(segment_data, eurGbpRate);
     }
 
     const quote_id    = generateQuoteId();
@@ -1469,6 +1658,8 @@ router.post("/", (req, res) => {
       intl_mix_status:              result.intl_mix_status,
       intl_region:                  result.intl_region,
       fallback_international_rate:  result.fallback_international_rate,
+      // ── Per-segment quotes (when segment_data was provided) ──────
+      segment_quotes:               segmentQuotes,
     });
 
   } catch (err) {
