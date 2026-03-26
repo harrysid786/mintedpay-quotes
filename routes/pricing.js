@@ -1552,7 +1552,7 @@ router.post("/", (req, res) => {
     // e.g. [{ key:'uk_debit', label:'UK Debit', vol:20919, cnt:1780, theirFees:471.16 }, ...]
     let segmentQuotes = null;
     if (segment_data && Array.isArray(segment_data) && segment_data.length > 0) {
-      segmentQuotes = calculateSegmentQuotes(segment_data, eurGbpRate);
+      segmentQuotes = calculateSegmentQuotes(segment_data, getSetting("EUR_GBP_RATE", DEFAULT_EUR_GBP_RATE));
     }
 
     const quote_id    = generateQuoteId();
