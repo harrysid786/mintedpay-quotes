@@ -908,7 +908,18 @@ async function buildStep4() {
 
   // Frontend not-competitive gate: if we can't beat their current rate, don't show a quote
   // Still pass all data to admin via the submit flow
-  if (hasCurFees && displayRate && effRate && displayRate >= effRate) {
+  // Compare TRUE all-in effective rate (% + fixed fee) vs merchant's current rate
+  // This catches cases where fixed 10p/tx pushes our total cost above their current rate
+  const _fixedFee = p && p.fixedFee ? p.fixedFee : 10; // pence per tx
+  const _csvCnt = parseInt((document.getElementById("csvCnt")||{}).textContent||"0") || 0;
+  const _csvVol = parseFloat((document.getElementById("csvVol")||{}).textContent||"0") || vol;
+  const _manCnt = parseInt((document.getElementById("cntInput")||{}).value||"0") || 0;
+  const _cnt = _csvCnt || _manCnt || 1;
+  const _avgTx = _csvVol > 0 && _cnt > 0 ? _csvVol / _cnt : (vol > 0 && _cnt > 0 ? vol / _cnt : 0);
+  const _allInEffRate = _avgTx > 0
+    ? displayRate + (_fixedFee / 100 / _avgTx * 100)
+    : displayRate;
+  if (hasCurFees && displayRate && effRate && _allInEffRate >= effRate) {
     document.getElementById("step4Loading").style.display = "none";
     document.getElementById("step4Content").style.display = "block";
     document.getElementById("step4Btns").style.display    = "flex";
