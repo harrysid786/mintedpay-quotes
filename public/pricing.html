@@ -1236,6 +1236,15 @@ function parseCSV(text) {
     if(!cardData[k])cardData[k]={vol:0,cnt:0};cardData[k].vol+=a;cardData[k].cnt++;
     if(colMap.country){const c=(r[colMap.country]||"").trim().toUpperCase();if(c){cpop++;if(c!=="GB"&&c!=="GBR"&&c!=="UK")intlVol+=a}}
   });
+  // AUTO-DETECT PENCE: Stripe and some processors export amounts in minor units (pence)
+  // If avg transaction > £500, divide all values by 100
+  if(cnt > 0 && (vol / cnt) > 500) {
+    const _d = 100;
+    vol   = vol   / _d;
+    fees  = fees  / _d;
+    Object.keys(cardData).forEach(k => { cardData[k].vol /= _d; });
+    intlVol = intlVol / _d;
+  }
   if(vol<=0||cnt<2)throw new Error("Not enough transaction data found");
 
   let dv=0;Object.entries(cardData).forEach(([k,v])=>{if(isDebitCard(k))dv+=v.vol});
