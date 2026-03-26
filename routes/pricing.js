@@ -900,8 +900,15 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
     // where worst-case floor = 2.21%) — quoting MORE than they currently pay.
     if (curFees && curFees > 0) {
       currentRate = (curFees / vol) * 100;
-      // Target = 80% of current rate — meaningful saving regardless of current rate level
-      const undercutTarget = currentRate * 0.80;
+      // ── ALL-IN undercut: work in effective all-in rates, not headline % ──
+      // Their all-in = currentRate (already an effective % from fees/vol)
+      // Our all-in   = quotedPct + (fixedFee × cnt / vol × 100)
+      // Target all-in = their all-in × 0.75  (25% undercut)
+      // Back-derive: target_pct = target_all_in - fixed_fee_as_pct
+      const displayedFixedFeePence = 10; // we always show 10p to merchant
+      const fixedFeeAsPct = (cnt * (displayedFixedFeePence / 100) / vol) * 100;
+      const targetAllIn = currentRate * 0.75;
+      const undercutTarget = targetAllIn - fixedFeeAsPct;
       // Cost floor uses REAL cost (provisionalCostEngine), not worst-case
       // This prevents the floor from exceeding the merchant's current fees
       const realCostRate = provisionalCostEngine.effectiveTotalCostPct;
@@ -1197,11 +1204,12 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
     warning_flags:                warningFlags,
     is_public_profile:            isPublicProfile,
     // ── Competitive flag ──────────────────────────────────────
-    // True when our quoted rate is cheaper than the merchant's current effective rate.
-    // False means the floor bound — we cannot beat their current provider at this avg ticket.
+    // True when our ALL-IN effective rate is cheaper than the merchant's current effective rate.
+    // All-in = quoted % rate + fixed fee expressed as % of volume.
+    // This correctly accounts for the fixed fee impact at low average ticket sizes.
     // null when no current fees were provided.
-    is_cheaper_than_current:      currentRate !== null ? (quoteRate < currentRate) : null,
-    not_competitive:              currentRate !== null ? (quoteRate >= currentRate) : null,
+    is_cheaper_than_current:      currentRate !== null ? (quoteRate + (cnt * (fixedFee / 100) / vol * 100) < currentRate) : null,
+    not_competitive:              currentRate !== null ? (quoteRate + (cnt * (fixedFee / 100) / vol * 100) >= currentRate) : null,
     // ── International region ───────────────────────────────────
     // Echoed back for transparency. null when not supplied.
     // Note: acquisition_plus always uses worst-case 1.50% regardless of this value.
