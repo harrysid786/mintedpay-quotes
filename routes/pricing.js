@@ -988,31 +988,87 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
   //
   // shortfall = max(0, total − £0.10)
   // shortfallPct = (shortfall / avgTx) × 100  [only when avgTx ≥ £1]
-  const PUBLIC_DISPLAYED_FIXED_FEE_PENCE = 10;
-  const PUBLIC_DISPLAYED_FIXED_FEE_GBP   = PUBLIC_DISPLAYED_FIXED_FEE_PENCE / 100;
+  // ── Variable fixed fee selection for public profile ─────────────
+  // Try 20p → 15p → 10p → 5p. Pick the highest fixed fee where:
+  //   1. Our all-in effective rate < their current effective rate (competitive)
+  //   2. Merchant saves ≥ 10% of their current fees (compelling reason to switch)
+  //   3. Our quoted % rate is above our floor (no loss)
+  // If no option works → not_competitive will catch it downstream.
+  const PUBLIC_FIXED_FEE_OPTIONS = [20, 15, 10, 5]; // pence, descending
+  const MIN_SAVING_PCT = 0.10; // 10% minimum saving threshold
 
+  let selectedFixedFeePence = 10; // default fallback
   let fixedFeeShortfallAbsorbed = false;
 
-  if (isPublicProfile) {
+  if (isPublicProfile && curFees && curFees > 0) {
+    let bestOption = null;
+    for (const fxP of PUBLIC_FIXED_FEE_OPTIONS) {
+      const fxGBP = fxP / 100;
+      // Floor: min % to break even at this fixed fee
+      const worstCaseTotalFixed = PUBLIC_WORST_CASE_TOTAL_FIXED_GBP;
+      const fxFloorPct = Math.max(
+        ((finalCostEngine.totalEstimatedMonthlyCostGBP - cnt * fxGBP) / vol) * 100,
+        rules.rateFloor
+      );
+      // Ceiling: max % before merchant pays same as now
+      const fxCeilPct = ((curFees - cnt * fxGBP) / vol) * 100;
+      // All-in floor
+      const fxFloorAllIn = fxFloorPct + (cnt * fxGBP / vol * 100);
+      if (fxFloorAllIn >= currentRate) continue; // not competitive at this fixed fee
+      if (fxCeilPct <= fxFloorPct) continue; // no headroom
+      // Target: 25% undercut of their all-in, back-derived
+      const fxFixedAsPct = (cnt * fxGBP / vol) * 100;
+      const fxTargetAllIn = currentRate * 0.75;
+      const fxTargetPct = fxTargetAllIn - fxFixedAsPct;
+      const fxQuotedPct = Math.max(fxTargetPct, fxFloorPct);
+      const fxAllIn = fxQuotedPct + fxFixedAsPct;
+      if (fxAllIn >= currentRate) continue; // still not competitive after clamping
+      const fxMerchPays = vol * (fxQuotedPct / 100) + cnt * fxGBP;
+      const fxSavingPct = (curFees - fxMerchPays) / curFees;
+      if (fxSavingPct < MIN_SAVING_PCT) continue; // saving too small to bother switching
+      // This option works — pick the highest fixed fee (first match wins)
+      bestOption = { fxP, fxQuotedPct, fxAllIn, fxSavingPct };
+      break;
+    }
+    if (bestOption) {
+      selectedFixedFeePence = bestOption.fxP;
+      // Override quoteRate with the rate calculated for the selected fixed fee
+      quoteRate = Math.ceil(bestOption.fxQuotedPct * 100) / 100;
+      // Re-check floor
+      const adjustedMin = realCostForFloor + rules.minMargin;
+      if (quoteRate < adjustedMin) quoteRate = Math.ceil(adjustedMin * 100) / 100;
+    }
+    // Handle shortfall: if true fixed cost > selected displayed fee, absorb into %
+    const selectedFxGBP = selectedFixedFeePence / 100;
     const worstCaseTotalFixed = PUBLIC_WORST_CASE_TOTAL_FIXED_GBP;
-    if (worstCaseTotalFixed > PUBLIC_DISPLAYED_FIXED_FEE_GBP) {
-      const shortfallPerTxGBP = worstCaseTotalFixed - PUBLIC_DISPLAYED_FIXED_FEE_GBP;
+    if (worstCaseTotalFixed > selectedFxGBP) {
+      const shortfallPerTxGBP = worstCaseTotalFixed - selectedFxGBP;
       if (avgTx >= 1) {
         const shortfallPct = (shortfallPerTxGBP / avgTx) * 100;
-        quoteRate = quoteRate + shortfallPct;
-        quoteRate = Math.ceil(quoteRate * 100) / 100;
+        quoteRate = Math.ceil((quoteRate + shortfallPct) * 100) / 100;
         fixedFeeShortfallAbsorbed = true;
+        // Re-check floor after shortfall
+        const adjustedMin = realCostForFloor + rules.minMargin;
+        if (quoteRate < adjustedMin) quoteRate = Math.ceil(adjustedMin * 100) / 100;
       }
     }
-
-    // Re-check floor after shortfall adjustment — use real cost for acquisition_plus
-    const adjustedMin = realCostForFloor + rules.minMargin;
-    if (quoteRate < adjustedMin) quoteRate = Math.ceil(adjustedMin * 100) / 100;
+  } else if (isPublicProfile) {
+    // No fee data — default 10p, apply shortfall logic as before
+    const worstCaseTotalFixed = PUBLIC_WORST_CASE_TOTAL_FIXED_GBP;
+    const selectedFxGBP = selectedFixedFeePence / 100;
+    if (worstCaseTotalFixed > selectedFxGBP && avgTx >= 1) {
+      const shortfallPct = ((worstCaseTotalFixed - selectedFxGBP) / avgTx) * 100;
+      quoteRate = Math.ceil((quoteRate + shortfallPct) * 100) / 100;
+      fixedFeeShortfallAbsorbed = true;
+      const adjustedMin = realCostForFloor + rules.minMargin;
+      if (quoteRate < adjustedMin) quoteRate = Math.ceil(adjustedMin * 100) / 100;
+    }
   }
 
   // Fixed fee shown to merchant:
-  //   acquisition_plus → always 10p (clean, competitive presentation)
+  //   acquisition_plus → dynamically selected (5p/10p/15p/20p)
   //   all other profiles → from the volume tier as before
+  const PUBLIC_DISPLAYED_FIXED_FEE_PENCE = selectedFixedFeePence;
   const fixedFee = isPublicProfile ? PUBLIC_DISPLAYED_FIXED_FEE_PENCE : provisionalFixedFee;
 
   // ════════════════════════════════════════════════════════════
