@@ -1553,6 +1553,10 @@ router.post("/", (req, res) => {
     let segmentQuotes = null;
     if (segment_data && Array.isArray(segment_data) && segment_data.length > 0) {
       segmentQuotes = calculateSegmentQuotes(segment_data, getSetting("EUR_GBP_RATE", DEFAULT_EUR_GBP_RATE));
+      // Segment data is more accurate than blended flag — if net saving > 0, we ARE competitive
+      if (segmentQuotes && segmentQuotes.summary && segmentQuotes.summary.totalSaving > 0) {
+        result.not_competitive = false;
+      }
     }
 
     const quote_id    = generateQuoteId();
