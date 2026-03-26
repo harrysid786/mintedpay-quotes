@@ -1335,13 +1335,25 @@ function calculateSegmentQuotes(segments, eurGbpRate) {
     // Their effective rate for this segment
     const theirEffRate = theirFees > 0 && vol > 0 ? (theirFees / vol) * 100 : null;
 
-    // Amex: always quoted as flat % (no fixed fee), just return standard rate
+    // Amex: quoted as flat % (no fixed fee)
+    // Our cost: Adyen IC 2.75% + scheme 0.13% + Adyen markup 0.20% = 3.08% + £0.143/tx fixed
+    // Quote rate = cost + margin, derived dynamically from volume/count
     if (key === 'amex') {
-      const ourRate    = 3.25;  // our standard Amex rate
-      const ourFees    = vol * (ourRate / 100);
-      const saving     = theirFees > 0 ? theirFees - ourFees : null;
-      const ourCost    = totalCost;
-      const profit     = ourFees - ourCost;
+      // Calculate true Amex cost (% + fixed expressed as effective %)
+      const amexCostPct     = ic + SCHEME_FEE + ADYEN_MARKUP_FLAT_PCT; // 2.75+0.13+0.20 = 3.08%
+      const amexFixedAsPct  = fixedCostGBP > 0 && cnt > 0 && vol > 0
+                              ? (cnt * fixedCostGBP / vol) * 100 : 0;
+      const amexTotalCostPct = amexCostPct + amexFixedAsPct;
+      // Quote: total cost % + 0.20% margin, ceil to 2dp, min 3.10%
+      const ourRate   = Math.max(Math.ceil((amexTotalCostPct + 0.20) * 100) / 100, 3.10);
+      const ourFees   = vol * (ourRate / 100); // no fixed fee shown to merchant for Amex
+      const saving    = theirFees > 0 ? theirFees - ourFees : null;
+      const profit    = ourFees - totalCost;
+      // Amex data quality note: if their effective rate looks lower than our cost,
+      // the CSV fee data is likely incomplete (Adyen/Stripe IC for Amex is 2.75%)
+      const amexFeeDataNote = theirEffRate !== null && theirEffRate < amexTotalCostPct
+                      ? 'Your Amex fee data may be incomplete — Adyen charges 2.75% interchange on Amex'
+                      : null;
       results.push({
         key, label, vol, cnt, avgTx,
         theirFees:    Math.round(theirFees  * 100) / 100,
@@ -1356,9 +1368,14 @@ function calculateSegmentQuotes(segments, eurGbpRate) {
         dataNote:     theirEffRate !== null && theirEffRate < ourRate
                       ? 'Amex interchange is higher — we cost more on this segment'
                       : null,
-        amexFeeDataNote: theirEffRate !== null && theirEffRate < 2.5
-                      ? 'Your Amex fee data may be incomplete — Stripe standard Amex rate is 3.25%'
-                      : null,
+        amexFeeDataNote,
+        amexCostBreakdown: {
+          icPct:      2.75,
+          schemePct:  SCHEME_FEE,
+          markupPct:  ADYEN_MARKUP_FLAT_PCT,
+          fixedAsPct: Math.round(amexFixedAsPct * 100) / 100,
+          totalCostPct: Math.round(amexTotalCostPct * 100) / 100,
+        },
       });
       continue;
     }
