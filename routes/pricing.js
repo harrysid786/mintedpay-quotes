@@ -1339,40 +1339,44 @@ function calculateSegmentQuotes(segments, eurGbpRate) {
     // Our cost: Adyen IC 2.75% + scheme 0.13% + Adyen markup 0.20% = 3.08% + £0.143/tx fixed
     // Quote rate = cost + margin, derived dynamically from volume/count
     if (key === 'amex') {
-      // Calculate true Amex cost (% + fixed expressed as effective %)
-      const amexCostPct     = ic; // 2.75% — Adyen flat all-in (NOT IC++), no scheme/markup added
-      const amexFixedAsPct  = fixedCostGBP > 0 && cnt > 0 && vol > 0
-                              ? (cnt * fixedCostGBP / vol) * 100 : 0;
-      const amexTotalCostPct = amexCostPct + amexFixedAsPct;
-      // Quote: total cost % + 0.20% margin, ceil to 2dp, min 3.10%
+      // Amex: Adyen charges 2.75% flat all-in (NOT IC++).
+      // Show 10p fixed fee to merchant — same as other card types.
+      // Wespell shortfall (£0.043) absorbed into quoted %.
+      const amexCostPct        = ic;  // 2.75% Adyen flat, no scheme/markup on top
+      const AMEX_DISPLAYED_FX  = 10;  // pence shown to merchant
+      const amexDisplayedFxGBP = AMEX_DISPLAYED_FX / 100;
+      // Shortfall: our real fixed cost (£0.143) minus displayed 10p = £0.043 absorbed into %
+      const amexShortfallPct   = (cnt > 0 && vol > 0)
+        ? ((fixedCostGBP - amexDisplayedFxGBP) * cnt / vol) * 100 : 0;
+      const amexTotalCostPct   = amexCostPct + amexShortfallPct;
+      // Quote: cost % + 0.20% margin, ceil to 2dp, min 3.10%
       const ourRate   = Math.max(Math.ceil((amexTotalCostPct + 0.20) * 100) / 100, 3.10);
-      const ourFees   = vol * (ourRate / 100); // no fixed fee shown to merchant for Amex
+      const ourFees   = vol * (ourRate / 100) + cnt * amexDisplayedFxGBP;
       const saving    = theirFees > 0 ? theirFees - ourFees : null;
       const profit    = ourFees - totalCost;
-      // Amex data quality note: if their effective rate looks lower than our cost,
-      // the CSV fee data is likely incomplete (Adyen/Stripe IC for Amex is 2.75%)
       const amexFeeDataNote = theirEffRate !== null && theirEffRate < 2.5
-                      ? 'Your Amex fee data may be incomplete — Adyen charges 2.75% flat on Amex transactions'
-                      : null;
+        ? 'Your Amex fee data may be incomplete — Adyen charges 2.75% flat on Amex transactions'
+        : null;
       results.push({
         key, label, vol, cnt, avgTx,
         theirFees:    Math.round(theirFees  * 100) / 100,
         theirEffRate: theirEffRate ? Math.round(theirEffRate * 100) / 100 : null,
         ourRate,
-        ourFixedFee:  0,
+        ourFixedFee:  AMEX_DISPLAYED_FX,
         ourFees:      Math.round(ourFees    * 100) / 100,
         saving:       saving !== null ? Math.round(saving   * 100) / 100 : null,
         savingPct:    saving !== null && theirFees > 0 ? Math.round(saving / theirFees * 10000) / 100 : null,
         profit:       Math.round(profit     * 100) / 100,
-        competitive:  theirEffRate !== null ? ourRate < theirEffRate : null,
+        competitive:  theirEffRate !== null ? (ourRate < theirEffRate) : null,
         dataNote:     theirEffRate !== null && theirEffRate < ourRate
                       ? 'Amex interchange is higher — we cost more on this segment'
                       : null,
         amexFeeDataNote,
         amexCostBreakdown: {
-          adyenFlatPct: 2.75,  // Adyen all-in flat charge (not IC++ — scheme + markup already included)
-          fixedAsPct:   Math.round(amexFixedAsPct * 100) / 100,
-          totalCostPct: Math.round(amexTotalCostPct * 100) / 100,
+          adyenFlatPct:     2.75,
+          shortfallPct:     Math.round(amexShortfallPct * 100) / 100,
+          displayedFixedFx: AMEX_DISPLAYED_FX,
+          totalCostPct:     Math.round(amexTotalCostPct * 100) / 100,
         },
       });
       continue;
