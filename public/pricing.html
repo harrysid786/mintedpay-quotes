@@ -1394,6 +1394,8 @@ function parseCSV(text) {
     fees  = fees  / _d;
     Object.keys(cardData).forEach(k => { cardData[k].vol /= _d; });
     intlVol = intlVol / _d;
+    // Scale segment accumulators — segAcc is built from raw pence values, must be divided too
+    Object.keys(segAcc).forEach(k => { segAcc[k].vol /= _d; segAcc[k].fees /= _d; });
   }
   if(vol<=0||cnt<2)throw new Error("Not enough transaction data found");
 
