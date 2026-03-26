@@ -366,11 +366,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
         <div class="csv-summary-title">Statement Detected</div>
         <div class="csv-row"><span class="csv-row-k">Transactions</span><span class="csv-row-v" id="csvCnt">—</span></div>
         <div class="csv-row"><span class="csv-row-k" id="csvVolLabel">Monthly Volume</span><span class="csv-row-v" id="csvVol">—</span></div>
-        <div class="csv-row" id="csvAnnualRow" style="display:none"><span class="csv-row-k" id="csvAnnualLabel">Annual Volume</span><span class="csv-row-v" id="csvAnnualVol">—</span></div>
+        <div class="csv-row" id="csvAnnualRow" style="display:none;align-items:flex-start"><span class="csv-row-k" id="csvAnnualLabel" style="display:flex;flex-direction:column">Annual Volume<span id="csvDateRangeNote" style="font-size:11px;color:var(--mute);font-weight:400;margin-top:1px"></span></span><span class="csv-row-v" id="csvAnnualVol">—</span></div>
         <div class="csv-row"><span class="csv-row-k">Avg Transaction</span><span class="csv-row-v" id="csvAvg">—</span></div>
         <div id="csvFeeRow" class="csv-row" style="display:none"><span class="csv-row-k">Current Fees</span><span class="csv-row-v" id="csvFees">—</span></div>
         <!-- Change 7: Effective rate styled prominently in red -->
-        <div id="csvRateRow" class="csv-row" style="display:none"><span class="csv-row-k">Effective Rate</span><span class="csv-row-v csv-rate-highlight" id="csvRate">—</span></div>
+        <div id="csvRateRow" class="csv-row" style="display:none"><span class="csv-row-k" style="display:flex;flex-direction:column">Effective Rate<span style="font-size:11px;color:var(--mute);font-weight:400;margin-top:1px">total fees ÷ volume</span></span><span class="csv-row-v csv-rate-highlight" id="csvRate">—</span></div>
         <div id="cardMixArea" class="hidden" style="margin-top:8px">
           <div class="csv-row"><span class="csv-row-k">Card Mix</span><span class="csv-row-v" id="csvDebit">—</span></div>
           <div class="card-mix-bar" id="mixBar"></div>
@@ -1477,7 +1477,9 @@ function handleFile(file) {
       var _volLabel  = document.getElementById("csvVolLabel");
       if (result.annualVol && result.dateRangeLabel && _annualRow && _annualEl) {
         if (_volLabel) _volLabel.textContent = "Monthly Volume (avg)";
-        _annualEl.innerHTML = fmtK(result.annualVol) + ' <span style="font-size:11px;color:var(--mute);font-weight:400">' + result.dateRangeLabel + '</span>';
+        _annualEl.textContent = fmtK(result.annualVol);
+        var _drNote = document.getElementById("csvDateRangeNote");
+        if (_drNote) _drNote.textContent = result.dateRangeLabel;
         _annualRow.style.display = "";
       } else {
         if (_volLabel) _volLabel.textContent = "Monthly Volume";
