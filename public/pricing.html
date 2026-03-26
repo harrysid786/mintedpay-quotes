@@ -513,7 +513,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
         <div class="rate-breakdown-row header">
           <span>What's included</span><span>Rate</span>
         </div>
-        <div class="rate-breakdown-row">
+        <div class="rate-breakdown-row seg-rate-row">
           <span class="rate-breakdown-key">UK cards <span id="bdUkSub" style="font-size:11px;color:var(--mute);font-weight:400"></span></span>
           <span class="rate-breakdown-val" id="bdUk">—</span>
         </div>
@@ -521,7 +521,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
           <span class="rate-breakdown-key">International cards <span id="bdIntlSub" style="font-size:11px;color:var(--mute);font-weight:400"></span></span>
           <span class="rate-breakdown-val" id="bdIntl">—</span>
         </div>
-        <div class="rate-breakdown-row">
+        <div class="rate-breakdown-row seg-rate-row">
           <span class="rate-breakdown-key">Fixed fee per transaction</span>
           <span class="rate-breakdown-val">10p</span>
         </div>
@@ -1123,6 +1123,8 @@ async function buildStep4() {
     _segEl.style.display = "block";
     document.getElementById("rateCompare").style.display = "none";
     document.getElementById("rateOnly").style.display    = "none";
+    // Hide rate-specific rows from What's Included — keep service rows
+    document.querySelectorAll(".seg-rate-row").forEach(function(el){ el.style.display = "none"; });
   }
   document.getElementById("step4Content").style.display = "block";
   document.getElementById("step4Btns").style.display    = "flex";
