@@ -1677,6 +1677,9 @@ router.post("/", (req, res) => {
       intl_mix_status:              result.intl_mix_status,
       intl_region:                  result.intl_region,
       fallback_international_rate:  result.fallback_international_rate,
+      // ── Competitive flags ─────────────────────────────────────────
+      not_competitive:              result.not_competitive,
+      is_cheaper_than_current:      result.is_cheaper_than_current,
       // ── Per-segment quotes (when segment_data was provided) ──────
       segment_quotes:               segmentQuotes,
     });
