@@ -365,7 +365,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
       <div id="csvSummary" class="csv-summary hidden">
         <div class="csv-summary-title">Statement Detected</div>
         <div class="csv-row"><span class="csv-row-k">Transactions</span><span class="csv-row-v" id="csvCnt">—</span></div>
-        <div class="csv-row"><span class="csv-row-k">Monthly Volume</span><span class="csv-row-v" id="csvVol">—</span></div>
+        <div class="csv-row"><span class="csv-row-k" id="csvVolLabel">Monthly Volume</span><span class="csv-row-v" id="csvVol">—</span></div>
+        <div class="csv-row" id="csvAnnualRow" style="display:none"><span class="csv-row-k" id="csvAnnualLabel">Annual Volume</span><span class="csv-row-v" id="csvAnnualVol">—</span></div>
         <div class="csv-row"><span class="csv-row-k">Avg Transaction</span><span class="csv-row-v" id="csvAvg">—</span></div>
         <div id="csvFeeRow" class="csv-row" style="display:none"><span class="csv-row-k">Current Fees</span><span class="csv-row-v" id="csvFees">—</span></div>
         <!-- Change 7: Effective rate styled prominently in red -->
@@ -1317,6 +1318,7 @@ const HINTS = {
   cardType: ["card type","card_type","card brand","card_brand","scheme","network","brand"],
   rowType:  ["transaction type","entry type","record type","transaction_type","__exact__type"],
   outcome:  ["transaction outcome","outcome","transaction_status","payment_status"],
+  date:    ["transaction date","date","transaction_date","payment date","created","created_at"],
   country:  ["card issue country","issued country","card country","issuing country","card_country"],
 };
 
@@ -1360,11 +1362,13 @@ function parseCSV(text) {
     international: {vol:0,cnt:0,fees:0},
     amex:          {vol:0,cnt:0,fees:0},
   };
+  let _minDate = null; let _maxDate = null; // date range tracking
   rows.forEach(r=>{
     if(colMap.rowType){const t=(r[colMap.rowType]||"").toUpperCase().trim();if(t&&!["CHARGE","PAYMENT","SALE","TRANSACTION","DEBIT","SETTLED","CAPTURE",""].includes(t))return}
     if(colMap.outcome){const o=(r[colMap.outcome]||"").toUpperCase().trim();if(o&&!["AUTHORISED","AUTHORIZED","APPROVED","SUCCESS","SETTLED","CAPTURED","COMPLETE","COMPLETED",""].includes(o))return}
     const a=pAmt(r[colMap.amount]);if(!a)return;
     cnt++;vol+=a;
+    if(colMap.date&&r[colMap.date]){try{const _d2=new Date(r[colMap.date].substring(0,10));if(!isNaN(_d2.getTime())){if(!_minDate||_d2<_minDate)_minDate=_d2;if(!_maxDate||_d2>_maxDate)_maxDate=_d2;}}catch(e){}}
     const fv=colMap.fee?(pAmt(r[colMap.fee])||0):0;if(fv)fees+=fv;
     const k=colMap.cardType?classCard(r[colMap.cardType]):"mixed";
     if(!cardData[k])cardData[k]={vol:0,cnt:0};cardData[k].vol+=a;cardData[k].cnt++;
@@ -1402,6 +1406,30 @@ function parseCSV(text) {
     // Scale segment accumulators — segAcc is built from raw pence values, must be divided too
     Object.keys(segAcc).forEach(k => { segAcc[k].vol /= _d; segAcc[k].fees /= _d; });
   }
+  // ── DATE RANGE DETECTION ─────────────────────────────────────────────────
+  // Only fires when a clearly-labelled date column was detected
+  let spanMonths = 1;
+  let annualVol  = null;
+  let dateRangeLabel = null;
+  if (_minDate && _maxDate) {
+    const daysDiff = Math.round((_maxDate - _minDate) / (1000 * 60 * 60 * 24)) + 1;
+    const _sm = daysDiff / 30.4375;
+    if (_sm > 1.5) {
+      // Multi-month data — divide to monthly average
+      spanMonths = _sm;
+      const _rawVol = vol;
+      vol   = Math.round((vol   / _sm) * 100) / 100;
+      fees  = Math.round((fees  / _sm) * 100) / 100;
+      cnt   = Math.round(cnt    / _sm);
+      intlVol = intlVol / _sm;
+      Object.keys(cardData).forEach(k => { cardData[k].vol /= _sm; cardData[k].cnt = Math.round(cardData[k].cnt / _sm); });
+      Object.keys(segAcc).forEach(k  => { segAcc[k].vol   = Math.round((segAcc[k].vol  / _sm) * 100) / 100; segAcc[k].fees = Math.round((segAcc[k].fees / _sm) * 100) / 100; segAcc[k].cnt = Math.round(segAcc[k].cnt / _sm); });
+      // Keep annual figures for display
+      annualVol = _rawVol;
+      const _months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      dateRangeLabel = _months[_minDate.getMonth()] + ' ' + _minDate.getFullYear() + ' – ' + _months[_maxDate.getMonth()] + ' ' + _maxDate.getFullYear();
+    }
+  }
   if(vol<=0||cnt<2)throw new Error("Not enough transaction data found");
 
   let dv=0;Object.entries(cardData).forEach(([k,v])=>{if(isDebitCard(k))dv+=v.vol});
@@ -1415,7 +1443,7 @@ function parseCSV(text) {
   for(const [key,acc] of Object.entries(segAcc)){
     if(acc.cnt > 0) segmentData.push({key, label:SEG_LABELS[key], vol:Number(acc.vol.toFixed(2)), cnt:acc.cnt, theirFees:Number(acc.fees.toFixed(2))});
   }
-  return { vol: Number(vol.toFixed(2)), cnt, cur: Number(fees.toFixed(2)), debitFrac: Number(debitFrac.toFixed(4)), intlFrac, currentRate: Number(currentRate.toFixed(4)), cardData, processor: detectProcessor("", rawH), segmentData };
+  return { vol: Number(vol.toFixed(2)), cnt, cur: Number(fees.toFixed(2)), debitFrac: Number(debitFrac.toFixed(4)), intlFrac, currentRate: Number(currentRate.toFixed(4)), cardData, processor: detectProcessor("", rawH), segmentData, spanMonths, annualVol, dateRangeLabel };
 }
 
 function handleFile(file) {
@@ -1443,6 +1471,18 @@ function handleFile(file) {
       document.getElementById("csvCnt").textContent = result.cnt.toLocaleString("en-GB");
       document.getElementById("csvVol").textContent = fmtK(result.vol);
       document.getElementById("csvAvg").textContent = fmt2(result.vol / result.cnt);
+      // Annual volume row — only shown when multi-month data detected
+      var _annualRow = document.getElementById("csvAnnualRow");
+      var _annualEl  = document.getElementById("csvAnnualVol");
+      var _volLabel  = document.getElementById("csvVolLabel");
+      if (result.annualVol && result.dateRangeLabel && _annualRow && _annualEl) {
+        if (_volLabel) _volLabel.textContent = "Monthly Volume (avg)";
+        _annualEl.innerHTML = fmtK(result.annualVol) + ' <span style="font-size:11px;color:var(--mute);font-weight:400">' + result.dateRangeLabel + '</span>';
+        _annualRow.style.display = "";
+      } else {
+        if (_volLabel) _volLabel.textContent = "Monthly Volume";
+        if (_annualRow) _annualRow.style.display = "none";
+      }
 
       if (result.cur > 0) {
         document.getElementById("csvFees").textContent = fmt2(result.cur);
