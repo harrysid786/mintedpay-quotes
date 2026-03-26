@@ -505,6 +505,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
         </div>
       </div>
 
+      <!-- Segment table: shown when CSV provides per-card segment data -->
+      <div id="segmentTable" style="display:none;margin-top:12px"></div>
+
       <!-- Rate breakdown table -->
       <div class="rate-breakdown-list">
         <div class="rate-breakdown-row header">
@@ -1018,6 +1021,55 @@ async function buildStep4() {
 
   quoteShown = true;
   document.getElementById("step4Loading").style.display = "none";
+  // ── Segment table (injected when CSV has per-card data) ──────────────────
+  const _segEl = document.getElementById("segmentTable");
+  const _sqData = p.segment_quotes;
+  if (_segEl && _sqData && _sqData.segments && _sqData.segments.length > 0) {
+    const _segs = _sqData.segments;
+    const _summ = _sqData.summary;
+    const _fmtR = function(pct, fx) { return fx ? pct.toFixed(2) + "% + " + fx + "p" : pct.toFixed(2) + "%"; };
+    const _fmtM = function(n) { return n !== null && n !== undefined ? "£" + Math.abs(n).toFixed(0) : "—"; };
+    var _rows = "";
+    _segs.forEach(function(s) {
+      var theirStr = s.theirEffRate !== null ? _fmtR(s.theirEffRate, null) : "—";
+      var ourStr   = s.ourRate !== null ? (s.ourFixedFee ? _fmtR(s.ourRate, s.ourFixedFee) : s.ourRate.toFixed(2) + "%") : "—";
+      var sav      = s.saving !== null ? s.saving : null;
+      var savStr   = sav !== null ? (sav >= 0 ? "save £" + sav.toFixed(0) + "/mo" : "+£" + Math.abs(sav).toFixed(0) + "/mo") : "—";
+      var savColor = (sav !== null && sav < 0) ? "color:var(--amber)" : "color:var(--green)";
+      var noteHtml = s.amexFeeDataNote ? "<div style=\"font-size:11px;color:var(--mute);margin-top:2px\">* " + s.amexFeeDataNote + "</div>" : "";
+      _rows += "<tr>" +
+        "<td style=\"padding:8px 10px;font-size:13px;font-weight:500;color:var(--ink)\">" + s.label + noteHtml + "</td>" +
+        "<td style=\"padding:8px 10px;font-size:13px;color:var(--slate);white-space:nowrap\">" + theirStr + "</td>" +
+        "<td style=\"padding:8px 10px;font-size:13px;color:var(--slate);white-space:nowrap\">" + _fmtM(s.theirFees) + "/mo</td>" +
+        "<td style=\"padding:8px 10px;font-size:13px;font-weight:500;color:var(--brand);white-space:nowrap\">" + ourStr + "</td>" +
+        "<td style=\"padding:8px 10px;font-size:13px;font-weight:500;" + savColor + ";white-space:nowrap\">" + savStr + "</td>" +
+        "</tr>";
+    });
+    var _totSav = _summ.totalSaving !== null ? _summ.totalSaving : null;
+    var _totStr = _totSav !== null ? (_totSav >= 0 ? "Save £" + _totSav.toFixed(0) + "/mo · £" + (_totSav * 12).toFixed(0) + "/yr" : "Costs £" + Math.abs(_totSav).toFixed(0) + "/mo more") : "—";
+    var _totColor = (_totSav !== null && _totSav < 0) ? "color:var(--amber)" : "color:var(--green)";
+    _segEl.innerHTML =
+      "<div style=\"background:var(--wash);border:1px solid var(--line);border-radius:var(--r);overflow:hidden\">" +
+        "<table style=\"width:100%;border-collapse:collapse\">" +
+          "<thead><tr style=\"background:var(--white);border-bottom:1px solid var(--line)\">" +
+            "<th style=\"padding:8px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left;text-transform:uppercase;letter-spacing:.05em\">Card type</th>" +
+            "<th style=\"padding:8px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left;text-transform:uppercase;letter-spacing:.05em\">Your rate</th>" +
+            "<th style=\"padding:8px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left;text-transform:uppercase;letter-spacing:.05em\">You pay/mo</th>" +
+            "<th style=\"padding:8px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left;text-transform:uppercase;letter-spacing:.05em\">Our rate</th>" +
+            "<th style=\"padding:8px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left;text-transform:uppercase;letter-spacing:.05em\">Saving</th>" +
+          "</tr></thead>" +
+          "<tbody>" + _rows + "</tbody>" +
+          "<tfoot><tr style=\"background:var(--white);border-top:2px solid var(--line)\">" +
+            "<td colspan=\"2\" style=\"padding:10px 10px;font-size:13px;font-weight:600;color:var(--ink)\">Total</td>" +
+            "<td style=\"padding:10px 10px;font-size:13px;font-weight:600;color:var(--ink)\">" + _fmtM(_summ.totalTheirFees) + "/mo</td>" +
+            "<td style=\"padding:10px 10px;font-size:13px;font-weight:600;color:var(--brand)\">" + _fmtM(_summ.totalOurFees) + "/mo</td>" +
+            "<td style=\"padding:10px 10px;font-size:14px;font-weight:700;" + _totColor + "\">" + _totStr + "</td>" +
+          "</tr></tfoot>" +
+        "</table></div>";
+    _segEl.style.display = "block";
+    document.getElementById("rateCompare").style.display = "none";
+    document.getElementById("rateOnly").style.display    = "none";
+  }
   document.getElementById("step4Content").style.display = "block";
   document.getElementById("step4Btns").style.display    = "flex";
 }
