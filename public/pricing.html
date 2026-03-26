@@ -823,6 +823,7 @@ async function calcPricing() {
         intl_frac:         intlFrac,
         intl_region:       intlRegion,
         pricing_profile:   "acquisition_plus",
+        segment_data:      (csvData && csvData.segmentData && csvData.segmentData.length > 0) ? csvData.segmentData : undefined,
       }),
     });
     const data = await res.json();
@@ -1237,6 +1238,15 @@ function parseCSV(text) {
 
   let vol=0,cnt=0,fees=0,intlVol=0,cpop=0;
   const cardData={};
+  // ── Segment accumulators ──────────────────────────────────────────
+  const EEA_COUNTRIES = new Set(['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO']);
+  const segAcc = {
+    uk_debit:      {vol:0,cnt:0,fees:0},
+    uk_credit:     {vol:0,cnt:0,fees:0},
+    eea:           {vol:0,cnt:0,fees:0},
+    international: {vol:0,cnt:0,fees:0},
+    amex:          {vol:0,cnt:0,fees:0},
+  };
   rows.forEach(r=>{
     if(colMap.rowType){const t=(r[colMap.rowType]||"").toUpperCase().trim();if(t&&!["CHARGE","PAYMENT","SALE","TRANSACTION","DEBIT","SETTLED","CAPTURE",""].includes(t))return}
     if(colMap.outcome){const o=(r[colMap.outcome]||"").toUpperCase().trim();if(o&&!["AUTHORISED","AUTHORIZED","APPROVED","SUCCESS","SETTLED","CAPTURED","COMPLETE","COMPLETED",""].includes(o))return}
@@ -1246,6 +1256,27 @@ function parseCSV(text) {
     const k=colMap.cardType?classCard(r[colMap.cardType]):"mixed";
     if(!cardData[k])cardData[k]={vol:0,cnt:0};cardData[k].vol+=a;cardData[k].cnt++;
     if(colMap.country){const c=(r[colMap.country]||"").trim().toUpperCase();if(c){cpop++;if(c!=="GB"&&c!=="GBR"&&c!=="UK")intlVol+=a}}
+    // ── Segment classification ────────────────────────────────────
+    {
+      const cardTypeRaw = colMap.cardType ? (r[colMap.cardType]||"").toLowerCase().trim() : "";
+      const countryRaw  = colMap.country  ? (r[colMap.country] ||"").trim().toUpperCase() : "";
+      const isAmex      = cardTypeRaw.includes("amex") || cardTypeRaw.includes("american express");
+      const isGb        = !countryRaw || countryRaw==="GB" || countryRaw==="GBR" || countryRaw==="UK";
+      const isEea       = !isGb && EEA_COUNTRIES.has(countryRaw);
+      const isIntl      = !isGb && !isEea && countryRaw !== "";
+      const isDebit     = cardTypeRaw.includes("debit") || cardTypeRaw.includes("maestro");
+      if(isAmex){
+        segAcc.amex.vol+=a; segAcc.amex.cnt+=1; segAcc.amex.fees+=f;
+      } else if(isEea){
+        segAcc.eea.vol+=a; segAcc.eea.cnt+=1; segAcc.eea.fees+=f;
+      } else if(isIntl){
+        segAcc.international.vol+=a; segAcc.international.cnt+=1; segAcc.international.fees+=f;
+      } else if(isDebit){
+        segAcc.uk_debit.vol+=a; segAcc.uk_debit.cnt+=1; segAcc.uk_debit.fees+=f;
+      } else {
+        segAcc.uk_credit.vol+=a; segAcc.uk_credit.cnt+=1; segAcc.uk_credit.fees+=f;
+      }
+    }
   });
   // AUTO-DETECT PENCE: Stripe and some processors export amounts in minor units (pence)
   // If avg transaction > £500, divide all values by 100
@@ -1263,7 +1294,13 @@ function parseCSV(text) {
   const currentRate=fees>0&&vol>0?fees/vol*100:0;
   const coverage=cnt>0?cpop/cnt:0;
   const intlFrac=colMap.country&&coverage>=0.8?Math.round(intlVol/vol*10000)/10000:null;
-  return { vol: Number(vol.toFixed(2)), cnt, cur: Number(fees.toFixed(2)), debitFrac: Number(debitFrac.toFixed(4)), intlFrac, currentRate: Number(currentRate.toFixed(4)), cardData, processor: detectProcessor("", rawH) };
+  // Build segment_data array for server (only include segments with data)
+  const segmentData = [];
+  const SEG_LABELS = {uk_debit:'UK Debit — Visa/MC',uk_credit:'UK Credit — Visa/MC',eea:'European/EEA cards',international:'International (non-EEA)',amex:'Amex'};
+  for(const [key,acc] of Object.entries(segAcc)){
+    if(acc.cnt > 0) segmentData.push({key, label:SEG_LABELS[key], vol:Number(acc.vol.toFixed(2)), cnt:acc.cnt, theirFees:Number(acc.fees.toFixed(2))});
+  }
+  return { vol: Number(vol.toFixed(2)), cnt, cur: Number(fees.toFixed(2)), debitFrac: Number(debitFrac.toFixed(4)), intlFrac, currentRate: Number(currentRate.toFixed(4)), cardData, processor: detectProcessor("", rawH), segmentData };
 }
 
 function handleFile(file) {
