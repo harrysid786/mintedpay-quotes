@@ -1087,7 +1087,6 @@ async function buildStep4() {
         "<td style=\"padding:8px 10px;font-size:13px;color:var(--slate);white-space:nowrap\">" + theirStr + "</td>" +
         "<td style=\"padding:8px 10px;font-size:13px;color:var(--slate);white-space:nowrap\">" + _fmtM(s.theirFees) + "/mo</td>" +
         "<td style=\"padding:8px 10px;font-size:13px;font-weight:500;color:var(--brand);white-space:nowrap\">" + ourStr + "</td>" +
-        "<td style=\"padding:8px 10px;font-size:13px;font-weight:500;" + savColor + ";white-space:nowrap\">" + savStr + "</td>" +
         "</tr>";
     });
     var _totSav = _summ.totalSaving !== null ? _summ.totalSaving : null;
@@ -1098,19 +1097,29 @@ async function buildStep4() {
         "<table style=\"width:100%;border-collapse:collapse\">" +
           "<thead><tr style=\"background:var(--white);border-bottom:1px solid var(--line)\">" +
             "<th style=\"padding:8px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left;text-transform:uppercase;letter-spacing:.05em\">Card type</th>" +
-            "<th style=\"padding:8px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left;text-transform:uppercase;letter-spacing:.05em\">Your rate</th>" +
+            "<th style=\"padding:8px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left;text-transform:uppercase;letter-spacing:.05em\">Your current rate</th>" +
             "<th style=\"padding:8px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left;text-transform:uppercase;letter-spacing:.05em\">You pay/mo</th>" +
             "<th style=\"padding:8px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left;text-transform:uppercase;letter-spacing:.05em\">Our rate</th>" +
-            "<th style=\"padding:8px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left;text-transform:uppercase;letter-spacing:.05em\">Saving</th>" +
           "</tr></thead>" +
           "<tbody>" + _rows + "</tbody>" +
           "<tfoot><tr style=\"background:var(--white);border-top:2px solid var(--line)\">" +
-            "<td colspan=\"2\" style=\"padding:10px 10px;font-size:13px;font-weight:600;color:var(--ink)\">Total</td>" +
-            "<td style=\"padding:10px 10px;font-size:13px;font-weight:600;color:var(--ink)\">" + _fmtM(_summ.totalTheirFees) + "/mo</td>" +
-            "<td style=\"padding:10px 10px;font-size:13px;font-weight:600;color:var(--brand)\">" + _fmtM(_summ.totalOurFees) + "/mo</td>" +
-            "<td style=\"padding:10px 10px;font-size:14px;font-weight:700;" + _totColor + "\">" + _totStr + "</td>" +
+            "<td style=\"padding:10px 10px;font-size:13px;font-weight:600;color:var(--ink)\">Total</td>" +
+            "<td style=\"padding:10px 10px;font-size:13px;color:var(--slate)\">£" + _summ.totalTheirFees.toFixed(0) + "/mo</td>" +
+            "<td style=\"padding:10px 10px;font-size:13px;color:var(--slate)\">£" + _summ.totalTheirFees.toFixed(0) + "/mo</td>" +
+            "<td style=\"padding:10px 10px;font-size:13px;font-weight:600;color:var(--brand)\">£" + _summ.totalOurFees.toFixed(0) + "/mo</td>" +
           "</tr></tfoot>" +
         "</table></div>";
+    // Saving banner below table
+    if (_totSav !== null && _totSav !== 0) {
+      var _banner = document.createElement("div");
+      var _bannerBg  = _totSav > 0 ? "var(--green-lt)" : "var(--amber-lt)";
+      var _bannerBd  = _totSav > 0 ? "var(--green-bd)" : "var(--amber-bd)";
+      var _bannerClr = _totSav > 0 ? "var(--green)" : "var(--amber)";
+      _banner.style.cssText = "background:" + _bannerBg + ";border:1px solid " + _bannerBd + ";border-radius:var(--r);padding:12px 16px;margin-top:10px;display:flex;justify-content:space-between;align-items:center";
+      _banner.innerHTML = "<span style=\"font-size:13px;color:var(--slate)\">Total saving with MintedPay</span>" +
+        "<span style=\"font-size:16px;font-weight:700;" + _bannerClr + "\">" + _totStr + "</span>";
+      _segEl.appendChild(_banner);
+    }
     _segEl.style.display = "block";
     document.getElementById("rateCompare").style.display = "none";
     document.getElementById("rateOnly").style.display    = "none";
