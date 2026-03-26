@@ -1372,15 +1372,15 @@ function parseCSV(text) {
       const isIntl      = !isGb && !isEea && countryRaw !== "";
       const isDebit     = cardTypeRaw.includes("debit") || cardTypeRaw.includes("maestro");
       if(isAmex){
-        segAcc.amex.vol+=a; segAcc.amex.cnt+=1; segAcc.amex.fees+=f;
+        segAcc.amex.vol+=a; segAcc.amex.cnt+=1; segAcc.amex.fees+=fv;
       } else if(isEea){
-        segAcc.eea.vol+=a; segAcc.eea.cnt+=1; segAcc.eea.fees+=f;
+        segAcc.eea.vol+=a; segAcc.eea.cnt+=1; segAcc.eea.fees+=fv;
       } else if(isIntl){
-        segAcc.international.vol+=a; segAcc.international.cnt+=1; segAcc.international.fees+=f;
+        segAcc.international.vol+=a; segAcc.international.cnt+=1; segAcc.international.fees+=fv;
       } else if(isDebit){
-        segAcc.uk_debit.vol+=a; segAcc.uk_debit.cnt+=1; segAcc.uk_debit.fees+=f;
+        segAcc.uk_debit.vol+=a; segAcc.uk_debit.cnt+=1; segAcc.uk_debit.fees+=fv;
       } else {
-        segAcc.uk_credit.vol+=a; segAcc.uk_credit.cnt+=1; segAcc.uk_credit.fees+=f;
+        segAcc.uk_credit.vol+=a; segAcc.uk_credit.cnt+=1; segAcc.uk_credit.fees+=fv;
       }
     }
   });
