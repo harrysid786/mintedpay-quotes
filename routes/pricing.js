@@ -1265,7 +1265,7 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
     // This correctly accounts for the fixed fee impact at low average ticket sizes.
     // null when no current fees were provided.
     is_cheaper_than_current:      currentRate !== null ? (quoteRate + (cnt * (fixedFee / 100) / vol * 100) < currentRate) : null,
-    not_competitive:              currentRate !== null ? (quoteRate + (cnt * (fixedFee / 100) / vol * 100) >= currentRate) : null,
+    not_competitive:              currentRate !== null ? (quoteRate + (cnt * (fixedFee / 100) / vol * 100) >= currentRate) : (vol > 0 && cnt > 0 && (vol / cnt) < 15) ? true : null,
     // ── International region ───────────────────────────────────
     // Echoed back for transparency. null when not supplied.
     // Note: acquisition_plus always uses worst-case 1.50% regardless of this value.
