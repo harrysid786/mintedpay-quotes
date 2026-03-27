@@ -555,7 +555,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
     <!-- Change 8: CTA renamed to "Request my confirmed rate →" -->
     <div class="btn-row" id="step4Btns" style="display:none">
       <button class="btn btn-secondary" onclick="goStep(3)">← Back</button>
-      <button class="btn btn-primary" onclick="goStep(5)" style="margin-left:auto">Request my confirmed rate →</button>
+      <button class="btn btn-primary" onclick="goStep(5)" style="margin-left:auto"id="step4PrimaryBtn">Request my confirmed rate →</button>
     </div>
   </div>
 
@@ -676,6 +676,8 @@ const PROVIDER_MSGS = {
 // NAVIGATION
 // ═══════════════════════════════════════════════════════════
 function goStep(n) {
+  // Clear stale pricing result when navigating back — prevents stale not-competitive state
+  if (typeof n === 'number' && n < 4) { pricingResult = null; quoteShown = false; }
   document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
   const el = document.getElementById(n === "done" ? "stepDone" : "step" + n);
   if (el) el.classList.add("active");
@@ -848,6 +850,9 @@ async function buildStep4() {
   if (_segReset) { _segReset.innerHTML = ""; _segReset.style.display = "none"; }
   document.querySelectorAll(".seg-rate-row").forEach(function(el){ el.style.display = ""; });
   document.querySelectorAll(".nc-advisory").forEach(function(el){ el.remove(); });
+  // Reset button text to default
+  var _primBtn = document.getElementById("step4PrimaryBtn");
+  if (_primBtn) _primBtn.textContent = "Request my confirmed rate →";
   document.getElementById("step4Loading").style.display = "block";
   document.getElementById("step4Content").style.display = "none";
   document.getElementById("step4Btns").style.display = "none";
@@ -892,6 +897,7 @@ async function buildStep4() {
     document.getElementById("rateCompare").style.display  = "none";
     document.getElementById("rateOnly").style.display     = "none";
     document.getElementById("segmentTable").style.display = "none";
+    document.querySelectorAll(".seg-rate-row").forEach(function(el){ el.style.display = "none"; });
 
     // ── Partial win: some segments competitive, some not ────────────────
     // Check if segment data exists and any segments ARE competitive
@@ -930,20 +936,17 @@ async function buildStep4() {
       // Fully not competitive — clean advisory
       var _nc_reason = "";
       if (p.avgTx && p.avgTx < 15) {
-        _nc_reason = "Your average transaction value of £" + p.avgTx.toFixed(2) + " means our per-transaction costs are higher as a percentage — this is a low average ticket size for our current pricing tier.";
+        _nc_reason = "Your average transaction value is below our minimum threshold for an instant quote. One of our specialists will review your account and be in touch with a personalised rate within one business day.";
       } else if (p.current_rate && p.current_rate < 1.20) {
-        _nc_reason = "Your current rate of " + p.current_rate.toFixed(2) + "% is already very competitive. We cannot better this at your current volume.";
+        _nc_reason = "Your current rate is already very competitive. Our team will review your full processing profile and be in touch with a personalised proposal within one business day.";
       } else {
-        _nc_reason = "Based on your current processing costs, we are not able to offer a cheaper rate at this time.";
+        _nc_reason = "Based on your processing profile, our team will put together a tailored proposal and be in touch within one business day.";
       }
       _nc_content =
         "<div style=\"font-size:14px;font-weight:600;color:var(--amber);margin-bottom:8px\">" +
-          "We want to beat your rate — let’s talk" +
+          "We’ll be in touch with your rate" +
         "</div>" +
-        "<p style=\"font-size:13px;color:#924008;line-height:1.6;margin-bottom:8px\">" + _nc_reason + "</p>" +
-        "<p style=\"font-size:13px;color:#924008;line-height:1.6\">" +
-          "Our specialists will review your account and be in touch directly. Your details have been captured." +
-        "</p>";
+        "<p style=\"font-size:13px;color:#924008;line-height:1.6;margin-bottom:8px\">" + _nc_reason + "</p>";
     }
 
     var _nc_advisory = document.createElement("div");
@@ -954,6 +957,8 @@ async function buildStep4() {
     _nc_advisory.className = "nc-advisory";
     _nc_container.appendChild(_nc_advisory);
     quoteShown = false;
+    var _pb = document.getElementById("step4PrimaryBtn");
+    if (_pb) _pb.textContent = "Submit my details →";
     return;
   }
 
