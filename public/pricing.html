@@ -778,7 +778,7 @@ function checkAvgTicket() {
   if (!warn) return;
   if (avg > 0 && avg < 15) {
     const pct = ((0.143 / avg) * 100).toFixed(1);
-    warn.innerHTML = `⚠️ <strong>Low average ticket (£${avg.toFixed(2)})</strong> — our fixed costs (~£0.14/tx) represent <strong>${pct}%</strong> of your transaction value. We'll still provide a rate, but our team will discuss the best options with you.`;
+    warn.innerHTML = `⚠️ <strong>Low average transaction value (£${avg.toFixed(2)})</strong> — a specialist will review your account and be in touch to discuss the best options for your business.`;
     warn.classList.remove("hidden");
   } else {
     warn.classList.add("hidden");
