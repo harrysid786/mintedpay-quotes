@@ -80,5 +80,8 @@ if (!leadCols.includes("brand"))            db.exec("ALTER TABLE leads ADD COLUM
 if (!leadCols.includes("intl_region"))      db.exec("ALTER TABLE leads ADD COLUMN intl_region      TEXT DEFAULT NULL");
 if (!leadCols.includes("industry"))         db.exec("ALTER TABLE leads ADD COLUMN industry         TEXT DEFAULT NULL");
 if (!leadCols.includes("industry_status"))  db.exec("ALTER TABLE leads ADD COLUMN industry_status  TEXT DEFAULT 'allowed'");
+if (!leadCols.includes("amex_rate"))        db.exec("ALTER TABLE leads ADD COLUMN amex_rate        REAL DEFAULT NULL");
+if (!leadCols.includes("amex_fixed"))       db.exec("ALTER TABLE leads ADD COLUMN amex_fixed       INTEGER DEFAULT NULL");
+if (!leadCols.includes("amex_vol"))         db.exec("ALTER TABLE leads ADD COLUMN amex_vol         REAL DEFAULT NULL");
 
 module.exports = db;
