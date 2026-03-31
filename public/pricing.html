@@ -179,6 +179,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 .confirm-step{display:flex;align-items:flex-start;gap:12px;font-size:13px;color:var(--slate);line-height:1.5}
 .confirm-step-num{width:22px;height:22px;border-radius:50%;background:var(--brand);color:var(--white);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
 
+/* ── BLUR / REVEAL ── */
+.blur-figures .csv-row-v,
+.blur-figures .csv-rate-highlight { filter:blur(5px); user-select:none; pointer-events:none; transition:filter .4s ease; }
+.blur-figures .card-mix-bar,
+.blur-figures .card-mix-legend,
+.blur-figures .card-mix-dot { filter:none; } /* card mix stays visible */
+.csv-unlock-banner { background:var(--brand-lt); border:1px solid #c4b5fd; border-radius:var(--r); padding:12px 16px; margin-top:12px; text-align:center; font-size:13px; color:var(--brand); font-weight:500; }
+.rate-blur-wrap { position:relative; }
+.rate-blur-content { filter:blur(6px); pointer-events:none; user-select:none; transition:filter .5s ease; }
+.rate-blur-content.revealed { filter:none; pointer-events:auto; user-select:auto; }
+.rate-reveal-overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(255,255,255,.7); backdrop-filter:blur(2px); border-radius:var(--r); z-index:10; padding:24px; text-align:center; transition:opacity .4s ease; }
+.rate-reveal-overlay.hidden { opacity:0; pointer-events:none; }
+.rate-reveal-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; color:var(--ink); margin-bottom:6px; }
+.rate-reveal-sub { font-size:13px; color:var(--slate); margin-bottom:18px; line-height:1.5; }
+.rate-reveal-fields { display:flex; flex-direction:column; gap:10px; width:100%; max-width:340px; }
+.rate-reveal-fields input { width:100%; padding:11px 14px; border:1.5px solid var(--line); border-radius:var(--r); font-size:15px; font-family:'DM Sans',sans-serif; color:var(--ink); outline:none; }
+.rate-reveal-fields input:focus { border-color:var(--brand); box-shadow:0 0 0 3px var(--brand-glow); }
+
 /* ── WARN BOX ── */
 .warn-box{background:var(--amber-lt);border:1px solid var(--amber-bd);border-left:3px solid #d97706;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;line-height:1.5;margin-top:8px}
 .warn-box.hidden{display:none}
@@ -228,7 +246,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 
   <!-- ═══ STEP 1: Business details ═══ -->
   <div id="step1" class="step active">
-    <div class="step-label">Step 1 of 5</div>
+    <div class="step-label">Step 3 of 5</div>
     <div class="step-title">Tell us about your business</div>
     <div class="step-sub">We'll use this to personalise your quote and follow up with you.</div>
 
@@ -247,6 +265,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
     </div>
 
     <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
       <button class="btn btn-primary" onclick="step1Next()" style="margin-left:auto">Continue →</button>
     </div>
   </div>
@@ -331,10 +350,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 
   <!-- ═══ STEP 3: Volume / CSV ═══ -->
   <div id="step3" class="step">
-    <div class="step-label">Step 3 of 5</div>
+    <div class="step-label">Step 1 of 5</div>
     <div class="step-title">Your processing volume</div>
     <!-- Change 6: Improved sub-heading copy -->
-    <div class="step-sub">Upload your most recent processing statement for an accurate analysis, or enter your figures manually.</div>
+    <div class="step-sub">Upload your most recent processing statement or enter your figures manually — we'll calculate your rate instantly.</div>
 
     <div class="tabs">
       <button class="tab on" id="tabUpload" onclick="switchTab('upload')">📄 Upload Statement</button>
@@ -364,6 +383,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
       </div>
       <div id="csvSummary" class="csv-summary hidden">
         <div class="csv-summary-title">Statement Detected</div>
+        <div id="csvUnlockBanner" class="csv-unlock-banner" style="display:none">🔒 Complete the next steps to unlock your full analysis and see your MintedPay rate</div>
         <div class="csv-row"><span class="csv-row-k">Transactions</span><span class="csv-row-v" id="csvCnt">—</span></div>
         <div class="csv-row"><span class="csv-row-k" id="csvVolLabel">Monthly Volume</span><span class="csv-row-v" id="csvVol">—</span></div>
         <div class="csv-row" id="csvAnnualRow" style="display:none;align-items:flex-start"><span class="csv-row-k" id="csvAnnualLabel" style="display:flex;flex-direction:column">Annual Volume<span id="csvDateRangeNote" style="font-size:11px;color:var(--mute);font-weight:400;margin-top:1px"></span></span><span class="csv-row-v" id="csvAnnualVol">—</span></div>
@@ -448,8 +468,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 
     <!-- Change 7: CTA updated to "See our rate →" -->
     <div class="btn-row">
-      <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
-      <button class="btn btn-primary" onclick="step3Next()" style="margin-left:auto">See our rate →</button>
+      <button class="btn btn-primary" onclick="step3Next()" style="margin-left:auto">Continue →</button>
     </div>
   </div>
 
@@ -465,6 +484,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
     </div>
 
     <div id="step4Content" style="display:none">
+      <div class="rate-reveal-overlay" id="rateRevealOverlay">
+        <div style="font-size:36px;margin-bottom:12px">🔒</div>
+        <div class="rate-reveal-title">Your rate is ready</div>
+        <div class="rate-reveal-sub">Enter your details to reveal your MintedPay rate and estimated saving.</div>
+        <div class="rate-reveal-fields">
+          <input type="text" id="revealName" placeholder="Your name" autocomplete="name">
+          <input type="email" id="revealEmail" placeholder="Email address" autocomplete="email">
+          <div id="revealError" style="display:none;font-size:12px;color:var(--red);text-align:left"></div>
+          <button class="btn btn-primary" onclick="revealRate()" style="width:100%;margin-top:4px">Reveal my rate →</button>
+        </div>
+      </div>
+      <div class="rate-blur-wrap"><div class="rate-blur-content" id="rateBlurContent">
       <!-- Rate compare: current vs MintedPay (only shown if fees known) -->
       <div id="rateCompare" style="display:none">
         <div class="rate-compare">
@@ -553,9 +584,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
     </div>
 
     <!-- Change 8: CTA renamed to "Request my confirmed rate →" -->
+      </div></div><!-- /rate-blur-content /rate-blur-wrap -->
     <div class="btn-row" id="step4Btns" style="display:none">
-      <button class="btn btn-secondary" onclick="goStep(3)">← Back</button>
-      <button class="btn btn-primary" onclick="goStep(5)" style="margin-left:auto"id="step4PrimaryBtn">Request my confirmed rate →</button>
+      <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(5)" style="margin-left:auto" id="step4PrimaryBtn">Request my confirmed rate →</button>
     </div>
   </div>
 
@@ -678,6 +710,13 @@ const PROVIDER_MSGS = {
 function goStep(n) {
   // Clear stale pricing result when navigating back — prevents stale not-competitive state
   if (typeof n === 'number' && n < 4) { pricingResult = null; quoteShown = false; }
+  // When going back to step 1 (CSV), re-apply blur if CSV data exists
+  if (n === 1 && csvData) {
+    const _cs = document.getElementById("csvSummary");
+    const _ub = document.getElementById("csvUnlockBanner");
+    if (_cs) _cs.classList.add("blur-figures");
+    if (_ub) _ub.style.display = "block";
+  }
   document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
   const el = document.getElementById(n === "done" ? "stepDone" : "step" + n);
   if (el) el.classList.add("active");
@@ -722,7 +761,11 @@ function step1Next() {
   document.getElementById("emailError").style.display = "none";
   // Pre-fill confirm page email
   document.getElementById("confirmEmail").value = email;
-  goStep(2);
+  // Pre-fill reveal overlay
+  document.getElementById("revealEmail").value = email;
+  const _cname = document.getElementById("contactName")?.value?.trim() || "";
+  if (_cname) document.getElementById("revealName").value = _cname;
+  goStep(4);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -802,8 +845,7 @@ async function step3Next() {
   }
   // Kick off pricing API call in background while merchant moves to rate step
   calcPricing();
-  // Go directly to Step 4 (rate display — old Step 5)
-  goStep(4);
+  goStep(2);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -856,6 +898,11 @@ async function buildStep4() {
   document.getElementById("step4Loading").style.display = "block";
   document.getElementById("step4Content").style.display = "none";
   document.getElementById("step4Btns").style.display = "none";
+  // Reset blur + overlay state
+  const _blurEl = document.getElementById("rateBlurContent");
+  const _overlayEl = document.getElementById("rateRevealOverlay");
+  if (_blurEl) _blurEl.classList.remove("revealed");
+  if (_overlayEl) _overlayEl.classList.remove("hidden");
 
   // Poll for pricing result (may already be ready from background fetch)
   const msgs = ["Calculating your rate…", "Comparing against your data…", "Preparing your quote…"];
@@ -1138,7 +1185,7 @@ async function buildStep4() {
     document.querySelectorAll(".seg-rate-row").forEach(function(el){ el.style.display = "none"; });
   }
   document.getElementById("step4Content").style.display = "block";
-  document.getElementById("step4Btns").style.display    = "flex";
+  // Btns only shown after revealRate() — keep hidden here
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1253,6 +1300,35 @@ async function submitLead() {
     document.getElementById("submitError").textContent = "Something went wrong. Please try again or email us at " + ACTIVE_BRAND.errorEmail + ".";
     document.getElementById("submitError").style.display = "block";
   }
+}
+
+// ═══════════════════════════════════════════════════════════
+// REVEAL RATE — unblurs Step 4 and pre-fills Step 5
+// ═══════════════════════════════════════════════════════════
+function revealRate() {
+  const name  = document.getElementById("revealName").value.trim();
+  const email = document.getElementById("revealEmail").value.trim();
+  const errEl = document.getElementById("revealError");
+  if (!name) { errEl.textContent = "Please enter your name."; errEl.style.display = "block"; return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = "Please enter a valid email address."; errEl.style.display = "block"; return;
+  }
+  errEl.style.display = "none";
+  // Pre-fill Step 5 contact fields
+  document.getElementById("contactName").value  = name;
+  document.getElementById("confirmEmail").value  = email;
+  // Unblur the rate content
+  const blurEl    = document.getElementById("rateBlurContent");
+  const overlayEl = document.getElementById("rateRevealOverlay");
+  if (blurEl)    blurEl.classList.add("revealed");
+  if (overlayEl) overlayEl.classList.add("hidden");
+  // Unblur CSV summary figures too
+  const csvSumm = document.getElementById("csvSummary");
+  if (csvSumm) csvSumm.classList.remove("blur-figures");
+  const _ub = document.getElementById("csvUnlockBanner");
+  if (_ub) _ub.style.display = "none";
+  // Show the CTA button
+  document.getElementById("step4Btns").style.display = "flex";
 }
 
 function buildConfirmation(name, email, rate, fixed, saving, vol, amexRate, amexFixed, amexVol) {
@@ -1537,6 +1613,10 @@ function handleFile(file) {
       }
 
       document.getElementById("csvSummary").classList.remove("hidden");
+      // Blur the figures and show the unlock teaser
+      document.getElementById("csvSummary").classList.add("blur-figures");
+      const _ub = document.getElementById("csvUnlockBanner");
+      if (_ub) _ub.style.display = "block";
 
       // Pre-kick pricing API as soon as CSV is parsed
       calcPricing();
