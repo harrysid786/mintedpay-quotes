@@ -675,6 +675,9 @@ function goStep(n) {
 }
 
 function updateProgress(n) {
+  // Map internal step IDs to display step numbers (step4 = display step 3)
+  const stepDisplayMap = { 1: 1, 2: 2, 4: 3 };
+  if (typeof n === 'number' && stepDisplayMap[n] !== undefined) n = stepDisplayMap[n];
   const fill  = document.getElementById("progressFill");
   const label = document.getElementById("progressLabel");
   if (n === "done") {
@@ -806,8 +809,8 @@ async function calcPricing() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        merchant_name:     document.getElementById("bizName").value.trim() || "Enquiry",
-        merchant_email:    document.getElementById("bizEmail").value.trim(),
+        merchant_name:     (document.getElementById("bizName")?.value || document.getElementById("revealName")?.value || "Enquiry").trim(),
+        merchant_email:    (document.getElementById("revealEmail")?.value || document.getElementById("bizEmail")?.value || "test@enquiry.com").trim(),
         monthly_volume:    vol,
         transaction_count: cnt,
         current_fees:      cur,
