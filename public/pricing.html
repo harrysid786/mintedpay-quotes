@@ -238,41 +238,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 <!-- PROGRESS -->
 <div class="progress-wrap">
   <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:20%"></div></div>
-  <div class="progress-label" id="progressLabel">Step 1 of 5</div>
+  <div class="progress-label" id="progressLabel">Step 1 of 3</div>
 </div>
 
 <div class="card">
   <div id="errorBox" class="error-box"></div>
 
   <!-- ═══ STEP 1: Business details ═══ -->
-  <div id="step3" class="step">
-    <div class="step-label">Step 3 of 4</div>
-    <div class="step-title">Tell us about your business</div>
-    <div class="step-sub">We'll use this to personalise your quote and follow up with you.</div>
-
-    <div class="field">
-      <label>Business name <span class="req">*</span></label>
-      <input type="text" id="bizName" placeholder="e.g. Acme Coffee Ltd" autocomplete="organization">
-    </div>
-    <div class="field">
-      <label>Email address <span class="req">*</span></label>
-      <input type="email" id="bizEmail" placeholder="accounts@yourbusiness.com" autocomplete="email">
-      <div id="emailError" class="field-hint" style="color:var(--red);display:none">Please enter a valid email address</div>
-    </div>
-    <div class="field">
-      <label>Phone number <span style="font-weight:400;color:var(--mute)">(optional)</span></label>
-      <input type="tel" id="bizPhone" placeholder="+44 7700 000 000" autocomplete="tel">
-    </div>
-
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
-      <button class="btn btn-primary" onclick="step1Next()" style="margin-left:auto">Continue →</button>
-    </div>
-  </div>
-
-  <!-- ═══ STEP 2: Merchant type + industry ═══ -->
   <div id="step2" class="step">
-    <div class="step-label">Step 2 of 4</div>
+    <div class="step-label">Step 2 of 3</div>
     <div class="step-title">How do you take payments?</div>
     <div class="step-sub">This helps us calculate the right rate for your business model.</div>
 
@@ -350,7 +324,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 
   <!-- ═══ STEP 3: Volume / CSV ═══ -->
   <div id="step1" class="step">
-    <div class="step-label">Step 1 of 4</div>
+    <div class="step-label">Step 1 of 3</div>
     <div class="step-title">Your processing volume</div>
     <!-- Change 6: Improved sub-heading copy -->
     <div class="step-sub">Upload your most recent processing statement or enter your figures manually — we'll calculate your rate instantly.</div>
@@ -474,7 +448,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 
   <!-- ═══ STEP 4 (was 5): MintedPay rate ═══ -->
   <div id="step4" class="step">
-    <div class="step-label">Step 4 of 4</div>
+    <div class="step-label">Step 3 of 3</div>
     <div class="step-title">Your MintedPay rate</div>
     <div class="step-sub">Here's what we can offer you — based on your actual processing data.</div>
 
@@ -487,10 +461,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
       <div class="rate-reveal-overlay" id="rateRevealOverlay">
         <div style="font-size:36px;margin-bottom:12px">🔒</div>
         <div class="rate-reveal-title">Your rate is ready</div>
-        <div class="rate-reveal-sub">Enter your details to reveal your MintedPay rate and estimated saving.</div>
+        <div class="rate-reveal-sub">Enter your details below to unlock your personalised rate and estimated saving.</div>
         <div class="rate-reveal-fields">
           <input type="text" id="revealName" placeholder="Your name" autocomplete="name">
           <input type="email" id="revealEmail" placeholder="Email address" autocomplete="email">
+          <input type="text" id="bizName" placeholder="Business name" autocomplete="organization">
+          <input type="tel" id="bizPhone" placeholder="Phone (optional)" autocomplete="tel">
           <div id="revealError" style="display:none;font-size:12px;color:var(--red);text-align:left"></div>
           <button class="btn btn-primary" onclick="revealRate()" style="width:100%;margin-top:4px">Reveal my rate →</button>
         </div>
@@ -592,7 +568,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
       <div id="submitError" style="display:none;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:var(--r);padding:12px 14px;font-size:13px;color:var(--red);margin-bottom:16px"></div>
     </div>
     <div class="btn-row" id="step4Btns" style="display:none">
-      <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
+      <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
       <button class="btn btn-primary" onclick="submitLead()" style="margin-left:auto" id="step4PrimaryBtn">Request my confirmed rate →</button>
     </div>
   </div>
@@ -660,7 +636,7 @@ let pricingResult = null;
 let selectedType  = "";
 let currentStep   = 1;
 let quoteShown    = false; // tracks whether we actually showed a rate to the merchant
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 3;
 
 const PROVIDER_MSGS = {
   stripe:      "Businesses switching from Stripe typically reduce processing costs by 20–30%.",
@@ -768,7 +744,7 @@ function step2Next() {
     showError("Please confirm your business eligibility to continue.");
     return;
   }
-  goStep(3);
+  goStep(4);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1162,8 +1138,8 @@ async function buildStep4() {
 // STEP 5 (was 6): SUBMIT LEAD
 // ═══════════════════════════════════════════════════════════
 async function submitLead() {
-  const contactName = (document.getElementById("revealName")?.value || document.getElementById("contactName")?.value || "").trim();
-  const email       = (document.getElementById("revealEmail")?.value || document.getElementById("confirmEmail")?.value || "").trim();
+  const contactName = (document.getElementById("revealName")?.value || "").trim();
+  const email       = (document.getElementById("revealEmail")?.value || "").trim();
   const phone       = (document.getElementById("bizPhone")?.value || "").trim();
 
   const errEl = document.getElementById("submitError");
@@ -1278,10 +1254,12 @@ function revealRate() {
   const name  = document.getElementById("revealName").value.trim();
   const email = document.getElementById("revealEmail").value.trim();
   const errEl = document.getElementById("revealError");
+  const bizNameVal = document.getElementById("bizName")?.value?.trim() || "";
   if (!name) { errEl.textContent = "Please enter your name."; errEl.style.display = "block"; return; }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errEl.textContent = "Please enter a valid email address."; errEl.style.display = "block"; return;
   }
+  if (!bizNameVal) { errEl.textContent = "Please enter your business name."; errEl.style.display = "block"; return; }
   errEl.style.display = "none";
   // Step 5 removed — name/email already captured in reveal overlay fields
   // Unblur the rate content
