@@ -1084,13 +1084,17 @@ async function buildStep4() {
       document.getElementById("saveMonthly").textContent = fmt2(saving);
       document.getElementById("saveAnnual").textContent  = fmt2(saving * 12);
       document.getElementById("savingBanner").style.display = "flex";
-      var _mpCost = vol * displayRate / 100 + cnt * fixed / 100;
+      // Hero: use segment summary when available (more accurate), else blended calc
+      var _segSumm = (p && p.segment_quotes && p.segment_quotes.summary) ? p.segment_quotes.summary : null;
+      var _heroSaving  = _segSumm && _segSumm.totalSaving  != null ? _segSumm.totalSaving  : saving;
+      var _heroMpCost  = _segSumm && _segSumm.totalOurFees != null ? _segSumm.totalOurFees : (vol * displayRate / 100 + cnt * fixed / 100);
+      var _heroCurCost = _segSumm && _segSumm.totalTheirFees != null ? _segSumm.totalTheirFees : cur;
       var _sh = document.getElementById("savingHero");
-      if (_sh) {
-        document.getElementById("heroSaveAmt").textContent = fmt2(saving) + "/mo";
-        document.getElementById("heroSaveYr").textContent  = fmt2(saving * 12) + " per year";
-        document.getElementById("heroCurFees").textContent = fmt2(cur) + "/mo";
-        document.getElementById("heroMpFees").textContent  = fmt2(_mpCost) + "/mo";
+      if (_sh && _heroSaving > 0) {
+        document.getElementById("heroSaveAmt").textContent = fmt2(_heroSaving) + "/mo";
+        document.getElementById("heroSaveYr").textContent  = fmt2(_heroSaving * 12) + " per year";
+        document.getElementById("heroCurFees").textContent = fmt2(_heroCurCost) + "/mo";
+        document.getElementById("heroMpFees").textContent  = fmt2(_heroMpCost) + "/mo";
         _sh.style.display = "flex";
       }
     } else {
