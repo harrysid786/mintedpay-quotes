@@ -881,7 +881,7 @@ async function buildStep4() {
   const fixed = p ? (p.fixed_fee || 10) : 10;
 
   // p.rate is the correct public quoted rate for acquisition_plus profile.
-  const hasIntl   = p && p.sell_international_rate && parseFloat(p.intl_frac || 0) > 0;
+  const hasIntl   = p && p.sell_international_rate && !!(p.has_real_international_data || parseFloat(p.intl_frac || 0) > 0);
   const sellIntl  = p ? parseFloat(p.sell_international_rate || 0) : null;
   const baseRate  = p ? parseFloat(p.rate) : null;
   const blended   = (hasIntl && baseRate && sellIntl)
@@ -1175,7 +1175,7 @@ async function submitLead() {
   // Determine indicative rate — same logic as buildStep4
   const p         = pricingResult;
   const _sellIntl = p ? parseFloat(p.sell_international_rate || 0) : null;
-  const _hasIntl  = p && p.sell_international_rate && parseFloat(p.intl_frac || 0) > 0;
+  const _hasIntl  = p && p.sell_international_rate && !!(p.has_real_international_data || parseFloat(p.intl_frac || 0) > 0);
   const _blended  = (_hasIntl && p && _sellIntl)
     ? Math.ceil(((1 - parseFloat(p.intl_frac)) * parseFloat(p.rate) + parseFloat(p.intl_frac) * _sellIntl) * 100) / 100
     : null;
