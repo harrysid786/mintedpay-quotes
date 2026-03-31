@@ -411,6 +411,9 @@
       const rate   = lead.processingRate || lead.pricing?.rate;
       const fee    = lead.fixedFee       || lead.pricing?.fixedFee;
       const hasPricing = !!(rate || fee);
+      const amexRate  = (lead.amexRate  !== undefined && lead.amexRate  !== null) ? parseFloat(lead.amexRate)  : null;
+      const amexFixed = (lead.amexFixed !== undefined && lead.amexFixed !== null) ? parseInt(lead.amexFixed)   : null;
+      const amexVol   = (lead.amexVol   !== undefined && lead.amexVol   !== null) ? parseFloat(lead.amexVol)   : null;
       const hasQuote   = !!lead.quote_id;
       const isKYB      = lead.status === "kyb_pending";
 
@@ -514,6 +517,11 @@
                       <div class="ov-pricing-label">Fixed Fee</div>
                       <div class="ov-pricing-value">${fee}p</div>
                     </div>
+                    ${(amexRate && amexVol > 0) ? `
+                    <div class="ov-pricing-cell">
+                      <div class="ov-pricing-label">Amex Rate</div>
+                      <div class="ov-pricing-value">${parseFloat(amexRate).toFixed(2)}%<span style="font-size:12px;font-weight:400"> + ${amexFixed != null ? amexFixed : 10}p</span></div>
+                    </div>` : ""}
                     ${riskColor ? `
                     <div class="ov-pricing-cell">
                       <div class="ov-pricing-label">Risk Level</div>
