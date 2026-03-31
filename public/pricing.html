@@ -1283,9 +1283,7 @@ function revealRate() {
     errEl.textContent = "Please enter a valid email address."; errEl.style.display = "block"; return;
   }
   errEl.style.display = "none";
-  // Pre-fill Step 5 contact fields
-  document.getElementById("contactName").value  = name;
-  document.getElementById("confirmEmail").value  = email;
+  // Step 5 removed — name/email already captured in reveal overlay fields
   // Unblur the rate content
   const blurEl    = document.getElementById("rateBlurContent");
   const overlayEl = document.getElementById("rateRevealOverlay");
