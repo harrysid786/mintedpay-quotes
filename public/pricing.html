@@ -730,12 +730,9 @@ function step1Next() {
     return;
   }
   document.getElementById("emailError").style.display = "none";
-  // Pre-fill confirm page email
-  document.getElementById("confirmEmail").value = email;
-  // Pre-fill reveal overlay
-  document.getElementById("revealEmail").value = email;
-  const _cname = document.getElementById("contactName")?.value?.trim() || "";
-  if (_cname) document.getElementById("revealName").value = _cname;
+  // Pre-fill reveal overlay with email from biz details
+  const _re = document.getElementById("revealEmail");
+  if (_re) _re.value = email;
   goStep(4);
 }
 
@@ -1167,7 +1164,7 @@ async function buildStep4() {
 async function submitLead() {
   const contactName = (document.getElementById("revealName")?.value || document.getElementById("contactName")?.value || "").trim();
   const email       = (document.getElementById("revealEmail")?.value || document.getElementById("confirmEmail")?.value || "").trim();
-  const phone       = (document.getElementById("confirmPhone")?.value || document.getElementById("bizPhone")?.value || "").trim();
+  const phone       = (document.getElementById("bizPhone")?.value || "").trim();
 
   const errEl = document.getElementById("submitError");
   if (!contactName) {
