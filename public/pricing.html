@@ -1213,6 +1213,9 @@ async function submitLead() {
     fixedFee:         indFixed,
     currentEffectiveRate: effRate ? parseFloat(effRate) : null,
     estimatedMonthlySaving: saving ? parseFloat(saving.toFixed(2)) : null,
+    amexRate:  (pricingResult && pricingResult.segment_quotes && pricingResult.segment_quotes.segments ? pricingResult.segment_quotes.segments.find(function(s){ return s.label === 'Amex'; }) : null)?.ourRate ?? null,
+    amexFixed: (pricingResult && pricingResult.segment_quotes && pricingResult.segment_quotes.segments ? pricingResult.segment_quotes.segments.find(function(s){ return s.label === 'Amex'; }) : null)?.ourFixedFee ?? null,
+    amexVol:   (pricingResult && pricingResult.segment_quotes && pricingResult.segment_quotes.segments ? pricingResult.segment_quotes.segments.find(function(s){ return s.label === 'Amex'; }) : null)?.vol ?? null,
     // Meta
     leadSource:       "website",
     status:           "new",
@@ -1236,7 +1239,13 @@ async function submitLead() {
     if (!res.ok) throw new Error(data.error || "Submission failed");
 
     // Show confirmation
-    buildConfirmation(contactName, email, indRate, indFixed, saving, vol);
+    const _amexSeg = (pricingResult && pricingResult.segment_quotes && pricingResult.segment_quotes.segments)
+      ? pricingResult.segment_quotes.segments.find(function(s){ return s.label === 'Amex'; })
+      : null;
+    buildConfirmation(contactName, email, indRate, indFixed, saving, vol,
+      _amexSeg ? _amexSeg.ourRate : null,
+      _amexSeg ? _amexSeg.ourFixedFee : null,
+      _amexSeg ? _amexSeg.vol : 0);
     goStep("done");
   } catch (e) {
     btn.disabled = false;
@@ -1246,14 +1255,15 @@ async function submitLead() {
   }
 }
 
-function buildConfirmation(name, email, rate, fixed, saving, vol) {
+function buildConfirmation(name, email, rate, fixed, saving, vol, amexRate, amexFixed, amexVol) {
   const fmt2 = n => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtK = n => { const a = Math.abs(n); if (a >= 1e6) return "£"+(a/1e6).toFixed(2)+"m"; if (a >= 1e3) return "£"+(a/1e3).toFixed(1)+"k"; return "£"+a.toFixed(2); };
   let rows = `
     <div class="confirm-row"><span class="confirm-row-k">Name</span><span class="confirm-row-v">${name}</span></div>
     <div class="confirm-row"><span class="confirm-row-k">Email</span><span class="confirm-row-v">${email}</span></div>`;
   if (vol > 0) rows += `<div class="confirm-row"><span class="confirm-row-k">Monthly volume</span><span class="confirm-row-v">${fmtK(vol)}</span></div>`;
-  if (rate && quoteShown) rows += `<div class="confirm-row"><span class="confirm-row-k">Indicative rate</span><span class="confirm-row-v">${parseFloat(rate).toFixed(2)}% + ${fixed}p/tx</span></div>`;
+  if (rate && quoteShown) rows += `<div class="confirm-row"><span class="confirm-row-k">UK Visa / Mastercard rate</span><span class="confirm-row-v">${parseFloat(rate).toFixed(2)}% + ${fixed}p/tx</span></div>`;
+  if (amexRate && amexVol > 0) rows += `<div class="confirm-row"><span class="confirm-row-k">Amex rate</span><span class="confirm-row-v">${parseFloat(amexRate).toFixed(2)}% + ${amexFixed != null ? amexFixed : 10}p/tx</span></div>`;
   if (saving && saving > 0) rows += `<div class="confirm-row"><span class="confirm-row-k">Est. monthly saving</span><span class="confirm-row-v">${fmt2(saving)}/mo</span></div>`;
   document.getElementById("confirmSummary").innerHTML = rows;
 }
