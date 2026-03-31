@@ -471,6 +471,34 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
           <button class="btn btn-primary" onclick="revealRate()" style="width:100%;margin-top:4px">Reveal my rate →</button>
         </div>
       </div>
+      <!-- Processing summary — blurred until reveal -->
+      <div class="rate-blur-content" id="summaryBlurContent" style="margin-bottom:14px">
+        <div id="processingSnapshot" style="display:none;background:var(--wash);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mute);margin-bottom:10px">Your processing summary</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+            <div style="padding:5px 0;border-bottom:1px solid var(--line)">
+              <div style="font-size:12px;color:var(--slate)">Monthly volume</div>
+              <div style="font-size:14px;font-weight:700;color:var(--ink)" id="snapVol">—</div>
+            </div>
+            <div style="padding:5px 0 5px 16px;border-bottom:1px solid var(--line)">
+              <div style="font-size:12px;color:var(--slate)">Transactions</div>
+              <div style="font-size:14px;font-weight:700;color:var(--ink)" id="snapCnt">—</div>
+            </div>
+            <div style="padding:5px 0;border-bottom:1px solid var(--line)">
+              <div style="font-size:12px;color:var(--slate)">Avg transaction</div>
+              <div style="font-size:14px;font-weight:700;color:var(--ink)" id="snapAvg">—</div>
+            </div>
+            <div style="padding:5px 0 5px 16px;border-bottom:1px solid var(--line)">
+              <div style="font-size:12px;color:var(--slate)">Current fees</div>
+              <div style="font-size:14px;font-weight:700;color:var(--ink)" id="snapFees">—</div>
+            </div>
+            <div style="padding:5px 0;grid-column:1/-1">
+              <div style="font-size:12px;color:var(--slate)">Effective rate <span style="font-size:11px;font-weight:400">(total fees ÷ volume, inc. % + per-tx charges)</span></div>
+              <div style="font-size:16px;font-weight:700;color:var(--red)" id="snapRate">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="rate-blur-wrap"><div class="rate-blur-content" id="rateBlurContent">
       <!-- Rate compare: current vs MintedPay (only shown if fees known) -->
       <div id="rateCompare" style="display:none">
@@ -846,9 +874,11 @@ async function buildStep4() {
   document.getElementById("step4Content").style.display = "none";
   document.getElementById("step4Btns").style.display = "none";
   // Reset blur + overlay state
-  const _blurEl = document.getElementById("rateBlurContent");
-  const _overlayEl = document.getElementById("rateRevealOverlay");
-  if (_blurEl) _blurEl.classList.remove("revealed");
+  const _blurEl    = document.getElementById("rateBlurContent");
+  const _sumBlurEl  = document.getElementById("summaryBlurContent");
+  const _overlayEl  = document.getElementById("rateRevealOverlay");
+  if (_blurEl)    _blurEl.classList.remove("revealed");
+  if (_sumBlurEl) _sumBlurEl.classList.remove("revealed");
   if (_overlayEl) _overlayEl.classList.remove("hidden");
   const _sw = document.getElementById("step4SubmitWrap");
   if (_sw) _sw.style.display = "none";
@@ -1133,6 +1163,22 @@ async function buildStep4() {
     // Hide rate-specific rows from What's Included — keep service rows
     document.querySelectorAll(".seg-rate-row").forEach(function(el){ el.style.display = "none"; });
   }
+  // Populate processing snapshot card
+  (function() {
+    const { vol, cnt, cur, avgTx } = getVolumeData();
+    const fmtK = n => { const a=Math.abs(n); if(a>=1e6) return '£'+(a/1e6).toFixed(2)+'m'; if(a>=1e3) return '£'+(a/1e3).toFixed(1)+'k'; return '£'+a.toFixed(2); };
+    const fmt2 = n => '£'+Math.abs(n).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const snap = document.getElementById('processingSnapshot');
+    if (snap && vol > 0) {
+      document.getElementById('snapVol').textContent  = fmtK(vol);
+      document.getElementById('snapCnt').textContent  = cnt.toLocaleString('en-GB') + '/mo';
+      document.getElementById('snapAvg').textContent  = fmt2(avgTx);
+      document.getElementById('snapFees').textContent = cur > 0 ? fmt2(cur) + '/mo' : '—';
+      const effRate = cur > 0 && vol > 0 ? (cur/vol*100).toFixed(2)+'%' : '—';
+      document.getElementById('snapRate').textContent = effRate;
+      snap.style.display = 'block';
+    }
+  })();
   document.getElementById("step4Content").style.display = "block";
   // Btns only shown after revealRate() — keep hidden here
 }
@@ -1265,10 +1311,12 @@ function revealRate() {
   if (!bizNameVal) { errEl.textContent = "Please enter your business name."; errEl.style.display = "block"; return; }
   errEl.style.display = "none";
   // Step 5 removed — name/email already captured in reveal overlay fields
-  // Unblur the rate content
+  // Unblur rate content AND summary card
   const blurEl    = document.getElementById("rateBlurContent");
+  const summaryEl = document.getElementById("summaryBlurContent");
   const overlayEl = document.getElementById("rateRevealOverlay");
   if (blurEl)    blurEl.classList.add("revealed");
+  if (summaryEl) summaryEl.classList.add("revealed");
   if (overlayEl) overlayEl.classList.add("hidden");
   // Unblur CSV summary figures too
   const csvSumm = document.getElementById("csvSummary");
