@@ -245,7 +245,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
   <div id="errorBox" class="error-box"></div>
 
   <!-- ═══ STEP 1: Business details ═══ -->
-  <div id="step1" class="step active">
+  <div id="step3" class="step">
     <div class="step-label">Step 3 of 5</div>
     <div class="step-title">Tell us about your business</div>
     <div class="step-sub">We'll use this to personalise your quote and follow up with you.</div>
@@ -349,7 +349,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
   </div>
 
   <!-- ═══ STEP 3: Volume / CSV ═══ -->
-  <div id="step3" class="step">
+  <div id="step1" class="step">
     <div class="step-label">Step 1 of 5</div>
     <div class="step-title">Your processing volume</div>
     <!-- Change 6: Improved sub-heading copy -->
@@ -709,8 +709,9 @@ const PROVIDER_MSGS = {
 // ═══════════════════════════════════════════════════════════
 function goStep(n) {
   // Clear stale pricing result when navigating back — prevents stale not-competitive state
-  if (typeof n === 'number' && n < 4) { pricingResult = null; quoteShown = false; }
-  // When going back to step 1 (CSV), re-apply blur if CSV data exists
+  // Clear pricing result only when going back to CSV step (step 1) to re-run fresh
+  if (typeof n === 'number' && n === 1) { pricingResult = null; quoteShown = false; }
+  // Re-apply blur on CSV summary when going back to step 1
   if (n === 1 && csvData) {
     const _cs = document.getElementById("csvSummary");
     const _ub = document.getElementById("csvUnlockBanner");
