@@ -246,7 +246,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 
   <!-- ═══ STEP 1: Business details ═══ -->
   <div id="step3" class="step">
-    <div class="step-label">Step 3 of 5</div>
+    <div class="step-label">Step 3 of 4</div>
     <div class="step-title">Tell us about your business</div>
     <div class="step-sub">We'll use this to personalise your quote and follow up with you.</div>
 
@@ -272,7 +272,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 
   <!-- ═══ STEP 2: Merchant type + industry ═══ -->
   <div id="step2" class="step">
-    <div class="step-label">Step 2 of 5</div>
+    <div class="step-label">Step 2 of 4</div>
     <div class="step-title">How do you take payments?</div>
     <div class="step-sub">This helps us calculate the right rate for your business model.</div>
 
@@ -350,7 +350,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 
   <!-- ═══ STEP 3: Volume / CSV ═══ -->
   <div id="step1" class="step">
-    <div class="step-label">Step 1 of 5</div>
+    <div class="step-label">Step 1 of 4</div>
     <div class="step-title">Your processing volume</div>
     <!-- Change 6: Improved sub-heading copy -->
     <div class="step-sub">Upload your most recent processing statement or enter your figures manually — we'll calculate your rate instantly.</div>
@@ -474,7 +474,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 
   <!-- ═══ STEP 4 (was 5): MintedPay rate ═══ -->
   <div id="step4" class="step">
-    <div class="step-label">Step 4 of 5</div>
+    <div class="step-label">Step 4 of 4</div>
     <div class="step-title">Your MintedPay rate</div>
     <div class="step-sub">Here's what we can offer you — based on your actual processing data.</div>
 
@@ -585,45 +585,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 
     <!-- Change 8: CTA renamed to "Request my confirmed rate →" -->
       </div></div><!-- /rate-blur-content /rate-blur-wrap -->
+    <div id="step4SubmitWrap" style="display:none">
+      <div style="font-size:13px;color:var(--slate);line-height:1.6;margin-bottom:12px;margin-top:8px">
+        By submitting, you agree that MintedPay (Nova Advisory Limited) may contact you about this enquiry. We never share your data with third parties.
+      </div>
+      <div id="submitError" style="display:none;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:var(--r);padding:12px 14px;font-size:13px;color:var(--red);margin-bottom:16px"></div>
+    </div>
     <div class="btn-row" id="step4Btns" style="display:none">
       <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
-      <button class="btn btn-primary" onclick="goStep(5)" style="margin-left:auto" id="step4PrimaryBtn">Request my confirmed rate →</button>
-    </div>
-  </div>
-
-  <!-- ═══ STEP 5 (was 6): Confirm details + submit ═══ -->
-  <div id="step5" class="step">
-    <!-- Change 10: Renamed title -->
-    <div class="step-label">Step 5 of 5</div>
-    <div class="step-title">Confirm your details</div>
-    <!-- Change 11: Improved sub-text -->
-    <div class="step-sub">Review your information and submit — one of our specialists will confirm your rate within one business day.</div>
-
-    <div id="confirmDetails" style="background:var(--wash);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:20px">
-      <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mute);margin-bottom:8px">Your details</div>
-      <div class="field" style="margin-bottom:12px">
-        <label>Your name <span class="req">*</span></label>
-        <input type="text" id="contactName" placeholder="Jane Smith" autocomplete="name">
-      </div>
-      <div class="field" style="margin-bottom:12px">
-        <label>Email <span class="req">*</span></label>
-        <input type="email" id="confirmEmail" placeholder="jane@yourbusiness.com" autocomplete="email">
-      </div>
-      <div class="field" style="margin-bottom:0">
-        <label>Phone <span style="font-weight:400;color:var(--mute)">(optional)</span></label>
-        <input type="tel" id="confirmPhone" placeholder="+44 7700 000 000" autocomplete="tel">
-      </div>
-    </div>
-
-    <div style="margin-bottom:20px;font-size:13px;color:var(--slate);line-height:1.6">
-      By submitting, you agree that MintedPay (Nova Advisory Limited) may contact you about this enquiry. We never share your data with third parties.
-    </div>
-
-    <div id="submitError" style="display:none;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:var(--r);padding:12px 14px;font-size:13px;color:var(--red);margin-bottom:16px"></div>
-
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="goStep(4)">← Back</button>
-      <button class="btn btn-primary" id="submitBtn" onclick="submitLead()" style="margin-left:auto">Submit my enquiry →</button>
+      <button class="btn btn-primary" onclick="submitLead()" style="margin-left:auto" id="step4PrimaryBtn">Request my confirmed rate →</button>
     </div>
   </div>
 
@@ -690,7 +660,7 @@ let pricingResult = null;
 let selectedType  = "";
 let currentStep   = 1;
 let quoteShown    = false; // tracks whether we actually showed a rate to the merchant
-const TOTAL_STEPS = 5; // Updated: Step 4 (cost breakdown) removed
+const TOTAL_STEPS = 4;
 
 const PROVIDER_MSGS = {
   stripe:      "Businesses switching from Stripe typically reduce processing costs by 20–30%.",
@@ -904,6 +874,8 @@ async function buildStep4() {
   const _overlayEl = document.getElementById("rateRevealOverlay");
   if (_blurEl) _blurEl.classList.remove("revealed");
   if (_overlayEl) _overlayEl.classList.remove("hidden");
+  const _sw = document.getElementById("step4SubmitWrap");
+  if (_sw) _sw.style.display = "none";
 
   // Poll for pricing result (may already be ready from background fetch)
   const msgs = ["Calculating your rate…", "Comparing against your data…", "Preparing your quote…"];
@@ -1193,23 +1165,22 @@ async function buildStep4() {
 // STEP 5 (was 6): SUBMIT LEAD
 // ═══════════════════════════════════════════════════════════
 async function submitLead() {
-  const contactName = document.getElementById("contactName").value.trim();
-  const email       = document.getElementById("confirmEmail").value.trim();
-  const phone       = document.getElementById("confirmPhone").value.trim();
+  const contactName = (document.getElementById("revealName")?.value || document.getElementById("contactName")?.value || "").trim();
+  const email       = (document.getElementById("revealEmail")?.value || document.getElementById("confirmEmail")?.value || "").trim();
+  const phone       = (document.getElementById("confirmPhone")?.value || document.getElementById("bizPhone")?.value || "").trim();
 
+  const errEl = document.getElementById("submitError");
   if (!contactName) {
-    document.getElementById("submitError").textContent = "Please enter your name.";
-    document.getElementById("submitError").style.display = "block";
+    if (errEl) { errEl.textContent = "Please enter your name."; errEl.style.display = "block"; }
     return;
   }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    document.getElementById("submitError").textContent = "Please enter a valid email address.";
-    document.getElementById("submitError").style.display = "block";
+    if (errEl) { errEl.textContent = "Please enter a valid email address."; errEl.style.display = "block"; }
     return;
   }
-  document.getElementById("submitError").style.display = "none";
+  if (errEl) errEl.style.display = "none";
 
-  const btn = document.getElementById("submitBtn");
+  const btn = document.getElementById("step4PrimaryBtn");
   btn.disabled = true;
   btn.textContent = "Submitting…";
 
@@ -1297,9 +1268,9 @@ async function submitLead() {
     goStep("done");
   } catch (e) {
     btn.disabled = false;
-    btn.textContent = "Submit my enquiry →";
-    document.getElementById("submitError").textContent = "Something went wrong. Please try again or email us at " + ACTIVE_BRAND.errorEmail + ".";
-    document.getElementById("submitError").style.display = "block";
+    btn.textContent = "Request my confirmed rate →";
+    const _se = document.getElementById("submitError");
+    if (_se) { _se.textContent = "Something went wrong. Please try again or email us at " + ACTIVE_BRAND.errorEmail + "."; _se.style.display = "block"; }
   }
 }
 
@@ -1328,7 +1299,9 @@ function revealRate() {
   if (csvSumm) csvSumm.classList.remove("blur-figures");
   const _ub = document.getElementById("csvUnlockBanner");
   if (_ub) _ub.style.display = "none";
-  // Show the CTA button
+  // Show consent text + CTA button
+  const _sw = document.getElementById("step4SubmitWrap");
+  if (_sw) _sw.style.display = "block";
   document.getElementById("step4Btns").style.display = "flex";
 }
 
