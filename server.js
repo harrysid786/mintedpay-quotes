@@ -18,6 +18,7 @@ app.use("/agreements", express.static(path.join(__dirname, "agreements")));
 
 // ── Existing routes (unchanged) ───────────────────────────────
 app.use("/api/quotes",           quotesRoute);
+app.use("/api/stripe",           require("./routes/stripe")); // Stripe Connect sandbox
 app.use("/api/quote_acceptance", acceptanceRoute);
 app.use("/api/calculate_quote",  pricingRoute);
 
