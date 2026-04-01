@@ -619,7 +619,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
       </div></div><!-- /rate-blur-content /rate-blur-wrap -->
     <div id="step4SubmitWrap" style="display:none">
       <div style="font-size:13px;color:var(--slate);line-height:1.6;margin-bottom:12px;margin-top:8px">
-        By submitting, you agree that MintedPay (Nova Advisory Limited) may contact you about this enquiry. We never share your data with third parties.
+        By submitting, you agree that <span id="consentBrandName">MintedPay</span> may contact you about this enquiry. We never share your data with third parties.
       </div>
       <div id="submitError" style="display:none;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:var(--r);padding:12px 14px;font-size:13px;color:var(--red);margin-bottom:16px"></div>
     </div>
@@ -658,18 +658,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 
 </div><!-- /card -->
 
-<div class="footer"><span id="footerText">MintedPay · Nova Advisory Limited · <a href="https://www.mintedpay.com">www.mintedpay.com</a></span></div>
+<div class="footer"><span id="footerText">MintedPay · <a href="https://www.mintedpay.com">www.mintedpay.com</a></span></div>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // BRAND DETECTION — reads hostname, applies correct brand config
 const BRANDS = {
   minted: {
     key:"minted", name:"MintedPay", errorEmail:"sales@minted.com",
-    legal:"MintedPay · Nova Advisory Limited · <a href='https://www.mintedpay.com'>www.mintedpay.com<\/a>"
+    legal:"MintedPay · <a href='https://www.mintedpay.com'>www.mintedpay.com<\/a>"
   },
   ummah: {
     key:"ummah", name:"Ummah", errorEmail:"sales@ummah.com",
-    legal:"Ummah · Nova Advisory Limited · <a href='https://www.ummah.com'>www.ummah.com<\/a>"
+    legal:"Ummah · <a href='https://www.ummah.com'>www.ummah.com<\/a>"
   }
 };
 const ACTIVE_BRAND = window.location.hostname.includes("ummah") ? BRANDS.ummah : BRANDS.minted;
@@ -683,6 +683,7 @@ function applyBrand() {
   const hp = document.getElementById("heroProvider"); if(hp) hp.textContent = b.name;
   const rl = document.getElementById("rateBlockLabel"); if(rl) rl.textContent = b.name;
   const ft = document.getElementById("footerText"); if(ft) ft.innerHTML = b.legal;
+  const cb = document.getElementById("consentBrandName"); if(cb) cb.textContent = b.name;
 }
 // ═══════════════════════════════════════════════════════════
 // STATE
