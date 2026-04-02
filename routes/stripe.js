@@ -16,7 +16,7 @@ router.get("/connect", (req, res) => {
   const params = qs.stringify({
     response_type: "code",
     client_id:     CLIENT_ID,
-    scope:         "read_only",
+    scope:         "read_write",
     redirect_uri:  REDIRECT_URI,
   });
   // Try v2 first (newer Stripe accounts / sandboxes)
