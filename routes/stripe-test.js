@@ -4,7 +4,7 @@ const router  = express.Router();
 const https   = require("https");
 const qs      = require("querystring");
 
-const CLIENT_ID    = process.env.STRIPE_TEST_CLIENT_ID;
+const CLIENT_ID    = process.env.STRIPE_CLIENT_ID;
 const SECRET_KEY   = process.env.STRIPE_TEST_SECRET_KEY;
 const REDIRECT_URI = process.env.STRIPE_REDIRECT_URI || "https://mintedpay-quotes.onrender.com/api/stripe/callback";
 
