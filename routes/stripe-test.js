@@ -166,4 +166,55 @@ function classCard(s) {
   return "mixed";
 }
 
+// ── POST /api/stripe-test/create-charges ─────────────────────────
+// Temporary endpoint to seed test transaction data
+router.post("/create-charges", async (req, res) => {
+  const sk = process.env.STRIPE_TEST_SECRET_KEY;
+  if (!sk) return res.status(500).json({error: 'No test key configured'});
+  const charges = [
+    {amount:15000,token:'tok_visa',desc:'Visa Credit'},
+    {amount:4500,token:'tok_visa',desc:'Visa Credit'},
+    {amount:8000,token:'tok_visa_debit',desc:'Visa Debit'},
+    {amount:12000,token:'tok_visa_debit',desc:'Visa Debit'},
+    {amount:20000,token:'tok_mastercard',desc:'Mastercard'},
+    {amount:6700,token:'tok_mastercard',desc:'Mastercard'},
+    {amount:9500,token:'tok_amex',desc:'Amex'},
+    {amount:30000,token:'tok_visa',desc:'Visa Credit'},
+    {amount:3500,token:'tok_visa_debit',desc:'Visa Debit'},
+    {amount:18000,token:'tok_mastercard',desc:'Mastercard'},
+  ];
+  const results = [];
+  for (const c of charges) {
+    const r = await stripePost('https://api.stripe.com/v1/charges',
+      `amount=${c.amount}&currency=gbp&source=${c.token}&description=${encodeURIComponent(c.desc)}`, sk);
+    results.push({desc:c.desc, amount:'£'+(c.amount/100), status:r.status, id:r.id});
+  }
+  res.json({created: results.filter(r=>r.status==='succeeded').length, results});
+});
+
+// ── POST /api/stripe-test/create-charges ─────────────────────────
+router.post("/create-charges", async (req, res) => {
+  const charges = [
+    {amount:15000,token:'tok_visa'},
+    {amount:4500,token:'tok_visa'},
+    {amount:8000,token:'tok_visa_debit'},
+    {amount:12000,token:'tok_visa_debit'},
+    {amount:20000,token:'tok_mastercard'},
+    {amount:6700,token:'tok_mastercard'},
+    {amount:9500,token:'tok_amex'},
+    {amount:30000,token:'tok_visa'},
+    {amount:3500,token:'tok_visa_debit'},
+    {amount:18000,token:'tok_mastercard'},
+  ];
+  const results = [];
+  for (const c of charges) {
+    try {
+      const r = await stripePost('https://api.stripe.com/v1/charges',
+        {amount:c.amount, currency:'gbp', source:c.token, description:'Test charge'});
+      results.push({amount:'£'+(c.amount/100), status:r.status, id:r.id, error:r.error?.message});
+    } catch(e) { results.push({error:e.message}); }
+  }
+  res.json({created:results.filter(r=>r.status==='succeeded').length, results});
+});
+
 module.exports = router;
