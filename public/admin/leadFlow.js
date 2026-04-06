@@ -3078,11 +3078,12 @@
       const csvIntlFracVal = (this.lead.csvIntlFrac !== null && this.lead.csvIntlFrac !== undefined)
         ? parseFloat(this.lead.csvIntlFrac) : null;
 
-      let intlFrac = null;
-      if (Number.isFinite(manualIntlPct) && manualIntlPct >= 0 && manualIntlPct <= 100) {
-        intlFrac = manualIntlPct / 100;                    // manual wins
-      } else if (csvIntlFracVal !== null && Number.isFinite(csvIntlFracVal)) {
-        intlFrac = csvIntlFracVal;                         // CSV fallback
+      let intlFrac;
+      // CSV-detected intlFrac takes priority over manual entry — CSV data is more accurate
+      if (csvIntlFracVal !== null && Number.isFinite(csvIntlFracVal)) {
+        intlFrac = csvIntlFracVal;                         // CSV wins
+      } else if (Number.isFinite(manualIntlPct) && manualIntlPct >= 0 && manualIntlPct <= 100) {
+        intlFrac = manualIntlPct / 100;                    // manual fallback
       }
       // else: intlFrac remains null → API returns split_indicative, no blended rate
 
