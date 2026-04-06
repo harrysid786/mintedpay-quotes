@@ -1257,7 +1257,11 @@ async function submitLead() {
   const intlRegionMap = { "uk": null, "eea": "eea", "uk_eea": "eea", "mixed": "mixed", "row": "row", "": null };
   const intlRegion = intlRegionMap.hasOwnProperty(intlRegionRaw) ? intlRegionMap[intlRegionRaw] : null;
   const provider   = document.getElementById("providerInput").value || null;
-  const intlPct    = parseFloat(document.getElementById("intlInput").value) || 0;
+  // CSV-detected intlFrac takes priority over manual intlInput entry
+  const _csvIntlFrac = (isUpload && csvData && csvData.intlFrac != null) ? csvData.intlFrac : null;
+  const intlPct    = _csvIntlFrac !== null
+    ? Math.round(_csvIntlFrac * 100) // use CSV-detected %, convert 0-1 to 0-100
+    : (parseFloat(document.getElementById("intlInput").value) || 0);
 
   // Determine indicative rate — same logic as buildStep4
   const p         = pricingResult;
