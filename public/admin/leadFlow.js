@@ -894,10 +894,10 @@
                     const fromCsv = parseFloat(this.lead.csvIntlFrac);
                     const hasManual = Number.isFinite(manual) && manual >= 0 && manual <= 100;
                     const hasCsv    = Number.isFinite(fromCsv);
-                    if (hasManual && hasCsv)
-                      return `<span style="color:var(--brand)">Using ${manual}% international transactions <span style="font-weight:400;color:var(--g3)">(manual input)</span></span>`;
                     if (hasCsv)
-                      return `<span style="color:var(--brand)">Detected ${Math.round(fromCsv*100)}% international transactions from your statement</span>`;
+                      return `<span style="color:var(--brand)">Detected ${Math.round(fromCsv*100)}% international from statement</span>`;
+                    if (hasManual)
+                      return `<span style="color:var(--brand)">Using ${manual}% international transactions <span style="font-weight:400;color:var(--g3)">(manual input)</span></span>`;
                     return "";
                   })()}
                 </div>
