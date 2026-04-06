@@ -261,7 +261,7 @@ body{font-family:'Inter',sans-serif;background:var(--g7);color:var(--black);font
 .qp-section-body strong{color:var(--brand);font-weight:600}
 .qp-bullets{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
 .qp-bullets li{font-size:14px;color:var(--g3);padding-left:14px;position:relative;line-height:1.5}
-.qp-bullets li::before{content:"Â·";position:absolute;left:0;color:var(--brand);font-weight:700}
+.qp-bullets li::before{content:"·";position:absolute;left:0;color:var(--brand);font-weight:700}
 .pricing-breakdown{width:100%;border-collapse:collapse;margin-top:16px;font-size:14px}
 .pricing-breakdown thead tr{background:var(--brand-lt)}
 .pricing-breakdown th{text-align:left;font-weight:600;color:var(--quote-accent);padding:8px 10px;border-bottom:2px solid #cccccc;font-size:12px;letter-spacing:.5px;text-transform:uppercase}
@@ -401,11 +401,11 @@ function getQuoteExpiry(){
 }
 function fmtK(n){
   const a=Math.abs(n), sg=n<0?"-":"";
-  if(a>=1e6) return sg+"Â£"+(a/1e6).toFixed(2)+"m";
-  if(a>=1000) return sg+"Â£"+(a/1000).toFixed(1)+"k";
-  return sg+"Â£"+a.toFixed(2);
+  if(a>=1e6) return sg+"£"+(a/1e6).toFixed(2)+"m";
+  if(a>=1000) return sg+"£"+(a/1000).toFixed(1)+"k";
+  return sg+"£"+a.toFixed(2);
 }
-function f2(n){ return "Â£"+Math.abs(n).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function f2(n){ return "£"+Math.abs(n).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function n0(n){ return Math.round(n).toLocaleString("en-GB"); }
  
 // âââ RENDER QUOTE PREVIEW âââ
@@ -570,7 +570,7 @@ function renderQuote(data){
               <span style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--brand);letter-spacing:-1px;line-height:1">${displayIntlRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> <span style="font-size:12px;font-weight:600;color:var(--g3)">+ ${ftx}p</span></span>
             </div>
           </div>
-          <div style="font-size:10px;color:var(--g3);margin-top:2px;padding-top:6px;border-top:1px solid var(--g6)">â ${blendedRate.toFixed(2)}% all-in on your card mix Â· Based on ${Math.round((quoteIntlFrac||0)*100)}% international traffic</div>` : `
+          <div style="font-size:10px;color:var(--g3);margin-top:2px;padding-top:6px;border-top:1px solid var(--g6)">â ${blendedRate.toFixed(2)}% all-in on your card mix · Based on ${Math.round((quoteIntlFrac||0)*100)}% international traffic</div>` : `
           <div style="display:flex;flex-direction:column;gap:10px;margin:10px 0 6px">
             <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
               <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3)">UK Cards</span>
@@ -653,7 +653,7 @@ function renderQuote(data){
           //   UK blended interchange:  (0.70 Ã 0.20%) + (0.30 Ã 0.30%) = 0.23%
           //   International interchange: ~1.50%
           //   Scheme fees (both):        0.13%
-          //   Acquirer markup:           0.20% (â¤Â£50k tier â conservative)
+          //   Acquirer markup:           0.20% (â¤£50k tier â conservative)
           // Weighted cost denominator = domFrac Ã ukCost + intlFrac Ã intlCost
           // curUkRate   = curRate Ã ukCost   / weightedCost
           // curIntlRate = curRate Ã intlCost / weightedCost
@@ -747,7 +747,7 @@ function renderQuote(data){
           <div style="margin:16px 0 12px;padding:14px 18px;background:var(--brand-lt);border:1.5px solid var(--brand-bd);border-radius:var(--r)">
           <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--brand);margin-bottom:4px">${blendedRate !== null ? 'UK Card Rate' : 'Your pricing starts from'}</div>
           <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--brand);letter-spacing:-0.5px;line-height:1">${displayUkRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> + ${ftx}<span style="font-size:14px;font-weight:600">p</span> <span style="font-size:12px;font-weight:400;color:var(--g3)">per transaction</span></div>
-          ${blendedRate !== null ? `<div style="font-size:10px;color:var(--g3);margin-top:4px">International cards: ${displayIntlRate.toFixed(2)}% + ${ftx}p Â· â ${blendedRate.toFixed(2)}% all-in on your card mix</div>` : ''}
+          ${blendedRate !== null ? `<div style="font-size:10px;color:var(--g3);margin-top:4px">International cards: ${displayIntlRate.toFixed(2)}% + ${ftx}p · â ${blendedRate.toFixed(2)}% all-in on your card mix</div>` : ''}
         </div>
         <table class="pricing-breakdown">
           <thead><tr><th>Transaction Type</th><th>Rate</th><th>Notes</th></tr></thead>
@@ -780,12 +780,12 @@ function renderQuote(data){
             </tr>` : ''}
             ${a.addChargeback ? `<tr>
               <td>Chargebacks</td>
-              <td class="pb-rate" style="color:var(--red)">Â£${(a.cbAmt||15).toFixed(2)} per chargeback</td>
+              <td class="pb-rate" style="color:var(--red)">£${(a.cbAmt||15).toFixed(2)} per chargeback</td>
               <td class="pb-note">Fee applied when a dispute is received</td>
             </tr>` : ''}
             ${a.addRefund ? `<tr>
               <td>Refunds</td>
-              <td class="pb-rate">Â£${(a.refAmt||1).toFixed(2)} per refund</td>
+              <td class="pb-rate">£${(a.refAmt||1).toFixed(2)} per refund</td>
               <td class="pb-note">Fee applied when processing refunds</td>
             </tr>` : ''}
           </tbody>
@@ -946,13 +946,13 @@ function openAcceptance(){
   if(a.addChargeback){
     addonRows += `<tr style="background:#f3f4f6">
       <td style="padding:8px 10px;border:1px solid #e5e5e5">Chargeback Fee</td>
-      <td style="padding:8px 10px;border:1px solid #e5e5e5"><strong>Â£${(a.cbAmt||15).toFixed(2)}</strong></td>
+      <td style="padding:8px 10px;border:1px solid #e5e5e5"><strong>£${(a.cbAmt||15).toFixed(2)}</strong></td>
     </tr>`;
   }
   if(a.addRefund){
     addonRows += `<tr>
       <td style="padding:8px 10px;border:1px solid #e5e5e5">Refund Fee</td>
-      <td style="padding:8px 10px;border:1px solid #e5e5e5"><strong>Â£${(a.refAmt||1).toFixed(2)}</strong></td>
+      <td style="padding:8px 10px;border:1px solid #e5e5e5"><strong>£${(a.refAmt||1).toFixed(2)}</strong></td>
     </tr>`;
   }
  
@@ -1062,7 +1062,7 @@ function confirmAcceptance(){
       <p style="color:#6b7280;margin-bottom:6px">Thank you, <strong>${d.merchant_name}</strong>.</p>
       <p style="color:#6b7280;margin-bottom:6px">Your ${brandName} Merchant Services Agreement has been recorded.</p>
       ${d.merchant_email ? `<p style="color:#6b7280;font-size:13px">A copy of the agreement has been emailed to <strong>${d.merchant_email}</strong>.</p>` : ""}
-      <p style="color:#9ca3af;font-size:12px;margin-top:16px">Quote ID: ${d.quote_id} Â· Accepted: ${new Date().toLocaleString("en-GB")}</p>
+      <p style="color:#9ca3af;font-size:12px;margin-top:16px">Quote ID: ${d.quote_id} · Accepted: ${new Date().toLocaleString("en-GB")}</p>
     </div>`;
     document.getElementById("acceptQuoteBtn").style.display = "none";
   })
@@ -1157,7 +1157,7 @@ function generateAgreementPDF(d, brandName, timestamp){
     doc.setFillColor("#00916e"); doc.setDrawColor("#00916e");
     doc.roundedRect(ml, pdfY, cw, 22, 2, 2, "F");
     doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor("#ffffff");
-    doc.text("You could save " + f2(pdfMSave) + " per month  Â·  " + f2(pdfMSave*12) + " per year", ml+6, pdfY+9);
+    doc.text("You could save " + f2(pdfMSave) + " per month  ·  " + f2(pdfMSave*12) + " per year", ml+6, pdfY+9);
     doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor("rgba(255,255,255,0.85)");
     doc.text("Based on submitted statement data vs "+brandName+" estimated costs", ml+6, pdfY+16);
     pdfY += 28;
@@ -1254,8 +1254,8 @@ function generateAgreementPDF(d, brandName, timestamp){
 
   if(a.addAmex)       scheduleRows.push(["American Express", (a.amexPct||3.5).toFixed(2)+"% + "+(a.amexFixed||20)+"p"]);
   if(a.addFX)         scheduleRows.push(["International / FX Transactions", (a.fxPct||1.5).toFixed(2)+"%"]);
-  if(a.addChargeback)  scheduleRows.push(["Chargeback Fee", "Â£"+(a.cbAmt||15).toFixed(2)]);
-  if(a.addRefund)      scheduleRows.push(["Refund Fee", "Â£"+(a.refAmt||1).toFixed(2)]);
+  if(a.addChargeback)  scheduleRows.push(["Chargeback Fee", "£"+(a.cbAmt||15).toFixed(2)]);
+  if(a.addRefund)      scheduleRows.push(["Refund Fee", "£"+(a.refAmt||1).toFixed(2)]);
   // Impact summary rows â only when savings data exists
   if(pdfMSave > 0){
     scheduleRows.push(["âââ Estimated Impact âââ", ""]);
@@ -1325,8 +1325,8 @@ function generateAgreementPDF(d, brandName, timestamp){
 
   if(a.addAmex)       acceptRows.push(["American Express", (a.amexPct||3.5).toFixed(2)+"% + "+(a.amexFixed||20)+"p"]);
   if(a.addFX)         acceptRows.push(["International / FX", (a.fxPct||1.5).toFixed(2)+"%"]);
-  if(a.addChargeback)  acceptRows.push(["Chargeback Fee", "Â£"+(a.cbAmt||15).toFixed(2)]);
-  if(a.addRefund)      acceptRows.push(["Refund Fee", "Â£"+(a.refAmt||1).toFixed(2)]);
+  if(a.addChargeback)  acceptRows.push(["Chargeback Fee", "£"+(a.cbAmt||15).toFixed(2)]);
+  if(a.addRefund)      acceptRows.push(["Refund Fee", "£"+(a.refAmt||1).toFixed(2)]);
   acceptRows.push(["Accepted At (UTC)",timestamp||"â"]);
  
   doc.autoTable({
