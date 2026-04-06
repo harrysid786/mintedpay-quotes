@@ -2751,6 +2751,7 @@
       const intlFrac = ((intlMode === "country" && countryCoverage >= 0.80) || intlMode === "presentmentCurrency")
         ? Math.round((intlVol / vol) * 10000) / 10000
         : null;
+      const csvIntlFrac = intlFrac; // alias used in return object
 
       // Merchant tier
       let tierLabel = "Small merchant";
