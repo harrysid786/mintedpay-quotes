@@ -2588,6 +2588,10 @@
         // Priority 1: card/issuing country (Stripe: "Card Issue Country", Adyen: "Issued Country")
         country:  ["card issue country","issued country","card country","issuing country","card_country","card_issue_country"],
         currency: ["currency","converted currency","transaction currency"],
+        // ── Payment method — used to skip non-card rows (Klarna, iDEAL etc)
+        paymentMethod: ["payment method name","payment method","payment_method","tender type","tender_type"],
+        // ── Presentment currency — Shopify: non-GBP = international card
+        presentmentCurrency: ["presentment currency","presentment_currency","billing currency","original currency"],
       };
       const colMap = {};
       for (const [field, hints] of Object.entries(HINTS)) {
@@ -2675,7 +2679,7 @@
       // Currency is NOT used — non-GBP currency ≠ international card origin
       // (e.g. a French tourist paying in GBP counts as non-GBP but non-UK card).
       // If no country column → intlFrac = null. Do not guess.
-      const intlMode = colMap.country ? "country" : "none";
+      const intlMode = colMap.country ? "country" : colMap.presentmentCurrency ? "presentmentCurrency" : "none";
 
       // ── Main aggregation — identical to processCSV() in public quote builder ──
       let vol = 0, cnt = 0, totalFees = 0, intlVol = 0, countryPopulated = 0;
@@ -2686,6 +2690,13 @@
         if (colMap.rowType) {
           const rowT = (r[colMap.rowType] || "").toUpperCase().trim();
           if (rowT && !["CHARGE","PAYMENT","SALE","TRANSACTION","DEBIT","SETTLED","CAPTURE",""].includes(rowT)) return;
+        }
+        // Skip non-card payment methods (Klarna, iDEAL, PayPal, bank transfer etc)
+        if (colMap.paymentMethod) {
+          const pm = (r[colMap.paymentMethod] || "").toLowerCase().trim();
+          if (pm && pm !== "card" && !pm.includes("credit") && !pm.includes("debit") &&
+              !pm.includes("visa") && !pm.includes("master") && !pm.includes("amex") &&
+              !pm.includes("discover")) return;
         }
         const a = pAmt(r[colMap.amount]);
         if (!a) return;
@@ -2702,7 +2713,7 @@
         cardData[k].vol += a;
         cardData[k].cnt++;
 
-        // International volume tracking — country mode only
+        // International volume tracking — country or presentmentCurrency mode
         if (intlMode === "country") {
           const c = (r[colMap.country] || "").trim().toUpperCase();
           if (c !== "") {
@@ -2712,6 +2723,15 @@
           }
         }
       });
+
+      // ── Presentment currency intl detection (Shopify CSVs) ──
+      if (intlMode === "presentmentCurrency") {
+        rows.forEach(r => {
+          const a2 = pAmt(r[colMap.amount]) || 0;
+          const pc = (r[colMap.presentmentCurrency] || "").trim().toUpperCase();
+          if (pc && pc !== "GBP") intlVol += a2;
+        });
+      }
 
       if (vol <= 0) throw new Error("No valid transaction amounts found in this CSV.");
       if (cnt < 2)  throw new Error("Not enough transactions found. Please upload a fuller statement or use Manual Entry.");
@@ -2728,7 +2748,7 @@
       // Below 80% coverage the country column is too sparse to trust — return null.
       // Prefer null over a silently understated intlFrac.
       const countryCoverage = cnt > 0 ? countryPopulated / cnt : 0;
-      const csvIntlFrac = (intlMode === "country" && vol > 0 && countryCoverage >= 0.80)
+      const intlFrac = ((intlMode === "country" && countryCoverage >= 0.80) || intlMode === "presentmentCurrency")
         ? Math.round((intlVol / vol) * 10000) / 10000
         : null;
 
