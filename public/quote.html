@@ -254,14 +254,14 @@ body{font-family:'Inter',sans-serif;background:var(--g7);color:var(--black);font
 .qp-kv:last-child{border-bottom:none}
 .qp-kv-k{color:var(--g3)}.qp-kv-v{font-weight:600;color:var(--black)}.qp-kv-v.g{color:var(--green)}.qp-kv-v.b{color:var(--brand)}
 .qp-footer{border-top:1px solid var(--g6);padding-top:10px;font-size:9px;color:var(--g4);line-height:1.6;text-align:center;margin-top:12px}
-/* Section boxes — YOUR PRICING / ADDITIONAL FEES */
+/* Section boxes â YOUR PRICING / ADDITIONAL FEES */
 .qp-section{width:100%;box-sizing:border-box;border:1px solid #e5e5e5;border-radius:8px;padding:22px 24px;margin-bottom:16px;background:#ffffff;border-left:none}
 .qp-section-title{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--quote-accent);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--g6)}
 .qp-section-body{font-size:14px;color:var(--g3);line-height:1.7}
 .qp-section-body strong{color:var(--brand);font-weight:600}
 .qp-bullets{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
 .qp-bullets li{font-size:14px;color:var(--g3);padding-left:14px;position:relative;line-height:1.5}
-.qp-bullets li::before{content:"·";position:absolute;left:0;color:var(--brand);font-weight:700}
+.qp-bullets li::before{content:"Â·";position:absolute;left:0;color:var(--brand);font-weight:700}
 .pricing-breakdown{width:100%;border-collapse:collapse;margin-top:16px;font-size:14px}
 .pricing-breakdown thead tr{background:var(--brand-lt)}
 .pricing-breakdown th{text-align:left;font-weight:600;color:var(--quote-accent);padding:8px 10px;border-bottom:2px solid #cccccc;font-size:12px;letter-spacing:.5px;text-transform:uppercase}
@@ -343,8 +343,8 @@ body{width:100%;margin:0;padding:0}.container,.content,.wrapper{max-width:100%}
  
   <!-- Loading -->
   <div id="loadingState" style="text-align:center;padding:80px 40px;color:var(--g4)">
-    <div style="font-size:28px;margin-bottom:12px">⏳</div>
-    <div style="font-size:14px">Loading your quote…</div>
+    <div style="font-size:28px;margin-bottom:12px">â³</div>
+    <div style="font-size:14px">Loading your quoteâ¦</div>
   </div>
  
   <!-- Quote preview -->
@@ -352,7 +352,7 @@ body{width:100%;margin:0;padding:0}.container,.content,.wrapper{max-width:100%}
  
   <!-- Accept button -->
   <div style="text-align:center;margin-top:16px;padding-bottom:40px">
-    <button id="acceptQuoteBtn" class="qbtn qbtn-p" onclick="openAcceptance()" style="display:none;background:#16a34a;border-color:#16a34a;padding:12px 32px;font-size:14px" onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">✓ Accept Quote</button>
+    <button id="acceptQuoteBtn" class="qbtn qbtn-p" onclick="openAcceptance()" style="display:none;background:#16a34a;border-color:#16a34a;padding:12px 32px;font-size:14px" onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">â Accept Quote</button>
   </div>
 </div>
  
@@ -380,7 +380,7 @@ body{width:100%;margin:0;padding:0}.container,.content,.wrapper{max-width:100%}
     </div>
     <label style="display:flex;gap:8px;align-items:flex-start;margin-bottom:18px;cursor:pointer">
       <input type="checkbox" id="acceptCheck" style="margin-top:2px;flex-shrink:0">
-      <span>I confirm I have read and agree to the Merchant Services Agreement and Schedule A – Fees &amp; Pricing.</span>
+      <span>I confirm I have read and agree to the Merchant Services Agreement and Schedule A â Fees &amp; Pricing.</span>
     </label>
     <div style="display:flex;justify-content:flex-end;gap:10px">
       <button onclick="closeAccept()" class="qbtn qbtn-o">Cancel</button>
@@ -390,10 +390,10 @@ body{width:100%;margin:0;padding:0}.container,.content,.wrapper{max-width:100%}
 </div>
  
 <script>
-// ═══ GLOBAL STATE ═══
+// âââ GLOBAL STATE âââ
 let quoteData = null;
  
-// ═══ HELPERS ═══
+// âââ HELPERS âââ
 function getQuoteExpiry(){
   const d = new Date();
   d.setDate(d.getDate()+30);
@@ -401,14 +401,14 @@ function getQuoteExpiry(){
 }
 function fmtK(n){
   const a=Math.abs(n), sg=n<0?"-":"";
-  if(a>=1e6) return sg+"£"+(a/1e6).toFixed(2)+"m";
-  if(a>=1000) return sg+"£"+(a/1000).toFixed(1)+"k";
-  return sg+"£"+a.toFixed(2);
+  if(a>=1e6) return sg+"Â£"+(a/1e6).toFixed(2)+"m";
+  if(a>=1000) return sg+"Â£"+(a/1000).toFixed(1)+"k";
+  return sg+"Â£"+a.toFixed(2);
 }
-function f2(n){ return "£"+Math.abs(n).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function f2(n){ return "Â£"+Math.abs(n).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function n0(n){ return Math.round(n).toLocaleString("en-GB"); }
  
-// ═══ RENDER QUOTE PREVIEW ═══
+// âââ RENDER QUOTE PREVIEW âââ
 function renderQuote(data){
   const brand = data.brand || {name:"MintedPay",nameParts:["Minted","Pay"],tagline:"Payment Processing Proposal",legal:""};
   const rate = parseFloat(data.rate) || 0;
@@ -419,7 +419,7 @@ function renderQuote(data){
   const cur = parseFloat(data.cur) || 0;
   const name = data.merchant_name || "[Merchant Name]";
 
-  // ── New regional pricing fields (from Steps 1–4) ──────────────────────
+  // ââ New regional pricing fields (from Steps 1â4) ââââââââââââââââââââââ
   // These are present when the quote was generated via the updated pricing engine.
   // Fall back gracefully when absent (older quotes, public tool).
   const sellUkRate   = data.sell_uk_rate            ? parseFloat(data.sell_uk_rate)            : null;
@@ -430,9 +430,9 @@ function renderQuote(data){
   // hasRegionalRates: true when both UK and Intl rates are available from the engine
   const hasRegionalRates = sellUkRate !== null && sellIntlRate !== null;
   // isIndicative: true when no intl_frac was provided at quote creation time.
-  // intlFrac stored on the quote object — null means user did not supply international %.
-  // When intlFrac is present (even 0%), we have real intent data → "Estimated Pricing".
-  // When absent → "Indicative Pricing".
+  // intlFrac stored on the quote object â null means user did not supply international %.
+  // When intlFrac is present (even 0%), we have real intent data â "Estimated Pricing".
+  // When absent â "Indicative Pricing".
   const quoteIntlFrac = (data.intlFrac !== null && data.intlFrac !== undefined)
     ? parseFloat(data.intlFrac)
     : null;
@@ -477,12 +477,12 @@ function renderQuote(data){
       </div>
  
       <div class="qp-intro">This payment processing proposal has been prepared for <strong>${name}</strong> based on the transaction data provided.</div>
-      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:10px 14px;margin-bottom:18px;display:flex;align-items:flex-start;gap:10px">
-        <span style="font-size:14px;flex-shrink:0">⚠️</span>
-        <div style="font-size:11px;color:#92400e;line-height:1.6">
-          <strong>Indicative pricing based on the data provided.</strong> All rates and savings figures are estimates only.
-          Final pricing is subject to underwriting, business and sector review, statement validation, and confirmation of your transaction mix.
-        </div>
+
+
+
+
+
+
       </div>
 
       ${mSave > 0 ? `
@@ -502,7 +502,7 @@ function renderQuote(data){
         <div class="qp-snap-card"><div class="qp-snap-l">Volume Analysed</div><div class="qp-snap-v">${fmtK(vol)}</div></div>
         <div class="qp-snap-card"><div class="qp-snap-l">Transactions Analysed</div><div class="qp-snap-v">${n0(cnt)}</div></div>
         <div class="qp-snap-card"><div class="qp-snap-l">Average Transaction</div><div class="qp-snap-v">${f2(avgTx)}</div></div>
-        <div class="qp-snap-card"><div class="qp-snap-l">Current Effective Rate</div><div class="qp-snap-v" style="color:${curRate!==null?(curRate<1?'var(--green)':curRate<2.2?'var(--amber)':'var(--red)'):'var(--g4)'}">${curRate!==null?curRate.toFixed(2)+'%':'—'}</div></div>
+        <div class="qp-snap-card"><div class="qp-snap-l">Current Effective Rate</div><div class="qp-snap-v" style="color:${curRate!==null?(curRate<1?'var(--green)':curRate<2.2?'var(--amber)':'var(--red)'):'var(--g4)'}">${curRate!==null?curRate.toFixed(2)+'%':'â'}</div></div>
       </div>` : ''}
  
       ${!isManual && cur > 0 ? `
@@ -512,7 +512,7 @@ function renderQuote(data){
           <div style="display:flex;flex-direction:column;gap:8px">
             <div style="display:flex;justify-content:space-between;align-items:baseline">
               <span style="font-size:12px;color:var(--g3)">Blended rate</span>
-              <span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--red)">${curRate !== null ? curRate.toFixed(2)+'%' : '—'}</span>
+              <span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--red)">${curRate !== null ? curRate.toFixed(2)+'%' : 'â'}</span>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:baseline">
               <span style="font-size:12px;color:var(--g3)">Monthly cost</span>
@@ -555,9 +555,9 @@ function renderQuote(data){
           <div class="qp-rate-big qp-rate-big-red">${curRate.toFixed(2)}<span class="qp-rate-pct">%</span></div>
           <div class="qp-rate-block-sub">effective rate based on<br>your submitted data</div>
         </div>
-        <div class="qp-rate-arrow">→</div>` : ''}
+        <div class="qp-rate-arrow">â</div>` : ''}
         <div class="qp-rate-block qp-rate-mp${curRate===null?' qp-rate-solo':''}">
-          <div class="qp-rate-block-lbl">${brand.name} — ${isIndicative ? 'Indicative Pricing' : 'Estimated Pricing'}</div>
+          <div class="qp-rate-block-lbl">${brand.name} â Pricing</div>
           ${blendedRate !== null ? `
           <div style="display:flex;flex-direction:column;gap:10px;margin:10px 0 6px">
             <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
@@ -570,7 +570,7 @@ function renderQuote(data){
               <span style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--brand);letter-spacing:-1px;line-height:1">${displayIntlRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> <span style="font-size:12px;font-weight:600;color:var(--g3)">+ ${ftx}p</span></span>
             </div>
           </div>
-          <div style="font-size:10px;color:var(--g3);margin-top:2px;padding-top:6px;border-top:1px solid var(--g6)">≈ ${blendedRate.toFixed(2)}% all-in on your card mix · Based on ${Math.round((quoteIntlFrac||0)*100)}% international traffic</div>` : `
+          <div style="font-size:10px;color:var(--g3);margin-top:2px;padding-top:6px;border-top:1px solid var(--g6)">â ${blendedRate.toFixed(2)}% all-in on your card mix Â· Based on ${Math.round((quoteIntlFrac||0)*100)}% international traffic</div>` : `
           <div style="display:flex;flex-direction:column;gap:10px;margin:10px 0 6px">
             <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
               <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3)">UK Cards</span>
@@ -593,7 +593,7 @@ function renderQuote(data){
       ${!isManual && cur > 0 && mSave > 0 ? `
       <div class="qp-save-banner">
         <div>
-          <div class="qp-save-l">You could save up to</div>
+          <div class="qp-save-l">Your estimated saving</div>
           <div style="font-size:10px;color:var(--green);opacity:.8;margin-top:2px">Estimated savings based on current provider fees supplied</div>
         </div>
         <div style="display:flex;gap:20px;align-items:baseline;flex-wrap:wrap">
@@ -605,13 +605,13 @@ function renderQuote(data){
       <div class="qp-section">
         <div class="qp-section-title">Why ${brand.name}</div>
         <div class="qp-section-body">
-          ${brand.name} is a UK-based payment processor built for modern businesses. We offer transparent pricing, fast onboarding, and dedicated support — with no hidden fees and no long-term contracts.
+          ${brand.name} is a UK-based payment processor built for modern businesses. We offer transparent pricing, fast onboarding, and dedicated support â with no hidden fees and no long-term contracts.
           <ul class="qp-bullets" style="margin-top:8px">
-            <li><strong>Transparent pricing</strong> — clear UK and international rates, no surprises on your statement</li>
-            <li><strong>Fast onboarding</strong> — go live in as little as 48 hours</li>
-            <li><strong>Dedicated account manager</strong> — a real person, not a ticket queue</li>
-            <li><strong>All major cards accepted</strong> — Visa, Mastercard, Amex, and international cards</li>
-            <li><strong>No lock-in</strong> — rolling monthly agreement, cancel any time</li>
+            <li><strong>Transparent pricing</strong> â clear UK and international rates, no surprises on your statement</li>
+            <li><strong>Fast onboarding</strong> â go live in as little as 48 hours</li>
+            <li><strong>Dedicated account manager</strong> â a real person, not a ticket queue</li>
+            <li><strong>All major cards accepted</strong> â Visa, Mastercard, Amex, and international cards</li>
+            <li><strong>No lock-in</strong> â rolling monthly agreement, cancel any time</li>
           </ul>
         </div>
       </div>
@@ -642,27 +642,27 @@ function renderQuote(data){
           </div>
         </div>
 
-        <!-- Current cost breakdown — uses real intlFrac when available, else indicative only -->
+        <!-- Current cost breakdown â uses real intlFrac when available, else indicative only -->
         ${(cur > 0 && !isManual && curRate !== null) ? (() => {
           // DATA SOURCE: quoteIntlFrac (stored at quote creation time).
-          // Priority: manual intlPercentage → CSV-detected csvIntlFrac → null.
+          // Priority: manual intlPercentage â CSV-detected csvIntlFrac â null.
           // When real intlFrac exists, decompose curRate by IC++ interchange cost ratio.
           // When absent, show only the blended average with "indicative" wording.
           //
           // IC++ interchange cost ratios (approximate, consistent with pricing engine):
-          //   UK blended interchange:  (0.70 × 0.20%) + (0.30 × 0.30%) = 0.23%
+          //   UK blended interchange:  (0.70 Ã 0.20%) + (0.30 Ã 0.30%) = 0.23%
           //   International interchange: ~1.50%
           //   Scheme fees (both):        0.13%
-          //   Acquirer markup:           0.20% (≤£50k tier — conservative)
-          // Weighted cost denominator = domFrac × ukCost + intlFrac × intlCost
-          // curUkRate   = curRate × ukCost   / weightedCost
-          // curIntlRate = curRate × intlCost / weightedCost
+          //   Acquirer markup:           0.20% (â¤Â£50k tier â conservative)
+          // Weighted cost denominator = domFrac Ã ukCost + intlFrac Ã intlCost
+          // curUkRate   = curRate Ã ukCost   / weightedCost
+          // curIntlRate = curRate Ã intlCost / weightedCost
           // This preserves the blended average exactly and uses no proxies.
           const IC_UK   = 0.23 + 0.13 + 0.20;  // UK blended interchange + scheme + acquirer
           const IC_INTL = 1.50 + 0.13 + 0.20;  // Intl interchange + scheme + acquirer
 
           if (quoteIntlFrac !== null) {
-            // intlFrac === 0: merchant is 100% domestic — show current rate as UK domestic only
+            // intlFrac === 0: merchant is 100% domestic â show current rate as UK domestic only
             if (quoteIntlFrac === 0) {
               return `
         <div style="margin-bottom:16px;padding:14px 16px;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:6px">
@@ -677,7 +677,7 @@ function renderQuote(data){
           </div>
         </div>`;
             }
-            // intlFrac === 1: merchant is 100% international — show current rate as international only
+            // intlFrac === 1: merchant is 100% international â show current rate as international only
             if (quoteIntlFrac === 1) {
               return `
         <div style="margin-bottom:16px;padding:14px 16px;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:6px">
@@ -692,7 +692,7 @@ function renderQuote(data){
           </div>
         </div>`;
             }
-            // intlFrac between 0 and 1 — derive split using IC++ cost ratios
+            // intlFrac between 0 and 1 â derive split using IC++ cost ratios
             const domFrac      = 1 - quoteIntlFrac;
             const weightedCost = (domFrac * IC_UK) + (quoteIntlFrac * IC_INTL);
             const curUkRate    = weightedCost > 0 ? Math.round(curRate * IC_UK   / weightedCost * 100) / 100 : null;
@@ -700,7 +700,7 @@ function renderQuote(data){
             if (curUkRate !== null && curIntlRate !== null) {
               return `
         <div style="margin-bottom:16px;padding:14px 16px;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:6px">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--red);margin-bottom:10px">Your Current Effective Rate — Estimated by Card Type</div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--red);margin-bottom:10px">Your Current Effective Rate â Estimated by Card Type</div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
             <div style="text-align:center;padding:10px;background:var(--white);border-radius:5px;border:1px solid var(--red-bd)">
               <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);margin-bottom:4px">UK Domestic</div>
@@ -718,11 +718,11 @@ function renderQuote(data){
               <div style="font-size:9px;color:var(--g3);margin-top:3px">from your statement</div>
             </div>
           </div>
-          <div style="margin-top:8px;font-size:10px;color:var(--g3)">Blended rate is from your statement. UK and international figures are derived estimates based on ${Math.round(quoteIntlFrac*100)}% international mix and IC++ interchange cost ratios — not direct statement line items.</div>
+          <div style="margin-top:8px;font-size:10px;color:var(--g3)">Blended rate is from your statement. UK and international figures are derived estimates based on ${Math.round(quoteIntlFrac*100)}% international mix and IC++ interchange cost ratios â not direct statement line items.</div>
         </div>`;
             }
           }
-          // No real intlFrac — show blended only, clearly labelled
+          // No real intlFrac â show blended only, clearly labelled
           return `
         <div style="margin-bottom:16px;padding:14px 16px;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:6px">
           <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--red);margin-bottom:10px">Your Current Effective Rate</div>
@@ -738,7 +738,7 @@ function renderQuote(data){
         })() : ''}
 
         <ul class="qp-bullets">
-          <li>No monthly minimum volumes — you only pay when you process</li>
+          <li>No monthly minimum volumes â you only pay when you process</li>
           <li>No fixed monthly fees or platform charges</li>
           <li>No gateway fees</li>
           <li>No PCI compliance fees</li>
@@ -747,7 +747,7 @@ function renderQuote(data){
           <div style="margin:16px 0 12px;padding:14px 18px;background:var(--brand-lt);border:1.5px solid var(--brand-bd);border-radius:var(--r)">
           <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--brand);margin-bottom:4px">${blendedRate !== null ? 'UK Card Rate' : 'Your pricing starts from'}</div>
           <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--brand);letter-spacing:-0.5px;line-height:1">${displayUkRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> + ${ftx}<span style="font-size:14px;font-weight:600">p</span> <span style="font-size:12px;font-weight:400;color:var(--g3)">per transaction</span></div>
-          ${blendedRate !== null ? `<div style="font-size:10px;color:var(--g3);margin-top:4px">International cards: ${displayIntlRate.toFixed(2)}% + ${ftx}p · ≈ ${blendedRate.toFixed(2)}% all-in on your card mix</div>` : ''}
+          ${blendedRate !== null ? `<div style="font-size:10px;color:var(--g3);margin-top:4px">International cards: ${displayIntlRate.toFixed(2)}% + ${ftx}p Â· â ${blendedRate.toFixed(2)}% all-in on your card mix</div>` : ''}
         </div>
         <table class="pricing-breakdown">
           <thead><tr><th>Transaction Type</th><th>Rate</th><th>Notes</th></tr></thead>
@@ -760,7 +760,7 @@ function renderQuote(data){
             <tr>
               <td>International Cards${isIndicative ? ' <span style="font-size:11px;color:var(--g3);font-weight:400">(indicative)</span>' : ''}</td>
               <td class="pb-rate">${displayIntlRate.toFixed(2)}% + ${ftx}p per transaction</td>
-              <td class="pb-note">Non-UK issued cards — includes EEA and Rest of World</td>
+              <td class="pb-note">Non-UK issued cards â includes EEA and Rest of World</td>
             </tr>
             ${!isIndicative && blendedRate !== null ? `
             <tr style="background:var(--g7)">
@@ -780,135 +780,135 @@ function renderQuote(data){
             </tr>` : ''}
             ${a.addChargeback ? `<tr>
               <td>Chargebacks</td>
-              <td class="pb-rate" style="color:var(--red)">£${(a.cbAmt||15).toFixed(2)} per chargeback</td>
+              <td class="pb-rate" style="color:var(--red)">Â£${(a.cbAmt||15).toFixed(2)} per chargeback</td>
               <td class="pb-note">Fee applied when a dispute is received</td>
             </tr>` : ''}
             ${a.addRefund ? `<tr>
               <td>Refunds</td>
-              <td class="pb-rate">£${(a.refAmt||1).toFixed(2)} per refund</td>
+              <td class="pb-rate">Â£${(a.refAmt||1).toFixed(2)} per refund</td>
               <td class="pb-note">Fee applied when processing refunds</td>
             </tr>` : ''}
           </tbody>
         </table>
         <div style="margin-top:10px;font-size:11px;color:var(--g3);line-height:1.5">International cards include non-UK issued cards and are typically more expensive due to bank and card network fees.</div>
         ${quoteIntlFrac !== null ? `<div style="margin-top:6px;font-size:11px;color:var(--g3)">Based on ${Math.round(quoteIntlFrac * 100)}% international transactions.</div>` : ''}
-        <div style="margin-top:10px;font-size:11px;color:var(--g3);letter-spacing:.3px">✓ No hidden fees. Transparent Interchange++ pricing.</div>
+        <div style="margin-top:10px;font-size:11px;color:var(--g3);letter-spacing:.3px">â No hidden fees. Transparent Interchange++ pricing.</div>
       </div>
  
-      ${vol > 0 ? `
-      <div class="qp-section">
-        <div class="qp-section-title">Estimated Cost Comparison</div>
-        <div style="font-size:11px;color:var(--g3);margin-top:-6px;margin-bottom:12px">Based on the information provided.</div>
-        <table class="pricing-breakdown" style="margin-top:0">
-          <thead>
-            <tr>
-              <th>Metric</th>
-              <th>Current Provider</th>
-              <th>${brand.name}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>${blendedRate !== null ? 'Estimated Blended Rate' : 'Starting Rate'}</td>
-              <td class="pb-rate" style="color:${curRate !== null ? 'var(--red)' : 'var(--g3)'}">${curRate !== null ? curRate.toFixed(2)+'%' : '—'}</td>
-              <td class="pb-rate" style="color:var(--brand)">${blendedRate !== null ? blendedRate.toFixed(2) : displayUkRate.toFixed(2)}%${blendedRate === null ? '<span style="font-size:10px;font-weight:400;color:var(--g3)"> (from)</span>' : ''}</td>
-            </tr>
-            <tr>
-              <td>Monthly Fees</td>
-              <td class="pb-rate" style="color:${cur > 0 ? 'var(--red)' : 'var(--g3)'}">${cur > 0 ? f2(cur) : '—'}</td>
-              <td class="pb-rate" style="color:var(--brand)">${f2(rev)}</td>
-            </tr>
-            <tr>
-              <td>Yearly Fees</td>
-              <td class="pb-rate" style="color:${cur > 0 ? 'var(--red)' : 'var(--g3)'}">${cur > 0 ? f2(cur * 12) : '—'}</td>
-              <td class="pb-rate" style="color:var(--brand)">${f2(rev * 12)}</td>
-            </tr>
-            ${mSave > 0 ? `
-            <tr style="background:var(--green-lt)">
-              <td style="font-weight:600;color:var(--green)">Estimated Monthly Saving</td>
-              <td></td>
-              <td class="pb-rate" style="color:var(--green)">+${f2(mSave)} / month</td>
-            </tr>` : ''}
-          </tbody>
-        </table>
-        ${mSave > 0 ? `
-        <div style="margin-top:14px;padding:16px 20px;background:var(--green-lt);border:1.5px solid var(--green-bd);border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-          <div>
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:3px">You could save up to</div>
-            <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--green);letter-spacing:-1px;line-height:1">+${f2(mSave * 12)}<span style="font-size:14px;font-weight:600;margin-left:4px">/ year</span></div>
-          </div>
-          <div style="font-size:11px;color:var(--green);opacity:.8;max-width:180px;line-height:1.5">Based on your current fees vs MintedPay estimated costs</div>
-        </div>
-        <div style="margin-top:10px;font-size:12px;color:var(--g3);line-height:1.6">Ready to switch? Complete your onboarding and we can start reviewing your account.</div>` : ''}
-        <div style="margin-top:8px;font-size:11px;color:var(--g3)">Based on the information provided. Final pricing may vary slightly depending on full transaction data.</div>
-      </div>` : ''}
 
-      ${(mSave > 0 || (curRate !== null && blendedRate !== null)) ? `
-      <div class="qp-section">
-        <div class="qp-section-title">Your Potential Impact</div>
-        <div style="display:grid;grid-template-columns:${mSave > 0 && curRate !== null && blendedRate !== null ? '1fr 1fr 1fr' : mSave > 0 ? '1fr 1fr' : '1fr'};gap:12px">
-          ${mSave > 0 ? `
-          <div style="text-align:center;padding:20px 16px;background:var(--green-lt);border:1.5px solid var(--green-bd);border-radius:8px">
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:8px">Annual Saving</div>
-            <div style="font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:var(--green);letter-spacing:-1px;line-height:1">+${f2(mSave*12)}</div>
-            <div style="font-size:11px;color:var(--green);margin-top:6px;opacity:.8">per year</div>
-          </div>
-          <div style="text-align:center;padding:20px 16px;background:var(--green-lt);border:1.5px solid var(--green-bd);border-radius:8px">
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:8px">Monthly Saving</div>
-            <div style="font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:var(--green);letter-spacing:-1px;line-height:1">+${f2(mSave)}</div>
-            <div style="font-size:11px;color:var(--green);margin-top:6px;opacity:.8">per month</div>
-          </div>` : ''}
-          ${curRate !== null && blendedRate !== null ? `
-          <div style="text-align:center;padding:20px 16px;background:var(--brand-lt);border:1.5px solid var(--brand-bd);border-radius:8px">
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--brand);margin-bottom:8px">Rate Reduction</div>
-            <div style="font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:var(--brand);letter-spacing:-1px;line-height:1">${(curRate - blendedRate) > 0 ? '-' : ''}${Math.abs(curRate - blendedRate).toFixed(2)}%</div>
-            <div style="font-size:11px;color:var(--brand);margin-top:6px;opacity:.8">${curRate.toFixed(2)}% → ${blendedRate.toFixed(2)}%</div>
-          </div>` : ''}
-        </div>
-        <div style="margin-top:10px;font-size:11px;color:var(--g3)">Based on the data provided. Actual savings depend on final transaction mix and volume.</div>
-      </div>` : ''}
 
-      <div class="qp-section">
-        <div class="qp-section-title">Next Steps</div>
-        <ol class="qp-next-steps" style="margin:0;padding-left:18px;color:var(--black)">
-          <li><strong>Accept this proposal</strong> — click the button below and sign the merchant agreement digitally. Takes under 2 minutes.</li>
-          <li><strong>Complete onboarding</strong> — short KYB/KYC form. Our team verifies your business within 48 hours.</li>
-          <li><strong>Go live</strong> — connect to your existing checkout, POS, or payment link. We handle the technical setup.</li>
-        </ol>
-      </div>
 
-      <div class="qp-section" style="background:#f8fafc;border-left:3px solid var(--brand)">
-        <div class="qp-section-title">Why ${brand.name}</div>
-        <ul class="qp-bullets" style="margin:0">
-          <li style="padding-left:0;font-size:14px"><strong style="color:var(--green)">✓</strong>  <strong>Transparent Interchange++ pricing</strong> — you see exactly what you pay and why</li>
-          <li style="padding-left:0;font-size:14px"><strong style="color:var(--green)">✓</strong>  <strong>No blended markup hiding</strong> — rates are split by card type, not bundled</li>
-          <li style="padding-left:0;font-size:14px"><strong style="color:var(--green)">✓</strong>  <strong>Lower processing margin</strong> — our fee is the smallest component of your rate</li>
-          <li style="padding-left:0;font-size:14px"><strong style="color:var(--green)">✓</strong>  <strong>UK-based support</strong> — real people, not ticket queues</li>
-          <li style="padding-left:0;font-size:14px"><strong style="color:var(--green)">✓</strong>  <strong>No lock-in contracts</strong> — rolling monthly, cancel any time</li>
-        </ul>
-      </div>
 
-      <div class="qp-section">
-        <div class="qp-section-title">How It Works</div>
-        <div style="font-size:13px;color:var(--g3);line-height:1.7;margin-bottom:14px">Every card payment has three cost layers. Most processors bundle these into a single blended rate and take a larger margin. ${brand.name} separates them so you always know what you're paying.</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-          <div style="padding:14px;border:1px solid var(--g6);border-radius:6px;border-top:3px solid var(--brand)">
-            <div style="font-size:11px;font-weight:700;color:var(--brand);margin-bottom:4px">1. Interchange</div>
-            <div style="font-size:12px;font-weight:600;color:var(--black);margin-bottom:4px">Issuing bank fee</div>
-            <div style="font-size:11px;color:var(--g3);line-height:1.5">Set by Visa and Mastercard. Goes to the cardholder's bank. Varies by card type — debit is lower than credit.</div>
-          </div>
-          <div style="padding:14px;border:1px solid var(--g6);border-radius:6px;border-top:3px solid var(--g3)">
-            <div style="font-size:11px;font-weight:700;color:var(--g2);margin-bottom:4px">2. Scheme fees</div>
-            <div style="font-size:12px;font-weight:600;color:var(--black);margin-bottom:4px">Card network levy</div>
-            <div style="font-size:11px;color:var(--g3);line-height:1.5">Visa and Mastercard's own assessment fee. Small and consistent across most transaction types.</div>
-          </div>
-          <div style="padding:14px;border:1px solid var(--g6);border-radius:6px;border-top:3px solid var(--green)">
-            <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px">3. ${brand.name} margin</div>
-            <div style="font-size:12px;font-weight:600;color:var(--black);margin-bottom:4px">Our processing fee</div>
-            <div style="font-size:11px;color:var(--g3);line-height:1.5">The smallest component. Covers our platform, acquiring, and support. Kept intentionally low.</div>
-          </div>
-        </div>
-      </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       <div class="qp-footer">
         <div style="margin-bottom:6px;font-size:9px;color:var(--g3);line-height:1.6">
@@ -921,7 +921,7 @@ function renderQuote(data){
     </div>`;
 }
  
-// ═══ ACCEPTANCE FLOW ═══
+// âââ ACCEPTANCE FLOW âââ
 function openAcceptance(){
   const d = quoteData;
   if(!d) return;
@@ -946,19 +946,19 @@ function openAcceptance(){
   if(a.addChargeback){
     addonRows += `<tr style="background:#f3f4f6">
       <td style="padding:8px 10px;border:1px solid #e5e5e5">Chargeback Fee</td>
-      <td style="padding:8px 10px;border:1px solid #e5e5e5"><strong>£${(a.cbAmt||15).toFixed(2)}</strong></td>
+      <td style="padding:8px 10px;border:1px solid #e5e5e5"><strong>Â£${(a.cbAmt||15).toFixed(2)}</strong></td>
     </tr>`;
   }
   if(a.addRefund){
     addonRows += `<tr>
       <td style="padding:8px 10px;border:1px solid #e5e5e5">Refund Fee</td>
-      <td style="padding:8px 10px;border:1px solid #e5e5e5"><strong>£${(a.refAmt||1).toFixed(2)}</strong></td>
+      <td style="padding:8px 10px;border:1px solid #e5e5e5"><strong>Â£${(a.refAmt||1).toFixed(2)}</strong></td>
     </tr>`;
   }
  
   document.getElementById("scheduleA").innerHTML = `
     <div style="border:1px solid #e5e5e5;border-radius:6px;padding:18px;margin-bottom:4px;background:#fafafa">
-      <h3 style="margin-top:0;font-family:'Syne',sans-serif">Schedule A — Fees &amp; Pricing</h3>
+      <h3 style="margin-top:0;font-family:'Syne',sans-serif">Schedule A â Fees &amp; Pricing</h3>
       <p><strong>Merchant:</strong> ${d.merchant_name}</p>
       <p><strong>Quote ID:</strong> ${d.quote_id}</p>
       <table style="width:100%;border-collapse:collapse;margin-top:10px">
@@ -983,7 +983,7 @@ function openAcceptance(){
             // Mixed: show estimated blended rate with transaction mix context
             rows += `<tr style="background:#f3f4f6">
               <td style="padding:8px 10px;border:1px solid #e5e5e5;color:#6b7280">Estimated Blended Rate</td>
-              <td style="padding:8px 10px;border:1px solid #e5e5e5;color:#6b7280">${blend.toFixed(2)}% — estimated blended rate based on ${Math.round(intlF*100)}% international transactions</td>
+              <td style="padding:8px 10px;border:1px solid #e5e5e5;color:#6b7280">${blend.toFixed(2)}% â estimated blended rate based on ${Math.round(intlF*100)}% international transactions</td>
             </tr>`;
           } else if (intlF === null || intlF === undefined) {
             // null: no mix data provided
@@ -1022,7 +1022,7 @@ function confirmAcceptance(){
   const timestamp = new Date().toISOString();
   const confirmBtn = document.getElementById("confirmBtn");
   confirmBtn.disabled = true;
-  confirmBtn.textContent = "Processing…";
+  confirmBtn.textContent = "Processingâ¦";
  
   const brandName = (d.brand && d.brand.name) || "MintedPay";
   const qprev = document.getElementById("qprev");
@@ -1043,9 +1043,9 @@ function confirmAcceptance(){
       confirmBtn.disabled = false;
       confirmBtn.textContent = "Accept & Confirm Agreement";
       closeAccept();
-      let icon="⚠️", title="Unable to Accept Quote", msg=result.error||"Something went wrong.", extra="";
-      if(res.status===409){ icon="✓"; title="Already Accepted"; }
-      if(res.status===410){ icon="⏱"; title="Quote Expired"; }
+      let icon="â ï¸", title="Unable to Accept Quote", msg=result.error||"Something went wrong.", extra="";
+      if(res.status===409){ icon="â"; title="Already Accepted"; }
+      if(res.status===410){ icon="â±"; title="Quote Expired"; }
       qprev.innerHTML = `<div style="text-align:center;padding:60px 40px;max-width:480px;margin:0 auto">
         <div style="width:64px;height:64px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px">${icon}</div>
         <h2 style="font-family:'Syne',sans-serif;color:#111;margin-bottom:10px">${title}</h2>
@@ -1057,12 +1057,12 @@ function confirmAcceptance(){
     closeAccept();
     generateAgreementPDF(d, brandName, timestamp);
     qprev.innerHTML = `<div style="text-align:center;padding:60px 40px;max-width:520px;margin:0 auto">
-      <div style="width:64px;height:64px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px">✓</div>
+      <div style="width:64px;height:64px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px">â</div>
       <h2 style="font-family:'Syne',sans-serif;color:#111;margin-bottom:10px">Agreement Accepted</h2>
       <p style="color:#6b7280;margin-bottom:6px">Thank you, <strong>${d.merchant_name}</strong>.</p>
       <p style="color:#6b7280;margin-bottom:6px">Your ${brandName} Merchant Services Agreement has been recorded.</p>
       ${d.merchant_email ? `<p style="color:#6b7280;font-size:13px">A copy of the agreement has been emailed to <strong>${d.merchant_email}</strong>.</p>` : ""}
-      <p style="color:#9ca3af;font-size:12px;margin-top:16px">Quote ID: ${d.quote_id} · Accepted: ${new Date().toLocaleString("en-GB")}</p>
+      <p style="color:#9ca3af;font-size:12px;margin-top:16px">Quote ID: ${d.quote_id} Â· Accepted: ${new Date().toLocaleString("en-GB")}</p>
     </div>`;
     document.getElementById("acceptQuoteBtn").style.display = "none";
   })
@@ -1074,7 +1074,7 @@ function confirmAcceptance(){
   });
 }
  
-// ═══ AGREEMENT PDF ═══
+// âââ AGREEMENT PDF âââ
 function generateAgreementPDF(d, brandName, timestamp){
   const {jsPDF} = window.jspdf;
   const doc = new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
@@ -1084,7 +1084,7 @@ function generateAgreementPDF(d, brandName, timestamp){
  
   function hline(y,col){ doc.setDrawColor(col||"#e5e5e5"); doc.line(ml,y,W-mr,y); }
  
-  // PAGE 1 — Agreement
+  // PAGE 1 â Agreement
   doc.setFillColor(brand); doc.rect(0,0,W,18,"F");
   doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor("#ffffff");
   doc.text(brandName.toUpperCase(),ml,11.5);
@@ -1094,7 +1094,7 @@ function generateAgreementPDF(d, brandName, timestamp){
   doc.setFont("helvetica","bold"); doc.setFontSize(20); doc.setTextColor(black);
   doc.text("Merchant Services",ml,38); doc.text("Agreement",ml,48);
   doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(grey);
-  doc.text("Quote ID: "+(d.quote_id||"—"),ml,56);
+  doc.text("Quote ID: "+(d.quote_id||"â"),ml,56);
   hline(67);
  
   const sections=[
@@ -1114,16 +1114,16 @@ function generateAgreementPDF(d, brandName, timestamp){
     const lines=doc.splitTextToSize(body,cw); doc.text(lines,ml,y); y+=lines.length*4.5+5;
   });
   doc.setFontSize(7.5); doc.setTextColor(grey);
-  doc.text(brandName+" — Confidential",ml,290);
+  doc.text(brandName+" â Confidential",ml,290);
   doc.text("Page 1 of 3",W-mr,290,{align:"right"});
  
-  // PAGE 2 — Schedule A
+  // PAGE 2 â Schedule A
   doc.addPage();
   doc.setFillColor(brand); doc.rect(0,0,W,18,"F");
   doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor("#ffffff");
   doc.text(brandName.toUpperCase(),ml,11.5);
   doc.setFont("helvetica","normal"); doc.setFontSize(8);
-  doc.text("SCHEDULE A — FEES & PRICING",W-mr,11.5,{align:"right"});
+  doc.text("SCHEDULE A â FEES & PRICING",W-mr,11.5,{align:"right"});
   doc.setFont("helvetica","bold"); doc.setFontSize(16); doc.setTextColor(black);
   doc.text("Schedule A",ml,34);
   doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(grey);
@@ -1141,7 +1141,7 @@ function generateAgreementPDF(d, brandName, timestamp){
   const pdfUkLabel   = "UK Cards"            + (pdfIsIndicative ? " (indicative)" : "");
   const pdfIntlLabel = "International Cards" + (pdfIsIndicative ? " (indicative)" : "");
 
-  // ── Savings headline block — only when fee data exists ───────────────────
+  // ââ Savings headline block â only when fee data exists âââââââââââââââââââ
   const pdfVol     = parseFloat(d.vol)       || 0;
   const pdfCnt     = parseFloat(d.cnt)       || 0;
   const pdfCur     = parseFloat(d.cur)       || 0;
@@ -1157,13 +1157,13 @@ function generateAgreementPDF(d, brandName, timestamp){
     doc.setFillColor("#00916e"); doc.setDrawColor("#00916e");
     doc.roundedRect(ml, pdfY, cw, 22, 2, 2, "F");
     doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor("#ffffff");
-    doc.text("You could save " + f2(pdfMSave) + " per month  ·  " + f2(pdfMSave*12) + " per year", ml+6, pdfY+9);
+    doc.text("You could save " + f2(pdfMSave) + " per month  Â·  " + f2(pdfMSave*12) + " per year", ml+6, pdfY+9);
     doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor("rgba(255,255,255,0.85)");
     doc.text("Based on submitted statement data vs "+brandName+" estimated costs", ml+6, pdfY+16);
     pdfY += 28;
   }
 
-  // ── IC++ explanation block in PDF ─────────────────────────────────────────
+  // ââ IC++ explanation block in PDF âââââââââââââââââââââââââââââââââââââââââ
   doc.setFillColor("#f0edff"); doc.setDrawColor("#c4b5fd");
   doc.roundedRect(ml, pdfY, cw, 28, 2, 2, "FD");
   doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor("#4b2afd");
@@ -1173,8 +1173,8 @@ function generateAgreementPDF(d, brandName, timestamp){
   doc.text("No hidden fees. No monthly minimums. No platform charges.", ml+4, pdfY+20, {maxWidth: cw-8});
   pdfY += 34;
 
-  // ── Current cost breakdown — uses real intlFrac, not debitFrac proxy ────
-  // DATA SOURCE: d.intlFrac — stored at quote creation (manual % or CSV-detected).
+  // ââ Current cost breakdown â uses real intlFrac, not debitFrac proxy ââââ
+  // DATA SOURCE: d.intlFrac â stored at quote creation (manual % or CSV-detected).
   // Same IC++ cost ratio method as HTML rendering.
   // pdfCurRate is declared above in the savings headline block.
   const pdfIntlFrac = (d.intlFrac !== null && d.intlFrac !== undefined) ? parseFloat(d.intlFrac) : null;
@@ -1185,7 +1185,7 @@ function generateAgreementPDF(d, brandName, timestamp){
     doc.setFillColor("#fff0f0"); doc.setDrawColor("#fca5a5");
 
     if (pdfIntlFrac === 0) {
-      // 100% domestic — show current rate as UK domestic only
+      // 100% domestic â show current rate as UK domestic only
       doc.roundedRect(ml, pdfY, cw, 18, 2, 2, "FD");
       doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor("#dc2626");
       doc.text("YOUR CURRENT RATE (UK DOMESTIC): " + pdfCurRate.toFixed(2) + "%", ml+4, pdfY+7);
@@ -1193,7 +1193,7 @@ function generateAgreementPDF(d, brandName, timestamp){
       doc.text("No international transactions reported. All volume treated as UK domestic.", ml+4, pdfY+13, {maxWidth: cw-8});
       pdfY += 24;
     } else if (pdfIntlFrac === 1) {
-      // 100% international — show current rate as international only
+      // 100% international â show current rate as international only
       doc.roundedRect(ml, pdfY, cw, 18, 2, 2, "FD");
       doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor("#dc2626");
       doc.text("YOUR CURRENT RATE (INTERNATIONAL): " + pdfCurRate.toFixed(2) + "%", ml+4, pdfY+7);
@@ -1201,7 +1201,7 @@ function generateAgreementPDF(d, brandName, timestamp){
       doc.text("All transactions reported as international.", ml+4, pdfY+13, {maxWidth: cw-8});
       pdfY += 24;
     } else if (pdfIntlFrac !== null && pdfIntlFrac > 0 && pdfIntlFrac < 1) {
-      // Mixed — derive UK / Intl / Blended split using IC++ cost ratios
+      // Mixed â derive UK / Intl / Blended split using IC++ cost ratios
       const domFrac      = 1 - pdfIntlFrac;
       const weightedCost = (domFrac * PDF_IC_UK) + (pdfIntlFrac * PDF_IC_INTL);
       const curUkR  = Math.round(pdfCurRate * PDF_IC_UK   / weightedCost * 100) / 100;
@@ -1209,7 +1209,7 @@ function generateAgreementPDF(d, brandName, timestamp){
 
       doc.roundedRect(ml, pdfY, cw, 26, 2, 2, "FD");
       doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor("#dc2626");
-      doc.text("YOUR CURRENT RATE — ESTIMATED BY CARD TYPE", ml+4, pdfY+6);
+      doc.text("YOUR CURRENT RATE â ESTIMATED BY CARD TYPE", ml+4, pdfY+6);
       doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor("#374151");
       doc.text("Blended rate is from your statement. UK/international figures are derived estimates based on " + Math.round(pdfIntlFrac*100) + "% international mix and IC++ cost ratios.", ml+4, pdfY+12, {maxWidth: cw-8});
 
@@ -1225,7 +1225,7 @@ function generateAgreementPDF(d, brandName, timestamp){
       });
       pdfY += 32;
     } else {
-      // null intlFrac — blended only, no split available
+      // null intlFrac â blended only, no split available
       doc.roundedRect(ml, pdfY, cw, 18, 2, 2, "FD");
       doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor("#dc2626");
       doc.text("YOUR CURRENT RATE: " + pdfCurRate.toFixed(2) + "% (blended)", ml+4, pdfY+7);
@@ -1236,13 +1236,13 @@ function generateAgreementPDF(d, brandName, timestamp){
   }
 
   const scheduleRows = [
-    [pdfUkLabel,   pdfUkRate.toFixed(2)+"% + "+(d.fixed_fee||"—")+"p per transaction"],
-    [pdfIntlLabel, pdfIntlRate.toFixed(2)+"% + "+(d.fixed_fee||"—")+"p per transaction"],
+    [pdfUkLabel,   pdfUkRate.toFixed(2)+"% + "+(d.fixed_fee||"â")+"p per transaction"],
+    [pdfIntlLabel, pdfIntlRate.toFixed(2)+"% + "+(d.fixed_fee||"â")+"p per transaction"],
   ];
 
-  // Mix note row — four branches matching modal and acceptance record wording exactly
+  // Mix note row â four branches matching modal and acceptance record wording exactly
   if(pdfIntlFrac !== null && pdfIntlFrac > 0 && pdfIntlFrac < 1 && hasRegionalPdf && d.blended_rate){
-    scheduleRows.push(["Estimated Blended Rate", parseFloat(d.blended_rate).toFixed(2)+"% — estimated blended rate based on "+Math.round(pdfIntlFrac*100)+"% international transactions"]);
+    scheduleRows.push(["Estimated Blended Rate", parseFloat(d.blended_rate).toFixed(2)+"% â estimated blended rate based on "+Math.round(pdfIntlFrac*100)+"% international transactions"]);
   } else if(pdfIntlFrac === null){
     scheduleRows.push(["", "No international transaction mix provided at quote time"]);
   } else if(pdfIntlFrac === 0){
@@ -1250,20 +1250,20 @@ function generateAgreementPDF(d, brandName, timestamp){
   } else if(pdfIntlFrac === 1){
     scheduleRows.push(["", "Current mix provided: 100% international transactions"]);
   }
-  scheduleRows.push(["Per Transaction Fixed Fee", (d.fixed_fee||"—")+"p"]);
+  scheduleRows.push(["Per Transaction Fixed Fee", (d.fixed_fee||"â")+"p"]);
 
   if(a.addAmex)       scheduleRows.push(["American Express", (a.amexPct||3.5).toFixed(2)+"% + "+(a.amexFixed||20)+"p"]);
   if(a.addFX)         scheduleRows.push(["International / FX Transactions", (a.fxPct||1.5).toFixed(2)+"%"]);
-  if(a.addChargeback)  scheduleRows.push(["Chargeback Fee", "£"+(a.cbAmt||15).toFixed(2)]);
-  if(a.addRefund)      scheduleRows.push(["Refund Fee", "£"+(a.refAmt||1).toFixed(2)]);
-  // Impact summary rows — only when savings data exists
+  if(a.addChargeback)  scheduleRows.push(["Chargeback Fee", "Â£"+(a.cbAmt||15).toFixed(2)]);
+  if(a.addRefund)      scheduleRows.push(["Refund Fee", "Â£"+(a.refAmt||1).toFixed(2)]);
+  // Impact summary rows â only when savings data exists
   if(pdfMSave > 0){
-    scheduleRows.push(["─── Estimated Impact ───", ""]);
+    scheduleRows.push(["âââ Estimated Impact âââ", ""]);
     scheduleRows.push(["Estimated Monthly Saving", "+"+f2(pdfMSave)]);
     scheduleRows.push(["Estimated Annual Saving",  "+"+f2(pdfMSave*12)]);
   }
   if(pdfCurRate !== null && pdfBlended !== null && pdfCurRate > pdfBlended){
-    scheduleRows.push(["Rate Reduction", "-"+(pdfCurRate - pdfBlended).toFixed(2)+"% ("+pdfCurRate.toFixed(2)+"% → "+pdfBlended.toFixed(2)+"%)"]);
+    scheduleRows.push(["Rate Reduction", "-"+(pdfCurRate - pdfBlended).toFixed(2)+"% ("+pdfCurRate.toFixed(2)+"% â "+pdfBlended.toFixed(2)+"%)"]);
   }
  
   doc.autoTable({
@@ -1276,7 +1276,7 @@ function generateAgreementPDF(d, brandName, timestamp){
     columnStyles:{1:{fontStyle:"bold",halign:"right"}},
   });
 
-  // Support note — always shown since we always display UK/International split
+  // Support note â always shown since we always display UK/International split
   const noteY = doc.lastAutoTable.finalY + 5;
   doc.setFontSize(7.5); doc.setTextColor(grey);
   const supportNote = pdfIsIndicative
@@ -1285,10 +1285,10 @@ function generateAgreementPDF(d, brandName, timestamp){
   doc.text(supportNote, ml, noteY, {maxWidth: cw});
 
   doc.setFontSize(7.5); doc.setTextColor(grey);
-  doc.text(brandName+" — Confidential",ml,290);
+  doc.text(brandName+" â Confidential",ml,290);
   doc.text("Page 2 of 3",W-mr,290,{align:"right"});
  
-  // PAGE 3 — Acceptance Record
+  // PAGE 3 â Acceptance Record
   doc.addPage();
   doc.setFillColor(brand); doc.rect(0,0,W,18,"F");
   doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor("#ffffff");
@@ -1301,19 +1301,19 @@ function generateAgreementPDF(d, brandName, timestamp){
   doc.setFillColor("#dcfce7"); doc.setDrawColor("#16a34a");
   doc.roundedRect(ml,46,60,10,2,2,"FD");
   doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor("#16a34a");
-  doc.text("✓  AGREEMENT ACCEPTED",ml+5,53);
+  doc.text("â  AGREEMENT ACCEPTED",ml+5,53);
  
-  // Build acceptance record rows — mirrors Schedule A structure
+  // Build acceptance record rows â mirrors Schedule A structure
   const acceptRows = [
-    ["Quote ID",d.quote_id||"—"],
-    ["Merchant Name",d.merchant_name||"—"],
-    ["Merchant Email",d.merchant_email||"—"],
-    [pdfUkLabel,   pdfUkRate.toFixed(2)+"% + "+(d.fixed_fee||"—")+"p per transaction"],
-    [pdfIntlLabel, pdfIntlRate.toFixed(2)+"% + "+(d.fixed_fee||"—")+"p per transaction"],
+    ["Quote ID",d.quote_id||"â"],
+    ["Merchant Name",d.merchant_name||"â"],
+    ["Merchant Email",d.merchant_email||"â"],
+    [pdfUkLabel,   pdfUkRate.toFixed(2)+"% + "+(d.fixed_fee||"â")+"p per transaction"],
+    [pdfIntlLabel, pdfIntlRate.toFixed(2)+"% + "+(d.fixed_fee||"â")+"p per transaction"],
   ];
-  // Mix note row — four branches matching modal and Schedule A wording exactly
+  // Mix note row â four branches matching modal and Schedule A wording exactly
   if(pdfIntlFrac !== null && pdfIntlFrac > 0 && pdfIntlFrac < 1 && hasRegionalPdf && d.blended_rate){
-    acceptRows.push(["Estimated Blended Rate", parseFloat(d.blended_rate).toFixed(2)+"% — estimated blended rate based on "+Math.round(pdfIntlFrac*100)+"% international transactions"]);
+    acceptRows.push(["Estimated Blended Rate", parseFloat(d.blended_rate).toFixed(2)+"% â estimated blended rate based on "+Math.round(pdfIntlFrac*100)+"% international transactions"]);
   } else if(pdfIntlFrac === null){
     acceptRows.push(["", "No international transaction mix provided at quote time"]);
   } else if(pdfIntlFrac === 0){
@@ -1321,13 +1321,13 @@ function generateAgreementPDF(d, brandName, timestamp){
   } else if(pdfIntlFrac === 1){
     acceptRows.push(["", "Current mix provided: 100% international transactions"]);
   }
-  acceptRows.push(["Per Transaction Fixed Fee", (d.fixed_fee||"—")+"p"]);
+  acceptRows.push(["Per Transaction Fixed Fee", (d.fixed_fee||"â")+"p"]);
 
   if(a.addAmex)       acceptRows.push(["American Express", (a.amexPct||3.5).toFixed(2)+"% + "+(a.amexFixed||20)+"p"]);
   if(a.addFX)         acceptRows.push(["International / FX", (a.fxPct||1.5).toFixed(2)+"%"]);
-  if(a.addChargeback)  acceptRows.push(["Chargeback Fee", "£"+(a.cbAmt||15).toFixed(2)]);
-  if(a.addRefund)      acceptRows.push(["Refund Fee", "£"+(a.refAmt||1).toFixed(2)]);
-  acceptRows.push(["Accepted At (UTC)",timestamp||"—"]);
+  if(a.addChargeback)  acceptRows.push(["Chargeback Fee", "Â£"+(a.cbAmt||15).toFixed(2)]);
+  if(a.addRefund)      acceptRows.push(["Refund Fee", "Â£"+(a.refAmt||1).toFixed(2)]);
+  acceptRows.push(["Accepted At (UTC)",timestamp||"â"]);
  
   doc.autoTable({
     startY:65, margin:{left:ml,right:mr},
@@ -1345,24 +1345,24 @@ function generateAgreementPDF(d, brandName, timestamp){
   doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor("#4b2afd");
   doc.text("Next Steps", ml+6, nextY+8);
   doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor("#374151");
-  doc.text("1. Agreement signed — you have completed this step.", ml+6, nextY+15);
+  doc.text("1. Agreement signed â you have completed this step.", ml+6, nextY+15);
   doc.text("2. Our team will contact you within 24 hours to begin KYB/KYC onboarding.", ml+6, nextY+21);
-  doc.text("3. Go live — connect your existing checkout, POS, or payment link.", ml+6, nextY+27);
+  doc.text("3. Go live â connect your existing checkout, POS, or payment link.", ml+6, nextY+27);
   doc.setFontSize(7.5); doc.setTextColor(grey);
-  doc.text(brandName+" — Confidential",ml,290);
+  doc.text(brandName+" â Confidential",ml,290);
   doc.text("Page 3 of 3",W-mr,290,{align:"right"});
  
   doc.save("Merchant_Agreement_"+(d.quote_id||"draft")+".pdf");
 }
  
-// ═══ LOAD QUOTE FROM URL ═══
+// âââ LOAD QUOTE FROM URL âââ
 async function loadQuote(){
   const params = new URLSearchParams(window.location.search);
   const quoteId = params.get("quote");
  
   if(!quoteId){
     document.getElementById("loadingState").innerHTML =
-      '<div style="font-size:28px;margin-bottom:12px">📋</div>' +
+      '<div style="font-size:28px;margin-bottom:12px">ð</div>' +
       '<div style="font-size:14px;color:#6b7280">No quote ID provided.</div>' +
       '<div style="font-size:12px;color:#9ca3af;margin-top:8px">Please use the link provided by your sales representative.</div>';
     return;
@@ -1375,7 +1375,7 @@ async function loadQuote(){
     const res = await fetch("/api/quotes/" + quoteId);
     if(!res.ok){
       document.getElementById("loadingState").innerHTML =
-        '<div style="font-size:28px;margin-bottom:12px">⚠️</div>' +
+        '<div style="font-size:28px;margin-bottom:12px">â ï¸</div>' +
         '<div style="font-size:14px;color:#6b7280">Quote not found or has expired.</div>' +
         '<div style="font-size:12px;color:#9ca3af;margin-top:8px">Quote ID: '+quoteId+'</div>';
       return;
@@ -1384,7 +1384,7 @@ async function loadQuote(){
   } catch(e) {
     console.error("Error loading quote:", e);
     document.getElementById("loadingState").innerHTML =
-      '<div style="font-size:28px;margin-bottom:12px">⚠️</div>' +
+      '<div style="font-size:28px;margin-bottom:12px">â ï¸</div>' +
       '<div style="font-size:14px;color:#6b7280">Unable to load quote. Please check your connection.</div>';
     return;
   }
@@ -1394,7 +1394,7 @@ async function loadQuote(){
   // Store globally for acceptance flow
   quoteData = data;
 
-  // ── Track quote view in Zoho CRM (fire-and-forget) ──
+  // ââ Track quote view in Zoho CRM (fire-and-forget) ââ
   fetch("/api/quotes/viewed", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -1422,7 +1422,7 @@ async function loadQuote(){
   document.getElementById("acceptQuoteBtn").style.display = "inline-block";
 }
  
-// ═══ INIT ═══
+// âââ INIT âââ
 document.addEventListener("DOMContentLoaded", () => {
   const cb = document.getElementById("acceptCheck");
   const btn = document.getElementById("confirmBtn");
