@@ -2721,17 +2721,12 @@
             const isUK = c === "GB" || c === "GBR" || c === "UNITED KINGDOM" || c === "UK";
             if (!isUK) intlVol += a;
           }
+        } else if (intlMode === "presentmentCurrency") {
+          // Run inside main loop so card-only / no-refund filters already apply
+          const pc = (r[colMap.presentmentCurrency] || "").trim().toUpperCase();
+          if (pc && pc !== "GBP") intlVol += a;
         }
       });
-
-      // ── Presentment currency intl detection (Shopify CSVs) ──
-      if (intlMode === "presentmentCurrency") {
-        rows.forEach(r => {
-          const a2 = pAmt(r[colMap.amount]) || 0;
-          const pc = (r[colMap.presentmentCurrency] || "").trim().toUpperCase();
-          if (pc && pc !== "GBP") intlVol += a2;
-        });
-      }
 
       if (vol <= 0) throw new Error("No valid transaction amounts found in this CSV.");
       if (cnt < 2)  throw new Error("Not enough transactions found. Please upload a fuller statement or use Manual Entry.");
