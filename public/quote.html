@@ -350,10 +350,7 @@ body{width:100%;margin:0;padding:0}.container,.content,.wrapper{max-width:100%}
   <!-- Quote preview -->
   <div id="qprev"></div>
  
-  <!-- Accept button -->
-  <div style="text-align:center;margin-top:16px;padding-bottom:40px">
-    <button id="acceptQuoteBtn" class="qbtn qbtn-p" onclick="openAcceptance()" style="display:none;background:#16a34a;border-color:#16a34a;padding:12px 32px;font-size:14px" onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">&#10003; Accept Quote</button>
-  </div>
+  <!-- Accept button rendered inside quote by renderQuote() -->
 </div>
  
 <!-- ACCEPTANCE MODAL -->
@@ -489,7 +486,7 @@ function renderQuote(data){
       <div style="background:var(--green);border-radius:8px;padding:20px 24px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div>
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,.75);margin-bottom:6px">Based on your statement data</div>
-          <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--white);letter-spacing:-1px;line-height:1">You could save <span style="text-decoration:underline;text-decoration-color:rgba(255,255,255,.4)">${f2(mSave)}</span> per month</div>
+          <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--white);letter-spacing:-1.5px;line-height:1">You could save <span style="text-decoration:underline;text-decoration-color:rgba(255,255,255,.4)">${f2(mSave)}</span> / month</div>
           <div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:6px">That's ${f2(mSave * 12)} per year on payment processing costs.</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
@@ -618,29 +615,6 @@ function renderQuote(data){
  
       <div class="qp-section">
         <div class="qp-section-title">Your Pricing</div>
-
-        <!-- Interchange++ explanation -->
-        <div style="background:var(--brand-lt);border:1px solid var(--brand-bd);border-radius:6px;padding:14px 16px;margin-bottom:16px">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand);margin-bottom:8px">Transparent Interchange++ Pricing</div>
-          <div style="font-size:13px;color:var(--g1);line-height:1.6;margin-bottom:10px">Your rate already includes all costs in one simple number:</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-            <div style="background:var(--white);border-radius:5px;padding:10px 12px;border:1px solid var(--brand-bd)">
-              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);margin-bottom:3px">Interchange</div>
-              <div style="font-size:12px;font-weight:600;color:var(--black)">Issuing bank fee</div>
-              <div style="font-size:10px;color:var(--g3);margin-top:2px">Paid to the cardholder's bank</div>
-            </div>
-            <div style="background:var(--white);border-radius:5px;padding:10px 12px;border:1px solid var(--brand-bd)">
-              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);margin-bottom:3px">Scheme fees</div>
-              <div style="font-size:12px;font-weight:600;color:var(--black)">Visa / Mastercard</div>
-              <div style="font-size:10px;color:var(--g3);margin-top:2px">Card network assessment fees</div>
-            </div>
-            <div style="background:var(--white);border-radius:5px;padding:10px 12px;border:1px solid var(--brand-bd)">
-              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);margin-bottom:3px">Processing fee</div>
-              <div style="font-size:12px;font-weight:600;color:var(--black)">${brand.name} margin</div>
-              <div style="font-size:10px;color:var(--g3);margin-top:2px">Our service and platform cost</div>
-            </div>
-          </div>
-        </div>
 
         <!-- Current cost breakdown &mdash; uses real intlFrac when available, else indicative only -->
         ${(cur > 0 && !isManual && curRate !== null) ? (() => {
@@ -792,7 +766,7 @@ function renderQuote(data){
         </table>
         <div style="margin-top:10px;font-size:11px;color:var(--g3);line-height:1.5">International cards include non-UK issued cards and are typically more expensive due to bank and card network fees.</div>
         ${quoteIntlFrac !== null ? `<div style="margin-top:6px;font-size:11px;color:var(--g3)">Based on ${Math.round(quoteIntlFrac * 100)}% international transactions.</div>` : ''}
-        <div style="margin-top:10px;font-size:11px;color:var(--g3);letter-spacing:.3px">&#10003; No hidden fees. Transparent Interchange++ pricing.</div>
+        <div style="margin-top:10px;font-size:11px;color:var(--g3);letter-spacing:.3px">&#10003; No hidden fees. Your rate includes all interchange, scheme, and processing costs in one transparent number.</div>
       </div>
  
 
@@ -917,6 +891,9 @@ function renderQuote(data){
           This document does not constitute a binding offer.
         </div>
         ${brand.legal||''}
+      <div style="text-align:center;margin:28px 0 8px">
+        <button id="acceptQuoteBtn" onclick="openAcceptance()" style="display:none;background:#16a34a;color:#fff;border:none;border-radius:8px;padding:14px 44px;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;letter-spacing:.2px" onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">&#10003; Accept this Quote</button>
+      </div>
       </div>
     </div>`;
 }
