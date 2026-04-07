@@ -125,6 +125,32 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
 .td-country{color:var(--g2);white-space:nowrap}
 .td-volume{font-weight:600;color:var(--black)}
 .td-date{color:var(--g3);font-size:11px;white-space:nowrap}
+.ov-pipe-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid var(--g6)}
+.ov-pipe-row:last-child{border-bottom:none}
+.ov-pipe-row-full{flex-direction:column;gap:6px}
+.ov-pipe-label{font-size:11px;font-weight:600;color:var(--g2);text-transform:uppercase;letter-spacing:.5px;min-width:110px;padding-top:4px}
+.ov-pipe-control{display:flex;align-items:center;gap:6px;flex:1}
+.ov-pipe-input{font-size:12px;border:1px solid var(--g5);border-radius:5px;padding:4px 8px;background:var(--white);color:var(--black);font-family:inherit;flex:1;min-width:0}
+.ov-pipe-input:focus{outline:none;border-color:var(--brand)}
+.ov-pipe-select{font-size:12px;border:1px solid var(--g5);border-radius:5px;padding:4px 8px;background:var(--white);color:var(--black);font-family:inherit;flex:1;cursor:pointer}
+.ov-pipe-select:focus{outline:none;border-color:var(--brand)}
+.ov-pipe-rate-wrap{display:flex;align-items:center;gap:4px}
+.ov-pipe-rate{max-width:80px}
+.ov-pipe-pct{font-size:12px;color:var(--g3);font-weight:600}
+.ov-pipe-val{font-size:12px;font-weight:600}
+.ov-pipe-log-wrap{display:flex;gap:6px;flex-wrap:wrap;width:100%}
+.ov-pipe-log-btn{font-size:11px;font-weight:700;padding:5px 12px;border-radius:5px;border:none;background:var(--brand);color:#fff;cursor:pointer;white-space:nowrap}
+.ov-pipe-log-btn:hover{opacity:.9}
+.ov-pipe-log-btn:disabled{opacity:.5;cursor:not-allowed}
+.ov-overdue{border-color:var(--red)!important}
+.ov-overdue-badge{font-size:9px;font-weight:700;background:var(--red);color:#fff;padding:2px 5px;border-radius:3px;white-space:nowrap}
+.ov-expired{color:var(--red);font-weight:600}
+.ov-active{color:var(--green);font-weight:600}
+.ov-call-history{margin-top:6px;display:flex;flex-direction:column;gap:4px}
+.ov-call-entry{display:flex;align-items:center;gap:8px;font-size:11px;padding:4px 6px;background:var(--g6);border-radius:4px;flex-wrap:wrap}
+.ov-call-outcome{font-weight:600;color:var(--black)}
+.ov-call-note{color:var(--g2);flex:1;font-style:italic}
+.ov-call-date{color:var(--g3);white-space:nowrap;margin-left:auto}
 .db-days-badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.3px}
 .days-green{background:#dcfce7;color:#166534}.days-amber{background:#fef3c7;color:#92400e}.days-red{background:#fee2e2;color:#991b1b}.days-grey{background:var(--g6);color:var(--g3)}
 .td-assign-select{font-size:11px;border:1px solid var(--g5);border-radius:4px;padding:3px 6px;background:var(--white);color:var(--black);cursor:pointer;max-width:110px;font-family:inherit}

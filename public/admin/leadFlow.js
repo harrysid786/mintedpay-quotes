@@ -694,6 +694,96 @@
                   </div>
                 </div>
 
+                <!-- Pipeline Management Card -->
+                <div class="ov-card">
+                  <div class="ov-card-hdr">
+                    <span class="ov-card-icon">📋</span>
+                    <span class="ov-card-title">Pipeline</span>
+                  </div>
+
+                  <!-- Follow-up Date -->
+                  <div class="ov-pipe-row">
+                    <label class="ov-pipe-label">Follow-up Date</label>
+                    <div class="ov-pipe-control">
+                      <input type="date" id="ov-followup-date" class="ov-pipe-input ${lead.followUpDate && new Date(lead.followUpDate) < new Date() ? 'ov-overdue' : ''}"
+                        value="${lead.followUpDate || ''}"
+                        onchange="window.ovSaveField('${lead.id}', 'followUpDate', this.value, this)">
+                      ${lead.followUpDate && new Date(lead.followUpDate) < new Date() ? '<span class="ov-overdue-badge">OVERDUE</span>' : ''}
+                    </div>
+                  </div>
+
+                  <!-- Quote Expiry (auto-calculated, read-only) -->
+                  ${lead.quoteGeneratedAt ? `
+                  <div class="ov-pipe-row">
+                    <label class="ov-pipe-label">Quote Expiry</label>
+                    <div class="ov-pipe-control">
+                      <span class="ov-pipe-val ${new Date(lead.quoteGeneratedAt).setDate(new Date(lead.quoteGeneratedAt).getDate()+14) < Date.now() ? 'ov-expired' : 'ov-active'}">
+                        ${new Date(new Date(lead.quoteGeneratedAt).getTime() + 14*24*60*60*1000).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
+                        ${new Date(lead.quoteGeneratedAt).getTime() + 14*24*60*60*1000 < Date.now() ? '(Expired)' : '(Active)'}
+                      </span>
+                    </div>
+                  </div>` : ''}
+
+                  <!-- Actual Rate Quoted -->
+                  <div class="ov-pipe-row">
+                    <label class="ov-pipe-label">Actual Rate Quoted</label>
+                    <div class="ov-pipe-control ov-pipe-rate-wrap">
+                      <input type="number" id="ov-actual-rate" class="ov-pipe-input ov-pipe-rate" step="0.01" min="0" max="10"
+                        placeholder="e.g. 1.60"
+                        value="${lead.actualRateQuoted || ''}"
+                        onchange="window.ovSaveField('${lead.id}', 'actualRateQuoted', parseFloat(this.value)||null, this)">
+                      <span class="ov-pipe-pct">%</span>
+                    </div>
+                  </div>
+
+                  <!-- Rejection Reason (shown when status=rejected) -->
+                  ${lead.status === 'rejected' ? `
+                  <div class="ov-pipe-row">
+                    <label class="ov-pipe-label">Rejection Reason</label>
+                    <select class="ov-pipe-select" id="ov-rejection-reason"
+                      onchange="window.ovSaveField('${lead.id}', 'rejectionReason', this.value, this)">
+                      <option value="">Select reason…</option>
+                      <option value="price_too_high" ${lead.rejectionReason==='price_too_high'?'selected':''}>Price too high</option>
+                      <option value="uncontactable" ${lead.rejectionReason==='uncontactable'?'selected':''}>Uncontactable</option>
+                      <option value="went_elsewhere" ${lead.rejectionReason==='went_elsewhere'?'selected':''}>Went elsewhere</option>
+                      <option value="prohibited_industry" ${lead.rejectionReason==='prohibited_industry'?'selected':''}>Prohibited industry</option>
+                      <option value="not_competitive" ${lead.rejectionReason==='not_competitive'?'selected':''}>Not competitive</option>
+                      <option value="other" ${lead.rejectionReason==='other'?'selected':''}>Other</option>
+                    </select>
+                  </div>` : ''}
+
+                  <!-- Call Log -->
+                  <div class="ov-pipe-row ov-pipe-row-full">
+                    <label class="ov-pipe-label">Log Contact</label>
+                    <div class="ov-pipe-log-wrap">
+                      <select id="ov-call-outcome" class="ov-pipe-select">
+                        <option value="">Outcome…</option>
+                        <option value="no_answer">No answer</option>
+                        <option value="left_voicemail">Left voicemail</option>
+                        <option value="spoke_to_merchant">Spoke to merchant</option>
+                        <option value="meeting_booked">Meeting booked</option>
+                        <option value="not_interested">Not interested</option>
+                        <option value="email_sent">Email sent</option>
+                      </select>
+                      <input type="text" id="ov-call-note" class="ov-pipe-input" placeholder="Note (optional)">
+                      <button class="ov-pipe-log-btn" onclick="window.ovAddCallLog('${lead.id}')">+ Log</button>
+                    </div>
+                  </div>
+
+                  <!-- Call Log History -->
+                  ${Array.isArray(lead.callLog) && lead.callLog.length > 0 ? `
+                  <div class="ov-call-history">
+                    ${[...lead.callLog].reverse().slice(0,5).map(entry => `
+                    <div class="ov-call-entry">
+                      <span class="ov-call-outcome">${{no_answer:'📵 No answer',left_voicemail:'📨 Voicemail',spoke_to_merchant:'✅ Spoke to merchant',meeting_booked:'📅 Meeting booked',not_interested:'❌ Not interested',email_sent:'📧 Email sent'}[entry.outcome] || entry.outcome}</span>
+                      ${entry.note ? `<span class="ov-call-note">${entry.note}</span>` : ''}
+                      <span class="ov-call-date">${new Date(entry.timestamp).toLocaleDateString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+                    </div>
+                    `).join('')}
+                  </div>` : ''}
+
+                </div>
+
                 <!-- Activity Timeline -->
                 <div class="ov-card">
                   <div class="ov-card-hdr">
@@ -1908,6 +1998,7 @@
         this.currentStep = this._resumeStep();
         this._render();
       });
+      window._currentLeadId = this.leadId;
       q("lf-overview-quote")?.addEventListener("click", () => {
         if (this.lead.processingRate && !this.lead.quote_id) {
           this._generateQuote();
@@ -3197,6 +3288,7 @@
       try {
         this.quoteGenerated = true;
         this.lead.status = "quoted";
+        this.lead.quoteGeneratedAt = this.lead.quoteGeneratedAt || new Date().toISOString();
 
         // ── Capture optional fee toggle state from the quote preview panel ──
         // These values are shown to the agent in Step 10 but never saved unless
@@ -3299,4 +3391,54 @@
 
   // ── Export ───────────────────────────────────────────────
   window.LeadFlow = LeadFlow;
+
+  // ── Pipeline field save helper ───────────────────────────────────────────
+  window.ovSaveField = async function(leadId, field, value, el) {
+    if (!leadId) return;
+    try {
+      const getResp = await fetch(`/api/leads/${leadId}`);
+      if (!getResp.ok) throw new Error('Fetch failed');
+      const lead = await getResp.json();
+      lead[field] = value;
+      const putResp = await fetch(`/api/leads/${leadId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(lead)
+      });
+      if (!putResp.ok) throw new Error('Save failed ' + putResp.status);
+      if (el) { el.style.borderColor = 'var(--green)'; setTimeout(() => el.style.borderColor = '', 1500); }
+    } catch(e) {
+      console.error('ovSaveField error:', e.message);
+      if (el) { el.style.borderColor = 'var(--red)'; setTimeout(() => el.style.borderColor = '', 2000); }
+    }
+  };
+
+  // ── Call log add helper ──────────────────────────────────────────────────
+  window.ovAddCallLog = async function(leadId) {
+    if (!leadId) return;
+    const outcome = document.getElementById('ov-call-outcome')?.value;
+    const note    = (document.getElementById('ov-call-note')?.value || '').trim();
+    if (!outcome) { alert('Please select an outcome first.'); return; }
+    const btn = document.querySelector('.ov-pipe-log-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+    try {
+      const getResp = await fetch(`/api/leads/${leadId}`);
+      if (!getResp.ok) throw new Error('Fetch failed');
+      const lead = await getResp.json();
+      const entry = { outcome, note: note || null, timestamp: new Date().toISOString() };
+      lead.callLog = Array.isArray(lead.callLog) ? [...lead.callLog, entry] : [entry];
+      const putResp = await fetch(`/api/leads/${leadId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(lead)
+      });
+      if (!putResp.ok) throw new Error('Save failed');
+      if (typeof window.adminOpenLead === 'function') window.adminOpenLead(leadId);
+    } catch(e) {
+      console.error('ovAddCallLog error:', e.message);
+      alert('Could not save log entry. Please try again.');
+      if (btn) { btn.disabled = false; btn.textContent = '+ Log'; }
+    }
+  };
+
 })();
