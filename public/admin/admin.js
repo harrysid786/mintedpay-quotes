@@ -49,11 +49,54 @@
     return `<span class="db-brand-badge">${brand.charAt(0).toUpperCase() + brand.slice(1)}</span>`;
   }
 
+  // ── Agents list ───────────────────────────────────────────
+  const AGENTS = ['Unassigned', 'Haroon', 'Agent 2', 'Agent 3'];
+
+  function daysBadge(createdAt) {
+    if (!createdAt) return '<span class="db-days-badge days-grey">—</span>';
+    const d = Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000);
+    const cls = d < 7 ? 'days-green' : d < 14 ? 'days-amber' : 'days-red';
+    return `<span class="db-days-badge ${cls}">${d}d</span>`;
+  }
+
+  function assigneeCell(lead) {
+    const current = lead.assignedTo || '';
+    const opts = AGENTS.map(a =>
+      `<option value="${a === 'Unassigned' ? '' : a}" ${current === (a === 'Unassigned' ? '' : a) ? 'selected' : ''}>${a}</option>`
+    ).join('');
+    return `<select class="td-assign-select" data-id="${lead.id}" onchange="window.adminAssignLead(this)">${opts}</select>`;
+  }
+
+  window.adminAssignLead = async function(sel) {
+    const id  = sel.dataset.id;
+    const val = sel.value;
+    sel.disabled = true;
+    try {
+      const getResp = await fetch(`/api/leads/${id}`);
+      if (!getResp.ok) throw new Error('Fetch failed');
+      const lead = await getResp.json();
+      const putResp = await fetch(`/api/leads/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...lead, assignedTo: val || null })
+      });
+      if (!putResp.ok) throw new Error('PUT failed ' + putResp.status);
+      sel.style.borderColor = 'var(--green)';
+      setTimeout(() => sel.style.borderColor = '', 1500);
+    } catch(e) {
+      console.error('Assign error:', e.message);
+      sel.style.borderColor = 'var(--red)';
+      setTimeout(() => sel.style.borderColor = '', 2000);
+    } finally {
+      sel.disabled = false;
+    }
+  };
+
   // ── Load & render leads table ────────────────────────────
   async function loadLeads() {
     const tbody = document.getElementById("leads-tbody");
     if (!tbody) return;
-    tbody.innerHTML = `<tr><td colspan="10" class="tbl-info">Loading…</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" class="tbl-info">Loading…</td></tr>`;
 
     try {
       const resp = await fetch("/api/leads");
@@ -66,7 +109,7 @@
       if (!leads.length) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="10" class="tbl-empty">
+            <td colspan="11" class="tbl-empty">
               No leads yet.<br>
               <button class="tbl-new-btn" onclick="window.adminNewLead()">+ Create your first lead</button>
             </td>
@@ -91,8 +134,9 @@
             <div>${lead.contactName || "—"}</div>
             ${lead.email ? `<div class="td-email">${lead.email}</div>` : ""}
           </td>
-          <td class="td-assignee">${lead.assignedTo || "—"}</td>
+          <td>${assigneeCell(lead)}</td>
           <td class="td-date">${fmtDate(lead.createdAt)}</td>
+          <td>${daysBadge(lead.createdAt)}</td>
           <td class="td-act">
             <button class="db-open-btn" onclick="window.adminOpenLead('${lead.id}')">Open →</button>
             <button class="db-delete-btn" onclick="window.adminDeleteLead('${lead.id}')" title="Delete lead">🗑</button>
@@ -101,7 +145,7 @@
       `).join("");
 
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="10" class="tbl-error">⚠️ Could not load leads. Is the server running?</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="11" class="tbl-error">⚠️ Could not load leads. Is the server running?</td></tr>`;
       console.error("Error loading leads:", e);
     }
   }
