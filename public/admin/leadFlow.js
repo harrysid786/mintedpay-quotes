@@ -1246,6 +1246,14 @@
             This merchant selected <strong>${this.lead.industry || "a restricted industry"}</strong>. Verify business documentation and obtain approval before generating a quote.
           </div>` : ""}
 
+          <!-- ══ NOT-COMPETITIVE BANNER ══ -->
+          ${(p.not_competitive || (avgTx > 0 && avgTx < 15)) ? `
+          <div style="background:#fff1f2;border:1px solid #fecdd3;border-left:3px solid #e11d48;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:#9f1239;line-height:1.5">
+            🚫 <strong>Not competitive at this ticket size.</strong>
+            Average transaction of <strong>£${avgTx.toFixed(2)}</strong> is below the £15 threshold where our fixed cost (~14p/tx) makes pricing uncompetitive.
+            Only proceed if monthly volume exceeds £50k or using the Acquisition profile.
+          </div>` : ""}
+
           <!-- ══ A: CUSTOMER OVERVIEW ══ -->
           <div class="lf-op-section">
             <div class="lf-op-section-title">Customer Overview</div>
