@@ -223,6 +223,12 @@
     // Delayed delivery (days/weeks after payment) = higher chargeback risk → +1
     if (lead.deliveryTime === "delayed") score += 1;
 
+    // ── Highest single transaction ─────────────────────────────────────────────
+    // Very large single tickets = rolling reserve / chargeback exposure risk
+    const highTx = parseFloat(lead.highestSingleTx) || 0;
+    if      (highTx > 20000) score += 2;
+    else if (highTx >  5000) score += 1;
+
     // ── MAP SCORE → RISK LEVEL AND DECISION ──────────────────────────────────
     // score 0–2   → LOW    → ACCEPT
     // score 3–5   → MEDIUM → ACCEPT (or REVIEW if restricted industry)

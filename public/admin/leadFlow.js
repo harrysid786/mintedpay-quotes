@@ -153,34 +153,6 @@
       ],
     },
     {
-      id: 6,
-      title: "Tech Stack",
-      subtitle: "What platforms and tools do they use?",
-      fields: [
-        { name: "platform", label: "E-commerce / CMS Platform", type: "select", options: [
-          { value: "shopify",     label: "Shopify" },
-          { value: "woocommerce", label: "WooCommerce" },
-          { value: "magento",     label: "Magento / Adobe Commerce" },
-          { value: "bigcommerce", label: "BigCommerce" },
-          { value: "squarespace", label: "Squarespace" },
-          { value: "wix",         label: "Wix" },
-          { value: "custom",      label: "Custom built" },
-          { value: "none",        label: "None / Not applicable" },
-          { value: "other",       label: "Other" },
-        ]},
-        { name: "integrations",       label: "Key Integrations (CRM, ERP, etc.)", type: "text", placeholder: "e.g. Salesforce, HubSpot, SAP, Zapier..." },
-        { name: "accountingSoftware", label: "Accounting Software", type: "select", options: [
-          { value: "xero",        label: "Xero" },
-          { value: "quickbooks",  label: "QuickBooks" },
-          { value: "sage",        label: "Sage" },
-          { value: "freeagent",   label: "FreeAgent" },
-          { value: "wave",        label: "Wave" },
-          { value: "none",        label: "None" },
-          { value: "other",       label: "Other" },
-        ]},
-      ],
-    },
-    {
       id: 7,
       title: "Volume & Transactions",
       subtitle: "Monthly processing volume and average transaction size",
@@ -188,6 +160,7 @@
         { name: "monthlyVolume",       label: "Monthly Processing Volume (£)", type: "number", required: true, placeholder: "e.g. 50000", min: 0 },
         { name: "avgTransactionValue", label: "Average Transaction Value (£)",  type: "number", required: true, placeholder: "e.g. 45",    min: 0 },
         { name: "_avgTicketWarning", label: "", type: "avg-ticket-warning" },
+        { name: "highestSingleTx",   label: "Highest Single Transaction (£)", type: "number", placeholder: "e.g. 500", min: 0 },
       ],
     },
     {
@@ -695,7 +668,7 @@
                 </div>
 
                 <!-- Pipeline Management Card -->
-                <div class="ov-card">
+                <div class="ov-card ov-card-pipeline">
                   <div class="ov-card-hdr">
                     <span class="ov-card-icon">📋</span>
                     <span class="ov-card-title">Pipeline</span>
