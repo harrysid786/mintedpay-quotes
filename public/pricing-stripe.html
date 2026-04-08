@@ -1654,7 +1654,9 @@ function parseCSV(text) {
   if(vol<=0||cnt<2)throw new Error("Not enough transaction data found");
 
   let dv=0;Object.entries(cardData).forEach(([k,v])=>{if(isDebitCard(k))dv+=v.vol});
-  const debitFrac=vol>0?dv/vol:0.70;
+  // If no explicit debit cards found (e.g. Stripe CSV uses "visa"/"master" not "visa_debit"),
+  // fall back to UK market average 70% debit rather than reporting 0%
+  const debitFrac=(vol>0&&dv===0)?0.70:(vol>0?dv/vol:0.70);
   const currentRate=fees>0&&vol>0?fees/vol*100:0;
   const coverage=cnt>0?cpop/cnt:0;
   const intlFrac=colMap.country&&coverage>=0.8?Math.round(intlVol/vol*10000)/10000:null;
