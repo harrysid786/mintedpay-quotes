@@ -1743,6 +1743,8 @@ function handleFile(file) {
       }
 
       document.getElementById("csvSummary").classList.remove("hidden");
+      // Hide the dropzone now that a file has been uploaded
+      document.getElementById("dropzone").classList.add("hidden");
       // Blur the figures and show the unlock teaser
       document.getElementById("csvSummary").classList.add("blur-figures");
       const _ub = document.getElementById("csvUnlockBanner");
