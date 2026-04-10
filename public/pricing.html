@@ -935,6 +935,7 @@ async function buildStep4() {
   const fmtRate = r => parseFloat(r).toFixed(2) + "%";
 
   const p     = pricingResult;
+  window._quoteResult = p;
   const fixed = p ? (p.fixed_fee || 10) : 10;
 
   // p.rate is the correct public quoted rate for acquisition_plus profile.
@@ -1337,7 +1338,7 @@ async function submitLead() {
       _amexSeg ? _amexSeg.ourRate : null,
       _amexSeg ? _amexSeg.ourFixedFee : null,
       _amexSeg ? _amexSeg.vol : 0);
-    goStep("done");
+    if (!window._revealSubmit) goStep("done");
   } catch (e) {
     btn.disabled = false;
     btn.textContent = "Request my confirmed rate →";
@@ -1377,17 +1378,16 @@ function revealRate() {
   const _sw = document.getElementById("step4SubmitWrap");
   if (_sw) _sw.style.display = "block";
 
-  // Submit lead and show inline confirmation
+  // Submit lead without navigating away
   (async () => {
     try {
-      const _origGoStep = window.goStep;
-      window.goStep = (step) => { if (step !== 'done') _origGoStep(step); };
+      window._revealSubmit = true;
       await submitLead();
-      window.goStep = _origGoStep;
-    } catch(e) {}
+      window._revealSubmit = false;
+    } catch(e) { window._revealSubmit = false; console.error('Lead submit error:', e); }
     const banner = document.createElement('div');
     banner.style.cssText = 'background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:14px 18px;margin-top:16px;font-size:14px;color:#2e7d32;text-align:center;';
-    banner.innerHTML = '&#10003; <strong>Details submitted.</strong> We&#39;ll be in touch shortly with your confirmed rate.';
+    banner.innerHTML = '&#10003; <strong>Details submitted.</strong> We\'ll be in touch shortly with your confirmed rate.';
     const content = document.getElementById('step4Content');
     if (content && !content.querySelector('.submit-confirm')) {
       banner.classList.add('submit-confirm');
