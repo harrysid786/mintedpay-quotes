@@ -1644,7 +1644,7 @@ function parseCSV(text) {
     if(!cardData[k])cardData[k]={vol:0,cnt:0};cardData[k].vol+=a;cardData[k].cnt++;
     if(colMap.country){const c=(r[colMap.country]||"").trim().toUpperCase();if(c){cpop++;if(c!=="GB"&&c!=="GBR"&&c!=="UK")intlVol+=a}} else if(colMap.presentmentCurrency){
     const _pc=(r[colMap.presentmentCurrency]||"").toUpperCase().trim();
-    if(_pc&&_pc!=="GBP")intlVol+=amt;
+    if(_pc&&_pc!=="GBP")intlVol+=a;
   }
     // ── Segment classification ────────────────────────────────────
     {
