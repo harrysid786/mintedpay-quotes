@@ -1587,6 +1587,8 @@ const HINTS = {
   outcome:  ["transaction outcome","outcome","transaction_status","payment_status"],
   date:    ["transaction date","date","transaction_date","payment date","created","created_at"],
   country:  ["card issue country","issued country","card country","issuing country","card_country"],
+  paymentMethod:         ["payment method name","payment method","payment_method","tender type","tender_type","method"],
+  presentmentCurrency:   ["presentment currency","presentment_currency","billing currency","card currency","original currency"],
 };
 
 function pAmt(v){const n=parseFloat(String(v||"").replace(/[£$€,\s]/g,""));return isNaN(n)||n<=0?null:n}
@@ -1634,12 +1636,16 @@ function parseCSV(text) {
     if(colMap.rowType){const t=(r[colMap.rowType]||"").toUpperCase().trim();if(t&&!["CHARGE","PAYMENT","SALE","TRANSACTION","DEBIT","SETTLED","CAPTURE",""].includes(t))return}
     if(colMap.outcome){const o=(r[colMap.outcome]||"").toUpperCase().trim();if(o&&!["AUTHORISED","AUTHORIZED","APPROVED","SUCCESS","SETTLED","CAPTURED","COMPLETE","COMPLETED",""].includes(o))return}
     const a=pAmt(r[colMap.amount]);if(!a)return;
+    if(colMap.paymentMethod){const _pm=(r[colMap.paymentMethod]||"").toLowerCase().trim();if(_pm&&!_pm.includes("card")&&!_pm.includes("credit")&&!_pm.includes("debit"))return;}
     cnt++;vol+=a;
     if(colMap.date&&r[colMap.date]){try{const _d2=new Date(r[colMap.date].substring(0,10));if(!isNaN(_d2.getTime())){if(!_minDate||_d2<_minDate)_minDate=_d2;if(!_maxDate||_d2>_maxDate)_maxDate=_d2;}}catch(e){}}
     const fv=colMap.fee?(pAmt(r[colMap.fee])||0):0;if(fv)fees+=fv;
     const k=colMap.cardType?classCard(r[colMap.cardType]):"mixed";
     if(!cardData[k])cardData[k]={vol:0,cnt:0};cardData[k].vol+=a;cardData[k].cnt++;
-    if(colMap.country){const c=(r[colMap.country]||"").trim().toUpperCase();if(c){cpop++;if(c!=="GB"&&c!=="GBR"&&c!=="UK")intlVol+=a}}
+    if(colMap.country){const c=(r[colMap.country]||"").trim().toUpperCase();if(c){cpop++;if(c!=="GB"&&c!=="GBR"&&c!=="UK")intlVol+=a}} else if(colMap.presentmentCurrency){
+    const _pc=(r[colMap.presentmentCurrency]||"").toUpperCase().trim();
+    if(_pc&&_pc!=="GBP")intlVol+=amt;
+  }
     // ── Segment classification ────────────────────────────────────
     {
       const cardTypeRaw = colMap.cardType ? (r[colMap.cardType]||"").toLowerCase().trim() : "";
