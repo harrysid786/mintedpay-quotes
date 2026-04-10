@@ -950,7 +950,7 @@ async function buildStep4() {
   if (p && p.not_competitive) {
     document.getElementById("step4Loading").style.display = "none";
     document.getElementById("step4Content").style.display = "block";
-    document.getElementById("step4Btns").style.display    = "flex";
+    document.getElementById("step4Btns").style.display    = "none";
     document.getElementById("rateCompare").style.display  = "none";
     document.getElementById("rateOnly").style.display     = "none";
     document.getElementById("segmentTable").style.display = "none";
@@ -1039,7 +1039,7 @@ async function buildStep4() {
   if (hasCurFees && displayRate && effRate && _allInEffRate >= effRate) {
     document.getElementById("step4Loading").style.display = "none";
     document.getElementById("step4Content").style.display = "block";
-    document.getElementById("step4Btns").style.display    = "flex";
+    document.getElementById("step4Btns").style.display    = "none";
     document.getElementById("rateCompare").style.display  = "none";
     document.getElementById("rateOnly").style.display     = "none";
     const advisory = document.createElement("div");
@@ -1377,7 +1377,23 @@ function revealRate() {
   const _sw = document.getElementById("step4SubmitWrap");
   if (_sw) _sw.style.display = "block";
 
-  submitLead();
+  // Submit lead and show inline confirmation
+  (async () => {
+    try {
+      const _origGoStep = window.goStep;
+      window.goStep = (step) => { if (step !== 'done') _origGoStep(step); };
+      await submitLead();
+      window.goStep = _origGoStep;
+    } catch(e) {}
+    const banner = document.createElement('div');
+    banner.style.cssText = 'background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:14px 18px;margin-top:16px;font-size:14px;color:#2e7d32;text-align:center;';
+    banner.innerHTML = '&#10003; <strong>Details submitted.</strong> We&#39;ll be in touch shortly with your confirmed rate.';
+    const content = document.getElementById('step4Content');
+    if (content && !content.querySelector('.submit-confirm')) {
+      banner.classList.add('submit-confirm');
+      content.appendChild(banner);
+    }
+  })();
 }
 
 function buildConfirmation(name, email, rate, fixed, saving, vol, amexRate, amexFixed, amexVol) {
