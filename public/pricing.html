@@ -881,10 +881,7 @@ async function calcPricing() {
     const data = await res.json();
     if (data && (data.rate || data.sell_uk_rate)) {
       pricingResult = data;
-      // Store intlFrac so quote page can display blended rate context
-      if (typeof intlFrac === 'number' && Number.isFinite(intlFrac)) {
-        pricingResult.intlFrac = intlFrac;
-      }
+      if (typeof intlFrac === 'number' && Number.isFinite(intlFrac)) { pricingResult.intlFrac = intlFrac; }
     }
   } catch (e) {
     console.warn("Pricing pre-fetch failed:", e);
