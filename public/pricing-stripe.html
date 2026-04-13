@@ -510,7 +510,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
             <input type="tel" id="bizPhone" placeholder="Phone (optional)" autocomplete="tel">
           </div>
           <div id="revealError" style="display:none;font-size:12px;color:var(--red);text-align:left;margin-bottom:8px"></div>
-          <button class="btn btn-primary" onclick="revealRate()" style="width:100%">Reveal my rate →</button>
+          <p style="font-size:12px;color:var(--slate);margin:0 0 12px;text-align:center;">By continuing, you agree that MintedPay may contact you about this enquiry. We never share your data with third parties.</p><button class="btn btn-primary" onclick="revealRate()" style="width:100%">Get my rate →</button>
         </div>
       </div>
       <!-- Processing summary — blurred until reveal -->
@@ -967,7 +967,6 @@ async function calcPricing() {
     const data = await res.json();
     if (data && (data.rate || data.sell_uk_rate)) {
       pricingResult = data;
-      if (typeof intlFrac === 'number' && Number.isFinite(intlFrac)) { pricingResult.intlFrac = intlFrac; }
     }
   } catch (e) {
     console.warn("Pricing pre-fetch failed:", e);
@@ -1037,7 +1036,7 @@ async function buildStep4() {
   if (p && p.not_competitive) {
     document.getElementById("step4Loading").style.display = "none";
     document.getElementById("step4Content").style.display = "block";
-    document.getElementById("step4Btns").style.display    = "flex";
+    document.getElementById("step4Btns").style.display    = "none";
     document.getElementById("rateCompare").style.display  = "none";
     document.getElementById("rateOnly").style.display     = "none";
     document.getElementById("segmentTable").style.display = "none";
@@ -1126,7 +1125,7 @@ async function buildStep4() {
   if (hasCurFees && displayRate && effRate && _allInEffRate >= effRate) {
     document.getElementById("step4Loading").style.display = "none";
     document.getElementById("step4Content").style.display = "block";
-    document.getElementById("step4Btns").style.display    = "flex";
+    document.getElementById("step4Btns").style.display    = "none";
     document.getElementById("rateCompare").style.display  = "none";
     document.getElementById("rateOnly").style.display     = "none";
     const advisory = document.createElement("div");
@@ -1255,6 +1254,7 @@ async function buildStep4() {
       _rows += "<tr>" +
         "<td style=\"padding:8px 10px;font-size:13px;font-weight:500;color:var(--ink)\">" + s.label + noteHtml + "</td>" +
         "<td style=\"padding:8px 10px;font-size:13px;color:var(--slate);white-space:nowrap\">" + theirStr + "</td>" +
+        "<td style=\"padding:8px 10px;font-size:13px;color:var(--slate);white-space:nowrap\">" + _fmtM(s.theirFees) + "/mo</td>" +
         "<td style=\"padding:8px 10px;font-size:13px;font-weight:500;color:var(--brand);white-space:nowrap\">" + ourStr + "</td>" +
         "</tr>";
     });
@@ -1267,11 +1267,15 @@ async function buildStep4() {
           "<thead><tr style=\"background:var(--white);border-bottom:1px solid var(--line)\">" +
             "<th style=\"padding:8px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left;text-transform:uppercase;letter-spacing:.05em\">Card type</th>" +
             "<th style=\"padding:8px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left;text-transform:uppercase;letter-spacing:.05em\">Your current rate</th>" +
+            "<th style=\"padding:8px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left;text-transform:uppercase;letter-spacing:.05em\">You pay/mo</th>" +
             "<th style=\"padding:8px 10px;font-size:11px;font-weight:600;color:var(--mute);text-align:left;text-transform:uppercase;letter-spacing:.05em\">Our rate</th>" +
           "</tr></thead>" +
           "<tbody>" + _rows + "</tbody>" +
           "<tfoot><tr style=\"background:var(--white);border-top:2px solid var(--line)\">" +
             "<td style=\"padding:10px 10px;font-size:13px;font-weight:600;color:var(--ink)\">Total</td>" +
+            "<td style=\"padding:10px 10px;font-size:13px;color:var(--slate)\">£" + _summ.totalTheirFees.toFixed(0) + "/mo</td>" +
+            "<td style=\"padding:10px 10px;font-size:13px;color:var(--slate)\">£" + _summ.totalTheirFees.toFixed(0) + "/mo</td>" +
+            "<td style=\"padding:10px 10px;font-size:13px;font-weight:600;color:var(--brand)\">£" + _summ.totalOurFees.toFixed(0) + "/mo</td>" +
           "</tr></tfoot>" +
         "</table></div>";
     // Saving banner below table
@@ -1454,7 +1458,53 @@ function revealRate() {
   // Show consent text + CTA button
   const _sw = document.getElementById("step4SubmitWrap");
   if (_sw) _sw.style.display = "block";
-  document.getElementById("step4Btns").style.display = "flex";
+
+  (async () => {
+    try {
+      const vol     = parseFloat(document.getElementById('volInput')?.value) || 0;
+      const cnt     = parseFloat(document.getElementById('cntInput')?.value) || 0;
+      const curRate = parseFloat(document.getElementById('curRateInput')?.value) || null;
+      const selCard = document.querySelector('.merchant-type-card.selected');
+      const selType = selCard ? (selCard.dataset.type || selCard.getAttribute('data-type') || 'online') : 'online';
+      const channels = selType === 'inperson' ? 'retail' : selType === 'both' ? 'both' : 'online';
+      const brand   = document.getElementById('ummahLogo')?.style.display === 'block' ? 'ummah' : 'minted';
+      const p       = (typeof pricingResult !== 'undefined' && pricingResult) ? pricingResult : {};
+      await fetch(API_BASE + '/api/leads', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          name:                   document.getElementById('revealName').value.trim(),
+          email:                  document.getElementById('revealEmail').value.trim(),
+          businessName:           document.getElementById('bizName').value.trim(),
+          phone:                  document.getElementById('bizPhone').value.trim() || null,
+          monthlyVolume:          vol,
+          avgTransactionValue:    cnt > 0 ? parseFloat((vol/cnt).toFixed(2)) : null,
+          currentEffectiveRate:   curRate,
+          currentMonthlyFees:     curRate ? parseFloat(((curRate/100)*vol).toFixed(2)) : null,
+          processingRate:         p.rate || null,
+          fixedFee:               p.fixed_fee || null,
+          estimatedMonthlySaving: p.monthly_saving ? parseFloat(p.monthly_saving.toFixed(2)) : null,
+          debitFrac:              p.debit_frac || 0,
+          intlPercentage:         parseFloat(document.getElementById('intlInput')?.value) || 0,
+          intlRegion:             document.getElementById('intlRegionInput')?.value || null,
+          currentProvider:        document.getElementById('providerInput')?.value || null,
+          industry:               document.getElementById('industryInput')?.value || null,
+          salesChannels:          channels,
+          leadSource:             'pricing_tool',
+          status:                 'new',
+          brand:                  brand
+        })
+      });
+    } catch(e) { console.error('Lead submit error:', e); }
+    const banner = document.createElement('div');
+    banner.style.cssText = 'background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:14px 18px;margin-top:16px;font-size:14px;color:#2e7d32;text-align:center;';
+    banner.innerHTML = '\u2713 <strong>Details submitted.</strong> We\'ll be in touch shortly with your confirmed rate.';
+    const content = document.getElementById('step4Content');
+    if (content && !content.querySelector('.submit-confirm')) {
+      banner.classList.add('submit-confirm');
+      content.appendChild(banner);
+    }
+  })();
 }
 
 function buildConfirmation(name, email, rate, fixed, saving, vol, amexRate, amexFixed, amexVol) {
@@ -1466,6 +1516,7 @@ function buildConfirmation(name, email, rate, fixed, saving, vol, amexRate, amex
   if (vol > 0) rows += `<div class="confirm-row"><span class="confirm-row-k">Monthly volume</span><span class="confirm-row-v">${fmtK(vol)}</span></div>`;
   if (rate && quoteShown) rows += `<div class="confirm-row"><span class="confirm-row-k">UK Visa / Mastercard rate</span><span class="confirm-row-v">${parseFloat(rate).toFixed(2)}% + ${fixed}p/tx</span></div>`;
   if (amexRate && amexVol > 0) rows += `<div class="confirm-row"><span class="confirm-row-k">Amex rate</span><span class="confirm-row-v">${parseFloat(amexRate).toFixed(2)}% + ${amexFixed != null ? amexFixed : 10}p/tx</span></div>`;
+  if (saving && saving > 0) rows += `<div class="confirm-row"><span class="confirm-row-k">Est. monthly saving</span><span class="confirm-row-v">${fmt2(saving)}/mo</span></div>`;
   document.getElementById("confirmSummary").innerHTML = rows;
 }
 
@@ -1536,6 +1587,8 @@ const HINTS = {
   outcome:  ["transaction outcome","outcome","transaction_status","payment_status"],
   date:    ["transaction date","date","transaction_date","payment date","created","created_at"],
   country:  ["card issue country","issued country","card country","issuing country","card_country"],
+  presentmentCurrency: ["presentment currency","presentment_currency","billing currency","card currency","original currency"],
+  paymentMethod: ["payment method name","payment method","payment_method","tender type","tender_type","method"],
 };
 
 function pAmt(v){const n=parseFloat(String(v||"").replace(/[£$€,\s]/g,""));return isNaN(n)||n<=0?null:n}
@@ -1582,6 +1635,8 @@ function parseCSV(text) {
   rows.forEach(r=>{
     if(colMap.rowType){const t=(r[colMap.rowType]||"").toUpperCase().trim();if(t&&!["CHARGE","PAYMENT","SALE","TRANSACTION","DEBIT","SETTLED","CAPTURE",""].includes(t))return}
     if(colMap.outcome){const o=(r[colMap.outcome]||"").toUpperCase().trim();if(o&&!["AUTHORISED","AUTHORIZED","APPROVED","SUCCESS","SETTLED","CAPTURED","COMPLETE","COMPLETED",""].includes(o))return}
+    // Skip non-card payment methods (Klarna, iDEAL, PayPal, bank transfer etc)
+    if(colMap.paymentMethod){const pm=(r[colMap.paymentMethod]||"").toLowerCase().trim();if(pm&&pm!=="card"&&!pm.includes("credit")&&!pm.includes("debit")&&!pm.includes("visa")&&!pm.includes("master")&&!pm.includes("amex")&&!pm.includes("discover"))return;}
     const a=pAmt(r[colMap.amount]);if(!a)return;
     cnt++;vol+=a;
     if(colMap.date&&r[colMap.date]){try{const _d2=new Date(r[colMap.date].substring(0,10));if(!isNaN(_d2.getTime())){if(!_minDate||_d2<_minDate)_minDate=_d2;if(!_maxDate||_d2>_maxDate)_maxDate=_d2;}}catch(e){}}
@@ -1589,6 +1644,11 @@ function parseCSV(text) {
     const k=colMap.cardType?classCard(r[colMap.cardType]):"mixed";
     if(!cardData[k])cardData[k]={vol:0,cnt:0};cardData[k].vol+=a;cardData[k].cnt++;
     if(colMap.country){const c=(r[colMap.country]||"").trim().toUpperCase();if(c){cpop++;if(c!=="GB"&&c!=="GBR"&&c!=="UK")intlVol+=a}}
+    // ── Presentment currency international detection (Shopify / FX CSVs) ──
+    else if(colMap.presentmentCurrency){
+      const pc=(r[colMap.presentmentCurrency]||"").trim().toUpperCase();
+      if(pc){cpop++;if(pc!=="GBP")intlVol+=a}
+    }
     // ── Segment classification ────────────────────────────────────
     {
       const cardTypeRaw = colMap.cardType ? (r[colMap.cardType]||"").toLowerCase().trim() : "";
@@ -1649,12 +1709,10 @@ function parseCSV(text) {
   if(vol<=0||cnt<2)throw new Error("Not enough transaction data found");
 
   let dv=0;Object.entries(cardData).forEach(([k,v])=>{if(isDebitCard(k))dv+=v.vol});
-  // If no explicit debit cards found (e.g. Stripe CSV uses "visa"/"master" not "visa_debit"),
-  // fall back to UK market average 70% debit rather than reporting 0%
-  const debitFrac=(vol>0&&dv===0)?0.70:(vol>0?dv/vol:0.70);
+  const debitFrac=vol>0?dv/vol:0.70;
   const currentRate=fees>0&&vol>0?fees/vol*100:0;
   const coverage=cnt>0?cpop/cnt:0;
-  const intlFrac=colMap.country&&coverage>=0.8?Math.round(intlVol/vol*10000)/10000:null;
+  const intlFrac=(colMap.country||colMap.presentmentCurrency)&&coverage>=0.8?Math.round(intlVol/vol*10000)/10000:null;
   // Build segment_data array for server (only include segments with data)
   const segmentData = [];
   const SEG_LABELS = {uk_debit:'UK Debit — Visa/MC',uk_credit:'UK Credit — Visa/MC',eea:'European/EEA cards',international:'International (non-EEA)',amex:'Amex'};
@@ -1740,8 +1798,6 @@ function handleFile(file) {
       }
 
       document.getElementById("csvSummary").classList.remove("hidden");
-      // Hide the dropzone now that a file has been uploaded
-      document.getElementById("dropzone").classList.add("hidden");
       // Blur the figures and show the unlock teaser
       document.getElementById("csvSummary").classList.add("blur-figures");
       const _ub = document.getElementById("csvUnlockBanner");
