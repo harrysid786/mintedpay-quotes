@@ -124,14 +124,14 @@
               ${lead.businessName || "<em class='muted'>Untitled</em>"}
               ${brandBadge(lead.brand)}
             </div>
-            <div class="td-biz-sub">${lead.industry || ""}</div>
+            <div class="td-biz-sub">${lead.industry ? lead.industry.split('|')[0].replace(/^\w/, c => c.toUpperCase()) : ""}</div>
           </td>
           <td class="td-country">${lead.country || "—"}</td>
           <td class="td-volume">${fmtVolume(lead.monthlyVolume)}</td>
           <td>${statusBadge(lead.status)}</td>
           <td>${riskBadge(lead.riskLevel)}</td>
           <td class="td-contact">
-            <div>${lead.contactName || "—"}</div>
+            <div>${lead.name || lead.contactName || "—"}</div>
             ${lead.email ? `<div class="td-email">${lead.email}</div>` : ""}
           </td>
           <td>${assigneeCell(lead)}</td>
