@@ -1461,9 +1461,10 @@ function revealRate() {
 
   (async () => {
     try {
-      const vol     = parseFloat(document.getElementById('volInput')?.value) || 0;
-      const cnt     = parseFloat(document.getElementById('cntInput')?.value) || 0;
-      const curRate = parseFloat(document.getElementById('curRateInput')?.value) || null;
+      const vd    = getVolumeData();
+      const vol   = vd.vol || 0;
+      const cnt   = vd.cnt || 0;
+      const curRate = vd.intlFrac !== null ? vd.cur / vol * 100 : null;
       const selCard = document.querySelector('.merchant-type-card.selected');
       const selType = selCard ? (selCard.dataset.type || selCard.getAttribute('data-type') || 'online') : 'online';
       const channels = selType === 'inperson' ? 'retail' : selType === 'both' ? 'both' : 'online';
@@ -1477,15 +1478,15 @@ function revealRate() {
           email:                  document.getElementById('revealEmail').value.trim(),
           businessName:           document.getElementById('bizName').value.trim(),
           phone:                  document.getElementById('bizPhone').value.trim() || null,
-          monthlyVolume:          vol,
-          avgTransactionValue:    cnt > 0 ? parseFloat((vol/cnt).toFixed(2)) : null,
-          currentEffectiveRate:   curRate,
-          currentMonthlyFees:     curRate ? parseFloat(((curRate/100)*vol).toFixed(2)) : null,
+          monthlyVolume:          vol || null,
+          avgTransactionValue:    vd.avgTx || null,
+          currentEffectiveRate:   vol > 0 && vd.cur > 0 ? parseFloat((vd.cur / vol * 100).toFixed(4)) : null,
+          currentMonthlyFees:     vd.cur || null,
           processingRate:         p.rate || null,
           fixedFee:               p.fixed_fee || null,
           estimatedMonthlySaving: p.monthly_saving ? parseFloat(p.monthly_saving.toFixed(2)) : null,
-          debitFrac:              p.debit_frac || 0,
-          intlPercentage:         parseFloat(document.getElementById('intlInput')?.value) || 0,
+          debitFrac:              vd.debitFrac || 0,
+          intlPercentage:         vd.intlFrac !== null ? parseFloat((vd.intlFrac * 100).toFixed(2)) : 0,
           intlRegion:             document.getElementById('intlRegionInput')?.value || null,
           currentProvider:        document.getElementById('providerInput')?.value || null,
           industry:               document.getElementById('industryInput')?.value || null,
