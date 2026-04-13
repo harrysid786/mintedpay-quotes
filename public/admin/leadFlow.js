@@ -155,15 +155,6 @@
         { name: "contactName", label: "Contact Name",    type: "text",  required: true, placeholder: "Jane Smith" },
         { name: "email",       label: "Email Address",   type: "email", required: true, placeholder: "jane@company.com" },
         { name: "phone",       label: "Phone Number",    type: "tel",   placeholder: "+44 7700 000000" },
-        { name: "leadSource",  label: "Lead Source",     type: "select", options: [
-          { value: "website",       label: "Website / Inbound" },
-          { value: "referral",      label: "Referral" },
-          { value: "cold_outreach", label: "Cold Outreach" },
-          { value: "event",         label: "Event / Conference" },
-          { value: "linkedin",      label: "LinkedIn" },
-          { value: "partner",       label: "Partner" },
-          { value: "other",         label: "Other" },
-        ]},
       ],
     },
     {
@@ -825,7 +816,7 @@
             <div class="lf-progress-bar">
               <div class="lf-progress-fill" style="width:${progress}%"></div>
             </div>
-            <div class="lf-step-label">Step ${this.currentStep} of ${this.totalSteps - 1} — <em>${stepDef.title}</em></div>
+            <div class="lf-step-label">Step ${Math.min(this.currentStep, this.totalSteps - 1)} of ${this.totalSteps - 1} — <em>${stepDef.title}</em></div>
           </div>
           <div class="lf-save-status" id="lf-save-status">
             <span class="lf-save-dot"></span> Saved
@@ -973,7 +964,7 @@
       if (f.showIf && !f.showIf(this.lead)) {
         return `<div class="lf-field hidden" data-field="${f.name}"></div>`;
       }
-      const val  = this.lead[f.name] != null ? String(this.lead[f.name]) : "";
+      const val  = f.name === 'contactName' ? (this.lead.contactName || this.lead.name || '') : this.lead[f.name] != null ? String(this.lead[f.name]) : "";
       const req  = f.required ? ' <span class="lf-req">*</span>' : "";
       let   ctrl = "";
 
@@ -2002,6 +1993,7 @@
           const resp = await fetch(`/api/leads/${this.leadId}`);
           const updated = await resp.json();
           this.lead = updated;
+          if (this.lead.avgTransactionValue) this.lead.avgTransactionValue = parseFloat(parseFloat(this.lead.avgTransactionValue).toFixed(2));
           this._render();
         } catch (e) {
           alert("Could not add note. Please try again.");
