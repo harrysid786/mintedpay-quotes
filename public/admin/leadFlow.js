@@ -503,7 +503,7 @@
                   <div class="ov-card-body">
                     ${row("Business Name", lead.businessName)}
                     ${row("Industry", lead.industry
-                        ? lead.industry
+                        ? (lead.industry.split("|")[0].replace(/^\w/,c=>c.toUpperCase()))
                           + (lead.industryStatus === "restricted" ? ` <span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:6px">NEEDS REVIEW</span>` : "")
                           + (lead.industryDetail ? ` <span class="ov-detail">(${lead.industryDetail})</span>` : "")
                         : "", { html: true })}
@@ -1203,7 +1203,7 @@
               <h2 class="lf-op-title">${this.lead.businessName || "Pricing Output"}</h2>
               <div class="lf-op-sub">
                 ${this.lead.country ? `<span>${this.lead.country}</span>` : ""}
-                ${this.lead.industry ? `<span>${this.lead.industry}</span>` : ""}
+                ${this.lead.industry ? `<span>${this.lead.industry.split("|")[0].replace(/^\w/,c=>c.toUpperCase())}</span>` : ""}
                 ${tierLabel ? `<span class="lf-op-tier" style="color:${tierColor};background:${tierBg}">${tierLabel}</span>` : ""}
                 <span class="lf-conf-badge ${confCls}">Confidence: ${confidence}</span>
               </div>
@@ -1218,7 +1218,7 @@
           ${this.lead.industryStatus === "restricted" ? `
           <div style="background:#fef3c7;border:1px solid #fcd34d;border-left:3px solid #d97706;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:#92400e;line-height:1.5">
             ⚠️ <strong>Restricted industry — manual review required.</strong>
-            This merchant selected <strong>${this.lead.industry || "a restricted industry"}</strong>. Verify business documentation and obtain approval before generating a quote.
+            This merchant selected <strong>${this.lead.industry ? this.lead.industry.split("|")[0].replace(/^\w/,c=>c.toUpperCase()) : "a restricted industry"}</strong>. Verify business documentation and obtain approval before generating a quote.
           </div>` : ""}
 
           <!-- ══ NOT-COMPETITIVE BANNER ══ -->
@@ -1913,7 +1913,7 @@
           <div class="lf-rejected-detail">
             ${this.lead.businessName ? `<div><strong>Business:</strong> ${this.lead.businessName}</div>` : ""}
             ${this.lead.country      ? `<div><strong>Country:</strong> ${this.lead.country}</div>` : ""}
-            ${this.lead.industry     ? `<div><strong>Industry:</strong> ${this.lead.industry}</div>` : ""}
+            ${this.lead.industry     ? `<div><strong>Industry:</strong> ${this.lead.industry.split("|")[0].replace(/^\w/,c=>c.toUpperCase())}</div>` : ""}
           </div>
           <p class="lf-rejected-note">
             This lead has been saved with status <strong>Rejected</strong>.
