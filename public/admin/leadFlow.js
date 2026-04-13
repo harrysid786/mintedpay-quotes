@@ -964,7 +964,7 @@
       if (f.showIf && !f.showIf(this.lead)) {
         return `<div class="lf-field hidden" data-field="${f.name}"></div>`;
       }
-      const val  = f.name === 'contactName' ? (this.lead.contactName || this.lead.name || '') : this.lead[f.name] != null ? String(this.lead[f.name]) : "";
+      const val  = f.name === 'contactName' ? (this.lead.contactName || this.lead.name || '') : f.name === 'industry' && this.lead[f.name] ? this.lead[f.name].split('|')[0] : f.name === 'avgTransactionValue' && this.lead[f.name] != null ? String(parseFloat(parseFloat(this.lead[f.name]).toFixed(2))) : this.lead[f.name] != null ? String(this.lead[f.name]) : ""
       const req  = f.required ? ' <span class="lf-req">*</span>' : "";
       let   ctrl = "";
 
