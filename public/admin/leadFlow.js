@@ -3169,7 +3169,7 @@
             // Tell the engine whether debitFrac came from real CSV card-mix detection
             csv_debit_frac_is_real: (csvDebitFrac > 0 && csvDebitFrac <= 1),
             // Pricing profile — admin-selectable, defaults to standard
-            pricing_profile: this.lead.pricingProfile || "standard",
+            pricing_profile: this.lead.pricingProfile || "acquisition_plus",
             // Settings override — sends local admin edits to the engine.
             // null when no changes applied — server uses getPricingSettings() defaults.
             settings_override: this._localPricingSettings || null,
