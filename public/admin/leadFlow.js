@@ -57,25 +57,17 @@
         { name: "businessName", label: "Business Name", type: "text", required: true, placeholder: "Acme Ltd" },
         { name: "country",      label: "Country of Operation", type: "datalist", required: true, options: COUNTRIES, placeholder: "Start typing a country..." },
         { name: "industry",     label: "Industry / Business Type", type: "industry-autocomplete", required: true, placeholder: "Type to search, e.g. E-commerce, SaaS, Retail…" },
-        { name: "industryDetail", label: "Industry Details (optional)", type: "text", placeholder: "e.g. B2B SaaS, Fashion E-commerce, Medical Devices..." },
-      ],
-    },
-    {
-      id: 2,
-      title: "Business Model",
-      subtitle: "How does the business operate?",
-      fields: [
-        { name: "description",   label: "Business Description", type: "textarea", placeholder: "Briefly describe what the business does and how it sells..." },
+      ,
         { name: "website",       label: "Website URL", type: "url", placeholder: "https://example.com" },
         { name: "salesChannels", label: "Sales Channels", type: "select", options: [
           { value: "online",  label: "Online only" },
           { value: "retail",  label: "Retail / In-person only" },
           { value: "both",    label: "Both online & retail" },
-        ]},
-      ],
+        ]}],
     },
+    
     {
-      id: 3,
+      id: 2,
       title: "Payment Types",
       subtitle: "How do customers pay?",
       fields: [
@@ -96,7 +88,7 @@
       ],
     },
     {
-      id: 4,
+      id: 3,
       title: "Risk Signals",
       subtitle: "Help us understand the risk profile",
       fields: [
@@ -113,20 +105,20 @@
           { value: "no",  label: "No" },
           { value: "yes", label: "Yes — we hold funds before disbursing" },
         ]},
-        { name: "businessAge",     label: "Business Age", type: "select", required: true, options: [
+        { name: "businessAge",     label: "Business Age", type: "select", required: false, options: [
           { value: "less_than_6",  label: "Less than 6 months" },
           { value: "6_to_12",      label: "6-12 months" },
           { value: "1_to_2",       label: "1-2 years" },
           { value: "2_plus",       label: "2+ years" },
         ]},
-        { name: "deliveryTime",    label: "Delivery Time", type: "select", required: true, options: [
+        { name: "deliveryTime",    label: "Delivery Time", type: "select", required: false, options: [
           { value: "instant",      label: "Instant / same-day" },
           { value: "delayed",      label: "Delayed (days/weeks)" },
         ]},
       ],
     },
     {
-      id: 5,
+      id: 4,
       title: "Current Setup",
       subtitle: "Who do they process with today?",
       fields: [
@@ -149,22 +141,14 @@
         ]},
         { name: "currentMonthlyFees",  label: "Current Monthly Processing Fees (£) — optional", type: "number", placeholder: "e.g. 850", min: 0,
           hint: "If known, enter what the merchant pays per month. Used to calculate savings." },
-        { name: "painPoints",          label: "Pain Points / Reason for Switching — optional", type: "textarea", placeholder: "What issues are they facing with their current provider?" },
-      ],
-    },
-    {
-      id: 7,
-      title: "Volume & Transactions",
-      subtitle: "Monthly processing volume and average transaction size",
-      fields: [
+      ,
         { name: "monthlyVolume",       label: "Monthly Processing Volume (£)", type: "number", required: true, placeholder: "e.g. 50000", min: 0 },
         { name: "avgTransactionValue", label: "Average Transaction Value (£)",  type: "number", required: true, placeholder: "e.g. 45",    min: 0 },
         { name: "_avgTicketWarning", label: "", type: "avg-ticket-warning" },
-        { name: "highestSingleTx",   label: "Highest Single Transaction (£)", type: "number", placeholder: "e.g. 500", min: 0 },
-      ],
+        { name: "highestSingleTx",   label: "Highest Single Transaction (£)", type: "number", placeholder: "e.g. 500", min: 0 },],
     },
     {
-      id: 8,
+      id: 5,
       title: "Contact Details",
       subtitle: "Who should we be in touch with?",
       fields: [
@@ -183,7 +167,7 @@
       ],
     },
     {
-      id: 9,
+      id: 6,
       title: "Brand & Pricing",
       subtitle: "Select brand and review pricing recommendation",
       fields: [
@@ -194,7 +178,7 @@
       ],
     },
     {
-      id: 10,
+      id: 7,
       title: "Pricing & Output",
       subtitle: "Review the pricing recommendation and risk assessment",
       isOutput: true,
@@ -297,7 +281,7 @@
       }
       this._injectStyles();
       this._bindEvents();
-      if (!this.showingOverview && this.currentStep === 10 && !this.pricingResult && !this.isRejected) {
+      if (!this.showingOverview && this.currentStep === 7 && !this.pricingResult && !this.isRejected) {
         this._calculateOutput();
       }
     }
@@ -862,7 +846,7 @@
       if (s.isOutput) return this._buildOutput();
 
       // Special handling for Step 7: Tab UI for CSV vs Manual
-      if (this.currentStep === 7) {
+      if (this.currentStep === 4) {
         const activeTab = this.lead.volumeTab || "manual";
         return `
           <div class="lf-step-wrap">
@@ -2940,7 +2924,7 @@
       }
 
       // Step 4: intlPercentage required (must be a number 0-100), plus businessAge + deliveryTime
-      if (this.currentStep === 4) {
+      if (this.currentStep === 3) {
         const intlVal = this.lead.intlPercentage;
         if (intlVal === undefined || intlVal === null || String(intlVal).trim() === "") {
           this._fieldError("lf-intlPercentage", "International transactions % is required — enter 0 if none");
@@ -2962,7 +2946,7 @@
       }
 
       // Step 7: monthlyVolume, avgTransactionValue required
-      if (this.currentStep === 7) {
+      if (this.currentStep === 4) {
         if (!this.lead.monthlyVolume || parseFloat(this.lead.monthlyVolume) <= 0) {
           this._fieldError("lf-monthlyVolume", "Monthly Volume must be greater than 0");
           return false;
@@ -2974,7 +2958,7 @@
       }
 
       // Step 8: contactName, email required + format validation
-      if (this.currentStep === 8) {
+      if (this.currentStep === 5) {
         if (!this.lead.contactName || !String(this.lead.contactName).trim()) {
           this._fieldError("lf-contactName", "Contact Name is required");
           return false;
@@ -3033,7 +3017,7 @@
       await this._saveNow();
       this._render();
 
-      if (this.currentStep === 10) this._calculateOutput();
+      if (this.currentStep === 7) this._calculateOutput();
     }
 
     // ── Collect current step fields into this.lead ────────
