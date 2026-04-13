@@ -881,6 +881,19 @@ async function calcPricing() {
     const data = await res.json();
     if (data && (data.rate || data.sell_uk_rate)) {
       pricingResult = data;
+      // ── Segmented sell rates ────────────────────────────────────────────
+      // Compute UK/Intl sell rates from blended rate using IC++ cost ratios.
+      // IC++ costs: UK=0.53%, Intl=1.50% conservative default.
+      if (pricingResult.rate > 0 && typeof intlFrac === 'number' && Number.isFinite(intlFrac)) {
+        var _IC_UK = 0.53, _IC_INTL = 1.50;
+        var _domF = 1 - intlFrac;
+        var _wIC  = (_domF * _IC_UK) + (intlFrac * _IC_INTL);
+        var _mul  = _wIC > 0 ? pricingResult.rate / _wIC : 1;
+        pricingResult.sell_uk_rate            = Math.max(1.10, Math.round(_IC_UK   * _mul * 100) / 100);
+        pricingResult.sell_international_rate = Math.round(_IC_INTL * _mul * 100) / 100;
+        pricingResult.blended_rate            = Math.round(((_domF * pricingResult.sell_uk_rate) + (intlFrac * pricingResult.sell_international_rate)) * 100) / 100;
+        pricingResult.intlFrac                = intlFrac;
+      }
     }
   } catch (e) {
     console.warn("Pricing pre-fetch failed:", e);
