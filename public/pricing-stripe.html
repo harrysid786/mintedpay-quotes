@@ -1484,7 +1484,7 @@ function revealRate() {
           currentMonthlyFees:     vd.cur || null,
           processingRate:         p.rate || null,
           fixedFee:               p.fixed_fee || null,
-          estimatedMonthlySaving: p.monthly_saving ? parseFloat(p.monthly_saving.toFixed(2)) : null,
+          estimatedMonthlySaving: p.segment_quotes?.summary?.totalSaving ?? (p.monthly_saving ? parseFloat(p.monthly_saving.toFixed(2)) : null),
           debitFrac:              vd.debitFrac || 0,
           intlPercentage:         vd.intlFrac !== null ? parseFloat((vd.intlFrac * 100).toFixed(2)) : 0,
           intlRegion:             document.getElementById('intlRegionInput')?.value || null,
