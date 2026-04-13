@@ -261,7 +261,7 @@ body{font-family:'Inter',sans-serif;background:var(--g7);color:var(--black);font
 .qp-section-body strong{color:var(--brand);font-weight:600}
 .qp-bullets{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
 .qp-bullets li{font-size:14px;color:var(--g3);padding-left:14px;position:relative;line-height:1.5}
-.qp-bullets li::before{content:"&#183;";position:absolute;left:0;color:var(--brand);font-weight:700}
+.qp-bullets li::before{content:"\00B7";position:absolute;left:0;color:var(--brand);font-weight:700}
 .pricing-breakdown{width:100%;border-collapse:collapse;margin-top:16px;font-size:14px}
 .pricing-breakdown thead tr{background:var(--brand-lt)}
 .pricing-breakdown th{text-align:left;font-weight:600;color:var(--quote-accent);padding:8px 10px;border-bottom:2px solid #cccccc;font-size:12px;letter-spacing:.5px;text-transform:uppercase}
@@ -525,8 +525,8 @@ function renderQuote(data){
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--brand);margin-bottom:10px">${brand.name}</div>
           <div style="display:flex;flex-direction:column;gap:8px">
             <div style="display:flex;justify-content:space-between;align-items:baseline">
-              <span style="font-size:12px;color:var(--g3)">${blendedRate !== null ? 'Blended rate' : 'UK rate (from)'}</span>
-              <span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--brand)">${(blendedRate !== null ? blendedRate : displayUkRate).toFixed(2)}%</span>
+              <span style="font-size:12px;color:var(--g3)">${'Quoted rate'}</span>
+              <span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--brand)">${parseFloat(data.rate).toFixed(2)}%</span>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:baseline">
               <span style="font-size:12px;color:var(--g3)">Monthly cost</span>
@@ -707,8 +707,8 @@ function renderQuote(data){
           <li>Full integration and technical support</li>
         </ul>
           <div style="margin:16px 0 12px;padding:14px 18px;background:var(--brand-lt);border:1.5px solid var(--brand-bd);border-radius:var(--r)">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--brand);margin-bottom:4px">${blendedRate !== null ? 'UK Card Rate' : 'Your pricing starts from'}</div>
-          <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--brand);letter-spacing:-0.5px;line-height:1">${displayUkRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> + ${ftx}<span style="font-size:14px;font-weight:600">p</span> <span style="font-size:12px;font-weight:400;color:var(--g3)">per transaction</span></div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--brand);margin-bottom:4px">${'YOUR QUOTED RATE'}</div>
+          <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--brand);letter-spacing:-0.5px;line-height:1">${parseFloat(data.rate).toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> + ${ftx}<span style="font-size:14px;font-weight:600">p</span> <span style="font-size:12px;font-weight:400;color:var(--g3)">per transaction</span></div>
           ${blendedRate !== null ? `<div style="font-size:10px;color:var(--g3);margin-top:4px">International cards: ${displayIntlRate.toFixed(2)}% + ${ftx}p &#183; &#226;&#137;&#136; ${blendedRate.toFixed(2)}% all-in on your card mix</div>` : ''}
         </div>
         <table class="pricing-breakdown">
