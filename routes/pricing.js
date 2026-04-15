@@ -1655,8 +1655,8 @@ router.post("/", (req, res) => {
       // ── Regional pricing fields ────────────────────────────────
       true_uk_cost:            result.true_uk_cost,
       true_international_cost: result.true_international_cost,
-      sell_uk_rate:            result.sell_uk_rate != null ? Math.max(result.sell_uk_rate, rules.minDomestic || 1.29) : null,
-      sell_international_rate: result.sell_international_rate != null ? Math.max(result.sell_international_rate, rules.minInternational || 2.29) : null,
+      sell_uk_rate:            result.sell_uk_rate,
+      sell_international_rate: result.sell_international_rate,
       blended_rate:            result.blended_rate,
       // ── Pricing mode decision ──────────────────────────────────
       pricing_mode:            result.pricing_mode,
