@@ -352,7 +352,7 @@ const ACQUISITION_PLUS_RULES = {
   // Public indicative rate floors
   blendedFloor:     1.10,
   minDomestic:      1.29,
-  minInternational: 2.29,
+  minInternational: 2.30,
   rateFloor:        1.10,
 
   // Minimum margin protection (below this → flag warning)
@@ -601,7 +601,7 @@ function calculateRegionalRates(wespellCost, profileName, settings, vol, debitFr
   const dynamicUkFloor   = trueUkCost            + profile.targetMargin + FLOOR_BUFFER;
   const dynamicIntlFloor = trueInternationalCost + profile.targetMargin + FLOOR_BUFFER;
   const sellUkRate            = Math.ceil(Math.max(targetUkRate,            dynamicUkFloor)   * 100) / 100;
-  const sellInternationalRate = Math.ceil(Math.max(targetInternationalRate, dynamicIntlFloor) * 100) / 100;
+  const sellInternationalRate = Math.max(Math.ceil(Math.max(targetInternationalRate, dynamicIntlFloor) * 100) / 100, rules.intlRateFloor);
 
   return {
     trueUkCost:            Math.round(trueUkCost            * 10000) / 10000,
