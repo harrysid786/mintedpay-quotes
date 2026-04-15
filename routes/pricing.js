@@ -1153,7 +1153,7 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
       finalCostEngine.wespellPctEffective, effectiveProfileName, syntheticSettings, vol, debitFrac
     );
     sellUkRate            = regional.sellUkRate;
-    sellInternationalRate = (regional.sellInternationalRate != null) ? Math.max(regional.sellInternationalRate, ACQUISITION_PLUS_RULES.intlRateFloor) : null;
+    sellInternationalRate = (regional.sellInternationalRate != null) ? Math.max(regional.sellInternationalRate, ACQUISITION_PLUS_RULES.minInternational) : null;
   } else {
     // CASE B / C — UK domestic only or no reliable mix data.
     // Derive UK rate from real debitFrac (real data should inform UK pricing).
