@@ -561,24 +561,24 @@ function renderQuote(data){
               <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3)">UK Cards</span>
               <span style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--brand);letter-spacing:-1px;line-height:1">${displayUkRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> <span style="font-size:12px;font-weight:600;color:var(--g3)">+ ${ftx}p</span></span>
             </div>
-            <div style="height:1px;background:var(--g6)"></div>
+${intlFrac > 0 ? `            <div style="height:1px;background:var(--g6)"></div>
             <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
               <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3)">International Cards</span>
               <span style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--brand);letter-spacing:-1px;line-height:1">${displayIntlRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> <span style="font-size:12px;font-weight:600;color:var(--g3)">+ ${ftx}p</span></span>
             </div>
           </div>
-          <div style="font-size:10px;color:var(--g3);margin-top:2px;padding-top:6px;border-top:1px solid var(--g6)">&#226;&#137;&#136; ${blendedRate.toFixed(2)}% all-in on your card mix &#183; Based on ${Math.round((quoteIntlFrac||0)*100)}% international traffic</div>` : `
+          <div style="font-size:10px;color:var(--g3);margin-top:2px;padding-top:6px;border-top:1px solid var(--g6)">&#226;&#137;&#136; ${blendedRate.toFixed(2)}% all-in on your card mix &#183; Based on ${Math.round((quoteIntlFrac||0)*100)}% international traffic</div>` : `` : ''}
           <div style="display:flex;flex-direction:column;gap:10px;margin:10px 0 6px">
             <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
               <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3)">UK Cards</span>
               <span style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--brand);letter-spacing:-1px;line-height:1">${displayUkRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> <span style="font-size:12px;font-weight:600;color:var(--g3)">+ ${ftx}p</span></span>
             </div>
-            <div style="height:1px;background:var(--g6)"></div>
+${intlFrac > 0 ? `            <div style="height:1px;background:var(--g6)"></div>
             <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
               <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3)">International Cards</span>
               <span style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--brand);letter-spacing:-1px;line-height:1">${displayIntlRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> <span style="font-size:12px;font-weight:600;color:var(--g3)">+ ${ftx}p</span></span>
             </div>
-          </div>`}
+          </div>`}` : ''}
           <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--g6);font-size:10px;color:var(--g3);line-height:1.5">
             ${isIndicative
               ? 'Indicative pricing based on the data provided. Final rates subject to underwriting and business review.'
@@ -719,17 +719,17 @@ function renderQuote(data){
               <td class="pb-rate">${displayUkRate.toFixed(2)}% + ${ftx}p per transaction</td>
               <td class="pb-note">UK-issued Visa &amp; Mastercard debit and credit</td>
             </tr>
-            <tr>
+${intlFrac > 0 ? `            <tr>
               <td>International Cards${isIndicative ? ' <span style="font-size:11px;color:var(--g3);font-weight:400">(indicative)</span>' : ''}</td>
               <td class="pb-rate">${displayIntlRate.toFixed(2)}% + ${ftx}p per transaction</td>
               <td class="pb-note">Non-UK issued cards &mdash; includes EEA and Rest of World</td>
-            </tr>
+            </tr>` : ''}
             ${!isIndicative && blendedRate !== null ? `
-            <tr style="background:var(--g7)">
+${intlFrac > 0 ? `            <tr style="background:var(--g7)">
               <td style="color:var(--g3);font-size:13px">Estimated Blended Rate</td>
               <td class="pb-rate" style="color:var(--g3);font-size:13px">${blendedRate.toFixed(2)}% + ${ftx}p</td>
               <td class="pb-note">Weighted estimate based on your card mix data</td>
-            </tr>` : ''}
+            </tr>` : ''}` : ''}
             ${a.addAmex ? `<tr>
               <td>American Express</td>
               <td class="pb-rate" style="color:var(--red)">${(a.amexPct||3.5).toFixed(2)}% + ${a.amexFixed||20}p per transaction</td>
@@ -753,7 +753,7 @@ function renderQuote(data){
           </tbody>
         </table>
         <div style="margin-top:10px;font-size:11px;color:var(--g3);line-height:1.5">International cards include non-UK issued cards and are typically more expensive due to bank and card network fees.</div>
-        ${quoteIntlFrac !== null ? `<div style="margin-top:6px;font-size:11px;color:var(--g3)">Based on ${Math.round(quoteIntlFrac * 100)}% international transactions.</div>` : ''}
+${intlFrac > 0 ? `        ${quoteIntlFrac !== null ? `<div style="margin-top:6px;font-size:11px;color:var(--g3)">Based on ${Math.round(quoteIntlFrac * 100)}% international transactions.</div>` : ''}` : ''}
         <div style="margin-top:10px;font-size:11px;color:var(--g3);letter-spacing:.3px">&#10003; No hidden fees. Your rate includes all interchange, scheme, and processing costs in one transparent number.</div>
       </div>
  
