@@ -601,7 +601,7 @@ function calculateRegionalRates(wespellCost, profileName, settings, vol, debitFr
   const dynamicUkFloor   = trueUkCost            + profile.targetMargin + FLOOR_BUFFER;
   const dynamicIntlFloor = trueInternationalCost + profile.targetMargin + FLOOR_BUFFER;
   const sellUkRate            = Math.ceil(Math.max(targetUkRate,            dynamicUkFloor)   * 100) / 100;
-  const sellInternationalRate = Math.ceil(Math.max(targetInternationalRate, dynamicIntlFloor) * 100) / 100;
+  const sellInternationalRate = Math.max(Math.ceil(Math.max(targetInternationalRate, dynamicIntlFloor) * 100) / 100, ACQUISITION_PLUS_RULES.intlRateFloor);
 
   return {
     trueUkCost:            Math.round(trueUkCost            * 10000) / 10000,
