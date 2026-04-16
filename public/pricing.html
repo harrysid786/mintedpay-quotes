@@ -341,7 +341,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
     <div class="step-label">Step 1 of 3</div>
     <div class="step-title">Your processing volume</div>
     <!-- Change 6: Improved sub-heading copy -->
-    <div class="step-sub">Upload your most recent processing statement or enter your figures manually &mdash; we'll calculate your rate instantly.</div>
+    <div class="step-sub">Upload your most recent processing statement or enter your figures manually â we'll calculate your rate instantly.</div>
 
     <div class="tabs">
       <button class="tab on" id="tabUpload" onclick="switchTab('upload')">ð Upload Statement</button>
@@ -1393,8 +1393,10 @@ function revealRate() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           name:                   document.getElementById('revealName').value.trim(),
+          contactName:            document.getElementById('revealName').value.trim(),
           email:                  document.getElementById('revealEmail').value.trim(),
           businessName:           document.getElementById('bizName').value.trim(),
+          country:                ({'uk':'United Kingdom','eea':'Europe / EEA','uk_eea':'UK and Europe','mixed':'UK and Worldwide','row':'International'})[document.getElementById('intlRegionInput')?.value||''] || 'United Kingdom',
           phone:                  document.getElementById('bizPhone').value.trim() || null,
           monthlyVolume:          vol,
           avgTransactionValue:    cnt > 0 ? parseFloat((vol/cnt).toFixed(2)) : null,
