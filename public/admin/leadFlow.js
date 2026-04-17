@@ -3020,7 +3020,11 @@
     _collectFields() {
       const step = STEPS[this.currentStep - 1];
       if (!step || step.isOutput) return;
+      // When on Step 4 CSV tab, skip manual volume fields to preserve CSV-derived data
+      const csvFields = ["monthlyVolume","avgTransactionValue","transactionCount","currentMonthlyFees","highestSingleTx"];
+      const skipCsvFields = this.currentStep === 4 && this.lead.volumeTab === "csv";
       step.fields.forEach(f => {
+        if (skipCsvFields && csvFields.includes(f.name)) return;
         const el = document.getElementById(`lf-${f.name}`);
         if (el && !el.closest(".hidden")) {
           this.lead[f.name] = el.value;
