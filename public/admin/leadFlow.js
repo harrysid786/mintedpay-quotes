@@ -2745,7 +2745,10 @@
           const pm = (r[colMap.paymentMethod] || "").toLowerCase().trim();
           if (pm && pm !== "card" && !pm.includes("credit") && !pm.includes("debit") &&
               !pm.includes("visa") && !pm.includes("master") && !pm.includes("amex") &&
-              !pm.includes("discover")) return;
+              !pm.includes("discover") &&
+              !pm.includes("contactless") && !pm.includes("chip") &&
+              !pm.includes("swipe") && !pm.includes("keyed") &&
+              !pm.includes("transaction")) return;
         }
         const a = pAmt(r[colMap.amount]);
         if (!a) return;
