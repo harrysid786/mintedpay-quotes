@@ -139,13 +139,13 @@
           { value: "other",        label: "Other" },
           { value: "none",         label: "None / processing directly" },
         ]},
-        { name: "currentMonthlyFees",  label: "Current Monthly Processing Fees (Â£) â optional", type: "number", placeholder: "e.g. 850", min: 0,
+        { name: "currentMonthlyFees",  label: "Current Monthly Processing Fees (£) â optional", type: "number", placeholder: "e.g. 850", min: 0,
           hint: "If known, enter what the merchant pays per month. Used to calculate savings." },
       ,
-        { name: "monthlyVolume",       label: "Monthly Processing Volume (Â£)", type: "number", required: true, placeholder: "e.g. 50000", min: 0 },
-        { name: "avgTransactionValue", label: "Average Transaction Value (Â£)",  type: "number", required: true, placeholder: "e.g. 45",    min: 0 },
+        { name: "monthlyVolume",       label: "Monthly Processing Volume (£)", type: "number", required: true, placeholder: "e.g. 50000", min: 0 },
+        { name: "avgTransactionValue", label: "Average Transaction Value (£)",  type: "number", required: true, placeholder: "e.g. 45",    min: 0 },
         { name: "_avgTicketWarning", label: "", type: "avg-ticket-warning" },
-        { name: "highestSingleTx",   label: "Highest Single Transaction (Â£)", type: "number", placeholder: "e.g. 500", min: 0 },],
+        { name: "highestSingleTx",   label: "Highest Single Transaction (£)", type: "number", placeholder: "e.g. 500", min: 0 },],
     },
     {
       id: 5,
@@ -334,9 +334,9 @@
       const fmtCurrency = (n) => {
         const num = parseFloat(n);
         if (!num) return null;
-        if (num >= 1_000_000) return "Â£" + (num / 1_000_000).toFixed(2) + "m";
-        if (num >= 1_000)     return "Â£" + (num / 1_000).toFixed(1) + "k";
-        return "Â£" + num.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        if (num >= 1_000_000) return "£" + (num / 1_000_000).toFixed(2) + "m";
+        if (num >= 1_000)     return "£" + (num / 1_000).toFixed(1) + "k";
+        return "£" + num.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       };
 
       const fmtTs = (iso) => {
@@ -367,7 +367,7 @@
 
       // Estimated monthly cost
       const estCost = (rate && fee && vol && txCnt)
-        ? "Â£" + ((vol * rate / 100) + (txCnt * fee / 100)).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        ? "£" + ((vol * rate / 100) + (txCnt * fee / 100)).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         : null;
 
       // Badges
@@ -390,9 +390,9 @@
         quote_generated:"Quote generated",
       };
       const activityIcons = {
-        lead_created:    "Ã°ÂÂÂ", status_changed: "Ã°ÂÂÂ", note_added:      "Ã°ÂÂÂ",
-        kyb_submitted:   "Ã°ÂÂÂ", archived:       "Ã°ÂÂÂ¦", reassigned:      "Ã°ÂÂÂ¤",
-        zoho_pushed:     "âÃ¯Â¸Â", quote_generated: "Ã°ÂÂÂ",
+        lead_created:    "🂟Â", status_changed: "🂟Â", note_added:      "🂟Â",
+        kyb_submitted:   "🂟Â", archived:       "🂟Â¦", reassigned:      "🂟Â¤",
+        zoho_pushed:     "âÃ¯Â¸Â", quote_generated: "🂟Â",
       };
       const groupedActivity = [...activity].reverse().reduce((acc, a) => {
         const dk = fmtDate(a.timestamp);
@@ -453,7 +453,7 @@
                 ${hasPricing ? `
                 <div class="ov-card">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">Ã°ÂÂÂ°</span>
+                    <span class="ov-card-icon">🂟Â°</span>
                     Pricing Summary
                   </div>
                   <div class="ov-pricing-grid">
@@ -497,7 +497,7 @@
                 <!-- B. Business Info Card -->
                 <div class="ov-card">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">Ã°ÂÂÂ¢</span>
+                    <span class="ov-card-icon">🂟Â¢</span>
                     Business Info
                   </div>
                   <div class="ov-card-body">
@@ -520,7 +520,7 @@
                 <!-- C. Risk Signals Card -->
                 <div class="ov-card">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">Ã°ÂÂÂ</span>
+                    <span class="ov-card-icon">🂟Â</span>
                     Risk Signals
                   </div>
                   <div class="ov-card-body">
@@ -545,7 +545,7 @@
                 <!-- D. Volume & Setup Card -->
                 <div class="ov-card">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">Ã°ÂÂÂ</span>
+                    <span class="ov-card-icon">🂟Â</span>
                     Volume & Setup
                   </div>
                   <div class="ov-card-body">
@@ -559,7 +559,7 @@
                         paypal:"PayPal / Braintree", elavon:"Elavon", paymentsense:"Paymentsense",
                         other:"Other", none:"None / direct"
                       }[lead.currentProvider]) || lead.currentProvider)}
-                    ${row("Current Monthly Fees", lead.currentMonthlyFees ? "Â£" + parseFloat(lead.currentMonthlyFees).toLocaleString("en-GB", {minimumFractionDigits:2,maximumFractionDigits:2}) : null, { hideEmpty: true })}
+                    ${row("Current Monthly Fees", lead.currentMonthlyFees ? "£" + parseFloat(lead.currentMonthlyFees).toLocaleString("en-GB", {minimumFractionDigits:2,maximumFractionDigits:2}) : null, { hideEmpty: true })}
                     ${row("Platform",          fmtPlatform(lead.platform))}
                     ${row("Accounting",        lead.accountingSoftware, { hideEmpty: true })}
                     ${row("Integrations",      lead.integrations, { hideEmpty: true })}
@@ -570,7 +570,7 @@
                 <!-- E. Contact Card -->
                 <div class="ov-card">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">Ã°ÂÂÂ¤</span>
+                    <span class="ov-card-icon">🂟Â¤</span>
                     Contact
                   </div>
                   <div class="ov-card-body">
@@ -591,23 +591,23 @@
                 <!-- Actions Card -->
                 <div class="ov-card ov-card-sticky">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">Ã°ÂÂÂ</span>
+                    <span class="ov-card-icon">🂟Â</span>
                     Actions
                   </div>
                   <div class="ov-actions-list">
                     <button class="ov-act-btn ov-act-primary" id="lf-overview-quote"
                             ${hasPricing && !hasQuote ? "" : "disabled"}>
-                      ${hasQuote ? "â Quote Generated" : "Ã°ÂÂÂ Generate Quote"}
+                      ${hasQuote ? "â Quote Generated" : "🂟Â Generate Quote"}
                     </button>
                     ${hasQuote ? `
                     <a class="ov-act-btn ov-act-link" href="/quote.html?quote=${lead.quote_id}&admin=1" target="_blank">
-                      Ã°ÂÂÂ View Quote (Admin)
+                      🂟Â View Quote (Admin)
                     </a>
                     <button class="ov-act-btn ov-act-secondary" id="lf-send-quote-email">
-                      Ã°ÂÂÂ§ Send to Merchant
+                      🂟Â§ Send to Merchant
                     </button>
                     <button class="ov-act-btn ov-act-secondary" id="lf-copy-quote-link">
-                      Ã°ÂÂÂ Copy Merchant Link
+                      🂟Â Copy Merchant Link
                     </button>
                     <button class="ov-act-btn ov-act-secondary" id="lf-download-quote-pdf">
                       â¬Ã¯Â¸Â Download PDF
@@ -619,7 +619,7 @@
                     </button>
                     <button class="ov-act-btn ${isKYB ? "ov-act-done" : "ov-act-kyb"}" id="lf-ov-mark-kyb"
                             ${isKYB ? "disabled" : ""}>
-                      ${isKYB ? "â KYB Pending" : "Ã°ÂÂÂ Mark as KYB Ready"}
+                      ${isKYB ? "â KYB Pending" : "🂟Â Mark as KYB Ready"}
                     </button>
                   </div>
                   <div class="ov-meta-rows">
@@ -645,7 +645,7 @@
                 <!-- Pipeline Management Card -->
                 <div class="ov-card ov-card-pipeline">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">Ã°ÂÂÂ</span>
+                    <span class="ov-card-icon">🂟Â</span>
                     <span class="ov-card-title">Pipeline</span>
                   </div>
 
@@ -723,7 +723,7 @@
                   <div class="ov-call-history">
                     ${[...lead.callLog].reverse().slice(0,5).map(entry => `
                     <div class="ov-call-entry">
-                      <span class="ov-call-outcome">${{no_answer:'Ã°ÂÂÂµ No answer',left_voicemail:'Ã°ÂÂÂ¨ Voicemail',spoke_to_merchant:'â Spoke to merchant',meeting_booked:'Ã°ÂÂÂ Meeting booked',not_interested:'â Not interested',email_sent:'Ã°ÂÂÂ§ Email sent'}[entry.outcome] || entry.outcome}</span>
+                      <span class="ov-call-outcome">${{no_answer:'🂟Âµ No answer',left_voicemail:'🂟Â¨ Voicemail',spoke_to_merchant:'â Spoke to merchant',meeting_booked:'🂟Â Meeting booked',not_interested:'â Not interested',email_sent:'🂟Â§ Email sent'}[entry.outcome] || entry.outcome}</span>
                       ${entry.note ? `<span class="ov-call-note">${entry.note}</span>` : ''}
                       <span class="ov-call-date">${new Date(entry.timestamp).toLocaleDateString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
                     </div>
@@ -735,7 +735,7 @@
                 <!-- Activity Timeline -->
                 <div class="ov-card">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">Ã°ÂÂÂ</span>
+                    <span class="ov-card-icon">🂟Â</span>
                     Activity
                   </div>
                   <div class="ov-timeline">
@@ -749,7 +749,7 @@
                                 <div class="ov-tl-dot"></div>
                                 <div class="ov-tl-body">
                                   <div class="ov-tl-text">
-                                    ${activityIcons[a.type] || "Ã°ÂÂÂ"}
+                                    ${activityIcons[a.type] || "🂟Â"}
                                     ${activityLabels[a.type] || a.type}
                                     ${a.oldStatus && a.newStatus ? `<span class="ov-tl-tag">${a.oldStatus} â ${a.newStatus}</span>` : ""}
                                     ${a.newAssignedTo ? `<span class="ov-tl-tag">â ${a.newAssignedTo}</span>` : ""}
@@ -764,7 +764,7 @@
                 <!-- Notes -->
                 <div class="ov-card">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">Ã°ÂÂÂ</span>
+                    <span class="ov-card-icon">🂟Â</span>
                     Notes
                     ${notes.length > 0 ? `<span class="ov-card-count">${notes.length}</span>` : ""}
                   </div>
@@ -921,10 +921,10 @@
                   ${this.lead.csvProcessor ? `<span style="display:inline-block;font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;background:var(--g6);color:var(--g3);margin-left:4px;vertical-align:middle">${this.lead.csvProcessor}</span>` : ""}
                 </div>
                 <div class="lf-csv-success-vals">
-                  <span>Volume: <strong>Â£${parseFloat(this.lead.monthlyVolume).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong></span>
+                  <span>Volume: <strong>£${parseFloat(this.lead.monthlyVolume).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong></span>
                   ${this.lead.transactionCount ? `<span>${Number(this.lead.transactionCount).toLocaleString("en-GB")} transactions</span>` : ""}
-                  ${this.lead.avgTransactionValue ? `<span>Avg: <strong>Â£${parseFloat(this.lead.avgTransactionValue).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></span>` : ""}
-                  ${this.lead.currentMonthlyFees ? `<span>Current fees: <strong>Â£${parseFloat(this.lead.currentMonthlyFees).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong></span>` : ""}
+                  ${this.lead.avgTransactionValue ? `<span>Avg: <strong>£${parseFloat(this.lead.avgTransactionValue).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></span>` : ""}
+                  ${this.lead.currentMonthlyFees ? `<span>Current fees: <strong>£${parseFloat(this.lead.currentMonthlyFees).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong></span>` : ""}
                   ${this.lead.csvCurrentRate ? `<span>Current rate: <strong style="color:${parseFloat(this.lead.csvCurrentRate)<1?"var(--green)":parseFloat(this.lead.csvCurrentRate)<2.2?"var(--amber)":"var(--red)"}">${parseFloat(this.lead.csvCurrentRate).toFixed(2)}%</strong></span>` : ""}
                   ${this.lead.csvDebitFrac ? `<span>${Math.round(parseFloat(this.lead.csvDebitFrac)*100)}% debit / ${Math.round((1-parseFloat(this.lead.csvDebitFrac))*100)}% credit</span>` : ""}
                   ${(() => {
@@ -945,7 +945,7 @@
           </div>` : `
 
           <label class="lf-dropzone" id="lf-csv-dropzone" for="lf-csv-file-input">
-            <span class="lf-dz-icon">Ã°ÂÂÂ</span>
+            <span class="lf-dz-icon">🂟Â</span>
             <span class="lf-dz-title">Drag & drop your statement here, or <u>click to browse</u></span>
             <span class="lf-dz-hint">Stripe Â· Worldpay Â· Barclaycard Â· any card processor export</span>
             <span class="lf-dz-hint" style="margin-top:2px;font-size:10px">Extracts: volume Â· fees Â· effective rate Â· card mix Â· debit fraction</span>
@@ -992,7 +992,7 @@
             <input class="lf-ctrl lf-industry-input ${warnClass}" id="lf-${f.name}" name="${f.name}"
                    type="text" value="${val}" placeholder="${f.placeholder || ""}"
                    autocomplete="off">
-            ${isProhibited ? `<div class="lf-industry-status lf-industry-status-red">Ã°ÂÂÂ« Prohibited industry â this lead cannot proceed</div>` :
+            ${isProhibited ? `<div class="lf-industry-status lf-industry-status-red">🂟Â« Prohibited industry â this lead cannot proceed</div>` :
               isRestricted ? `<div class="lf-industry-status lf-industry-status-amber">â Ã¯Â¸Â Restricted industry â additional review required</div>` : ""}
             <div class="lf-industry-dropdown" id="lf-industry-dropdown" style="display:none">
               ${cats.map(c => {
@@ -1019,7 +1019,7 @@
             <input class="lf-ctrl lf-country-input ${warnClass}" id="lf-${f.name}" name="${f.name}"
                    type="text" value="${val}" placeholder="${f.placeholder || ""}"
                    autocomplete="off" aria-autocomplete="list">
-            ${isProhibited ? `<div class="lf-industry-status lf-industry-status-red">Ã°ÂÂÂ« We do not accept merchants from this country</div>` :
+            ${isProhibited ? `<div class="lf-industry-status lf-industry-status-red">🂟Â« We do not accept merchants from this country</div>` :
               isRestricted ? `<div class="lf-industry-status lf-industry-status-amber">â Ã¯Â¸Â Higher-risk jurisdiction â additional review required</div>` : ""}
             <div class="lf-industry-dropdown" id="lf-country-dropdown" style="display:none">
               ${(f.options || []).map(country => {
@@ -1040,9 +1040,9 @@
           const fixedPct = ((0.143 / avg) * 100).toFixed(1);
           return `
             <div class="lf-avg-ticket-warning" id="lf-avg-ticket-warning">
-              â Ã¯Â¸Â <strong>Low average ticket (Â£${avg.toFixed(2)})</strong> â our fixed costs (~Â£0.14/tx) represent
+              â Ã¯Â¸Â <strong>Low average ticket (£${avg.toFixed(2)})</strong> â our fixed costs (~£0.14/tx) represent
               <strong>${fixedPct}%</strong> of this transaction value.
-              Competitive pricing is difficult below Â£15 avg ticket.
+              Competitive pricing is difficult below £15 avg ticket.
               Consider the <strong>Acquisition</strong> profile and review margin carefully.
             </div>`;
         }
@@ -1191,8 +1191,8 @@
       const fPct     = Math.round(((simFixed - minFixed) / (maxFixed - minFixed)) * 100);
       const rZone    = simRate < 1.5 ? "var(--green)" : simRate < 2.5 ? "var(--amber)" : "var(--red)";
 
-      const fmt2 = (n) => "Â£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      const fmtK = (n) => { const a = Math.abs(n); if (a >= 1e6) return "Â£" + (a / 1e6).toFixed(2) + "m"; if (a >= 1e3) return "Â£" + (a / 1e3).toFixed(1) + "k"; return "Â£" + a.toFixed(2); };
+      const fmt2 = (n) => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const fmtK = (n) => { const a = Math.abs(n); if (a >= 1e6) return "£" + (a / 1e6).toFixed(2) + "m"; if (a >= 1e3) return "£" + (a / 1e3).toFixed(1) + "k"; return "£" + a.toFixed(2); };
 
       return `
         <div class="lf-output-page">
@@ -1224,9 +1224,9 @@
           <!-- ââ NOT-COMPETITIVE BANNER ââ -->
           ${(p.not_competitive || (avgTx > 0 && avgTx < 15)) ? `
           <div style="background:#fff1f2;border:1px solid #fecdd3;border-left:3px solid #e11d48;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:#9f1239;line-height:1.5">
-            Ã°ÂÂÂ« <strong>Not competitive at this ticket size.</strong>
-            Average transaction of <strong>Â£${avgTx.toFixed(2)}</strong> is below the Â£15 threshold where our fixed cost (~14p/tx) makes pricing uncompetitive.
-            Only proceed if monthly volume exceeds Â£50k or using the Acquisition profile.
+            🂟Â« <strong>Not competitive at this ticket size.</strong>
+            Average transaction of <strong>£${avgTx.toFixed(2)}</strong> is below the £15 threshold where our fixed cost (~14p/tx) makes pricing uncompetitive.
+            Only proceed if monthly volume exceeds £50k or using the Acquisition profile.
           </div>` : ""}
 
           <!-- ââ A: CUSTOMER OVERVIEW ââ -->
@@ -1354,13 +1354,13 @@
               <div class="lf-op-fee-chip">
                 <input type="checkbox" id="lf-toggle-chargeback" checked>
                 <label for="lf-toggle-chargeback">Chargeback</label>
-                <span>Â£</span>
+                <span>£</span>
                 <input type="number" class="lf-op-fee-inp" id="lf-chargeback-input" value="15" min="0" step="1">
               </div>
               <div class="lf-op-fee-chip">
                 <input type="checkbox" id="lf-toggle-refund" checked>
                 <label for="lf-toggle-refund">Refund</label>
-                <span>Â£</span>
+                <span>£</span>
                 <input type="number" class="lf-op-fee-inp" id="lf-refund-input" value="1" min="0" step="1">
               </div>
             </div>
@@ -1486,12 +1486,12 @@
                   </tr>
                   <tr id="lf-qp-cb-row">
                     <td>Chargebacks</td>
-                    <td class="lf-op-ptable-rate" style="color:var(--red)" id="lf-qp-cb-val">Â£15.00 per chargeback</td>
+                    <td class="lf-op-ptable-rate" style="color:var(--red)" id="lf-qp-cb-val">£15.00 per chargeback</td>
                     <td class="lf-op-ptable-note">Fee applied when a dispute is received</td>
                   </tr>
                   <tr id="lf-qp-ref-row">
                     <td>Refunds</td>
-                    <td class="lf-op-ptable-rate" id="lf-qp-ref-val">Â£1.00 per refund</td>
+                    <td class="lf-op-ptable-rate" id="lf-qp-ref-val">£1.00 per refund</td>
                     <td class="lf-op-ptable-note">Fee applied when processing refunds</td>
                   </tr>
                 </tbody>
@@ -1515,7 +1515,7 @@
             <div class="lf-op-action-row">
               <button class="lf-op-act-btn lf-op-act-primary" id="lf-gen-quote"
                       ${this.pricingResult && !this.quoteGenerated ? "" : "disabled"}>
-                ${this.lead.quote_id ? "â Quote Generated" : "Ã°ÂÂÂ Generate Quote Link"}
+                ${this.lead.quote_id ? "â Quote Generated" : "🂟Â Generate Quote Link"}
               </button>
               <button class="lf-op-act-btn lf-op-act-secondary" id="lf-push-zoho"
                       ${!this.lead.zohoPushed ? "" : "disabled"}>
@@ -1523,7 +1523,7 @@
               </button>
               <button class="lf-op-act-btn ${isKYB ? "lf-op-act-done" : "lf-op-act-kyb"}" id="lf-mark-kyb"
                       ${isKYB ? "disabled" : ""}>
-                ${isKYB ? "â KYB Pending" : "Ã°ÂÂÂ Mark KYB Ready"}
+                ${isKYB ? "â KYB Pending" : "🂟Â Mark KYB Ready"}
               </button>
             </div>
             ${this.lead.quote_id ? `
@@ -1535,7 +1535,7 @@
             </div>` : ""}
             ${isKYB ? `
             <div class="lf-op-kyb-notice">
-              Ã°ÂÂÂ This lead is marked KYB Ready and added to the onboarding pipeline.
+              🂟Â This lead is marked KYB Ready and added to the onboarding pipeline.
             </div>` : ""}
           </div>
 
@@ -1691,7 +1691,7 @@
                 ${gr.volumeMargins.map((t, i) => `
                 <tr>
                   <td style="padding:8px 12px;font-size:12px;color:var(--g3);border-bottom:1px solid var(--g6)">
-                    ${i === 0 ? "Under Â£50k / mo" : i === 1 ? "Â£50k â Â£200k / mo" : "Â£200k+ / mo"}
+                    ${i === 0 ? "Under £50k / mo" : i === 1 ? "£50k â £200k / mo" : "£200k+ / mo"}
                   </td>
                   <td style="padding:8px 12px;border-bottom:1px solid var(--g6);text-align:right">
                     ${inp("ps-vmarg-" + i, t.margin.toFixed(2))}
@@ -1713,7 +1713,7 @@
                 ${gr.fixedFeeTiers.map((t, i) => `
                 <tr>
                   <td style="padding:8px 12px;font-size:12px;color:var(--g3);border-bottom:1px solid var(--g6)">
-                    ${i === 0 ? "Under Â£100k / mo" : i === 1 ? "Â£100k â Â£200k / mo" : "Â£200k+ / mo"}
+                    ${i === 0 ? "Under £100k / mo" : i === 1 ? "£100k â £200k / mo" : "£200k+ / mo"}
                   </td>
                   <td style="padding:8px 12px;border-bottom:1px solid var(--g6);text-align:right">
                     ${inp("ps-ftier-" + i, t.fee.toFixed(0), "1", "1")}
@@ -1908,7 +1908,7 @@
     _buildRejected() {
       return `
         <div class="lf-step-wrap lf-rejected">
-          <div class="lf-rejected-icon">Ã°ÂÂÂ«</div>
+          <div class="lf-rejected-icon">🂟Â«</div>
           <h2 class="lf-rejected-title">Business Not Supported</h2>
           <p class="lf-rejected-msg">${this._rejectReason || "This business does not meet our onboarding criteria."}</p>
           <div class="lf-rejected-detail">
@@ -1974,7 +1974,7 @@
         const merchantUrl = `${window.location.origin}/quote.html?quote=${this.lead.quote_id}`;
         navigator.clipboard.writeText(merchantUrl).then(() => {
           const btn = q("lf-copy-quote-link");
-          if (btn) { btn.textContent = "â Copied!"; setTimeout(() => { btn.textContent = "Ã°ÂÂÂ Copy Merchant Link"; }, 2000); }
+          if (btn) { btn.textContent = "â Copied!"; setTimeout(() => { btn.textContent = "🂟Â Copy Merchant Link"; }, 2000); }
         }).catch(() => alert("Failed to copy. Please try again."));
       });
       q("lf-download-quote-pdf")?.addEventListener("click", () => {
@@ -2067,7 +2067,7 @@
         const curPay  = simCurFees > 0 ? simCurFees : (curRate && vol > 0 ? (curRate / 100) * vol : null);
         const save    = curPay !== null ? Math.max(0, curPay - rev) : 0;
 
-        const fmt2 = (n) => "Â£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const fmt2 = (n) => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
         if (q("lf-sim-out-cost"))  q("lf-sim-out-cost").textContent  = vol > 0 ? fmt2(rev)  : "â";
         if (q("lf-sim-out-eff"))   q("lf-sim-out-eff").textContent   = effR;
@@ -2152,8 +2152,8 @@
 
         if (q("lf-qp-amex-val")) q("lf-qp-amex-val").textContent = amexPct.toFixed(2) + "% + " + (q("lf-amex-input")?.dataset?.fixed || "20") + "p per transaction";
         if (q("lf-qp-fx-val"))   q("lf-qp-fx-val").textContent   = fxPct.toFixed(2) + "%";
-        if (q("lf-qp-cb-val"))   q("lf-qp-cb-val").textContent   = "Â£" + cbAmt.toFixed(2) + " per chargeback";
-        if (q("lf-qp-ref-val"))  q("lf-qp-ref-val").textContent  = "Â£" + refAmt.toFixed(2) + " per refund";
+        if (q("lf-qp-cb-val"))   q("lf-qp-cb-val").textContent   = "£" + cbAmt.toFixed(2) + " per chargeback";
+        if (q("lf-qp-ref-val"))  q("lf-qp-ref-val").textContent  = "£" + refAmt.toFixed(2) + " per refund";
       };
 
       ["amex", "fx", "chargeback", "refund"].forEach(fee => {
@@ -2182,7 +2182,7 @@
         let warn = document.getElementById("lf-avg-ticket-warning");
         if (avg > 0 && avg < 15) {
           const fixedPct = ((0.143 / avg) * 100).toFixed(1);
-          const msg = `â Ã¯Â¸Â <strong>Low average ticket (Â£${avg.toFixed(2)})</strong> â our fixed costs (~Â£0.14/tx) represent <strong>${fixedPct}%</strong> of this transaction value. Competitive pricing is difficult below Â£15. Consider the <strong>Acquisition</strong> profile.`;
+          const msg = `â Ã¯Â¸Â <strong>Low average ticket (£${avg.toFixed(2)})</strong> â our fixed costs (~£0.14/tx) represent <strong>${fixedPct}%</strong> of this transaction value. Competitive pricing is difficult below £15. Consider the <strong>Acquisition</strong> profile.`;
           if (!warn) {
             warn = document.createElement("div");
             warn.id = "lf-avg-ticket-warning";
@@ -2267,7 +2267,7 @@
             industryInput.classList.add("lf-industry-prohibited");
             const div = document.createElement("div");
             div.className = "lf-industry-status lf-industry-status-red";
-            div.textContent = "Ã°ÂÂÂ« Prohibited industry â this lead cannot proceed";
+            div.textContent = "🂟Â« Prohibited industry â this lead cannot proceed";
             industryInput.insertAdjacentElement("afterend", div);
           } else if (isR) {
             industryInput.classList.add("lf-industry-restricted");
@@ -2336,7 +2336,7 @@
             countryInput.classList.add("lf-industry-prohibited");
             const div = document.createElement("div");
             div.className = "lf-industry-status lf-industry-status-red";
-            div.textContent = "Ã°ÂÂÂ« We do not accept merchants from this country";
+            div.textContent = "🂟Â« We do not accept merchants from this country";
             countryInput.insertAdjacentElement("afterend", div);
           } else if (isR) {
             countryInput.classList.add("lf-industry-restricted");
@@ -2491,14 +2491,14 @@
         const industryCheck = window.RiskEngine.checkQualification("United Kingdom", industry, indDetail);
         let msg;
         if (!countryCheck.allowed) {
-          msg = `Ã°ÂÂÂ« We do not accept merchants operating from <strong>${country}</strong>. This lead cannot proceed.`;
+          msg = `🂟Â« We do not accept merchants operating from <strong>${country}</strong>. This lead cannot proceed.`;
         } else if (!industryCheck.allowed) {
           const industryLabel = indDetail || industry;
-          msg = `Ã°ÂÂÂ« We do not accept merchants in the <strong>${industryLabel}</strong> industry. This lead cannot proceed.`;
+          msg = `🂟Â« We do not accept merchants in the <strong>${industryLabel}</strong> industry. This lead cannot proceed.`;
         } else {
-          msg = `Ã°ÂÂÂ« ${check.reason || "This combination is not supported. This lead cannot proceed."}`;
+          msg = `🂟Â« ${check.reason || "This combination is not supported. This lead cannot proceed."}`;
         }
-        banner.innerHTML = `<span class="lf-qual-icon">Ã°ÂÂÂ«</span><span class="lf-qual-text">${msg}</span>`;
+        banner.innerHTML = `<span class="lf-qual-icon">🂟Â«</span><span class="lf-qual-text">${msg}</span>`;
         const fieldsContainer = this.overlay.querySelector(".lf-fields");
         if (fieldsContainer) fieldsContainer.parentElement.insertBefore(banner, fieldsContainer);
       } else if (check.restricted) {
@@ -2676,7 +2676,7 @@
       }
       // Pass 2: from candidates, prefer the first one where the first data row
       // contains a parseable positive number. Falls back to first candidate if none parse.
-      const pAmtTest = (v) => { const n = parseFloat(String(v||"").replace(/[Â£$â¬,\s]/g,"")); return Number.isFinite(n) && n > 0; };
+      const pAmtTest = (v) => { const n = parseFloat(String(v||"").replace(/[£$â¬,\s]/g,"")); return Number.isFinite(n) && n > 0; };
       const firstDataRow = rows[0] || {};
       const numericCandidate = amountCandidates.find(h => pAmtTest(firstDataRow[h]));
       colMap.amount = numericCandidate || amountCandidates[0] || "";
@@ -2687,7 +2687,7 @@
 
       // Strip currency symbols â same as pAmt() in public quote builder
       const pAmt = (v) => {
-        const n = parseFloat(String(v || "").replace(/[Â£$â¬,\s]/g, ""));
+        const n = parseFloat(String(v || "").replace(/[£$â¬,\s]/g, ""));
         return isNaN(n) || n <= 0 ? null : n;
       };
 
@@ -3360,7 +3360,7 @@
         this.onSaved();
         this._render();
       } catch (e) {
-        if (btn) { btn.textContent = "Ã°ÂÂÂ Mark as KYB Ready"; btn.disabled = false; }
+        if (btn) { btn.textContent = "🂟Â Mark as KYB Ready"; btn.disabled = false; }
         alert("Error marking as KYB. Please try again.");
       }
     }
