@@ -460,7 +460,7 @@ function renderQuote(data){
     <div class="qprev">
       <div class="qp-hdr">
         <div class="qp-logo-area">
-          <img class="qp-logo" src="${brand.logoData||''}" alt="${brand.name}" style="${logoStyle}">
+          <img class="qp-logo" src="${brand.logoData||''}" alt="${brand.name}" style="${brand.logoData ? logoStyle : 'display:none'}">
           <div>
             <div class="qp-brand" style="${brand.key==='ummah'?'display:none':''}">${brandLabel}</div>
             <div style="font-size:10px;color:var(--g3);margin-top:1px">${brand.tagline||''}</div>

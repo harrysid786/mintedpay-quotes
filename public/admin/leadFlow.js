@@ -1,5 +1,5 @@
 /**
- * MintedPay — Lead Flow Wizard
+ * MintedPay â Lead Flow Wizard
  * Fullscreen step-by-step sales lead creation with Lead Overview.
  * Exposed as window.LeadFlow (class).
  *
@@ -11,7 +11,7 @@
 (function () {
   "use strict";
 
-  // ── Comprehensive Countries List (~195 countries) ────────────
+  // ââ Comprehensive Countries List (~195 countries) ââââââââââââ
   const COUNTRIES = [
     "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda",
     "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain",
@@ -47,7 +47,7 @@
     "Zambia", "Zimbabwe",
   ];
 
-  // ── Step definitions ─────────────────────────────────────
+  // ââ Step definitions âââââââââââââââââââââââââââââââââââââ
   const STEPS = [
     {
       id: 1,
@@ -56,7 +56,7 @@
       fields: [
         { name: "businessName", label: "Business Name", type: "text", required: true, placeholder: "Acme Ltd" },
         { name: "country",      label: "Country of Operation", type: "datalist", required: true, options: COUNTRIES, placeholder: "Start typing a country..." },
-        { name: "industry",     label: "Industry / Business Type", type: "industry-autocomplete", required: true, placeholder: "Type to search, e.g. E-commerce, SaaS, Retail…" },
+        { name: "industry",     label: "Industry / Business Type", type: "industry-autocomplete", required: true, placeholder: "Type to search, e.g. E-commerce, SaaS, Retailâ¦" },
       ,
         { name: "website",       label: "Website URL", type: "url", placeholder: "https://example.com" },
         { name: "salesChannels", label: "Sales Channels", type: "select", options: [
@@ -94,16 +94,16 @@
       fields: [
         { name: "intlPercentage",  label: "International Transactions (%)", type: "number", required: true, placeholder: "0", min: 0, max: 100 },
         { name: "intlRegion", label: "International Card Region", type: "select", options: [
-          { value: "",      label: "— Unknown / Not sure —" },
+          { value: "",      label: "â Unknown / Not sure â" },
           { value: "eea",   label: "Mostly EEA / Europe (0.80% interchange)" },
           { value: "mixed", label: "Mixed EEA + Rest of World (1.15% blended)" },
           { value: "row",   label: "Mostly Rest of World (1.50% interchange)" },
-        ], hint: "Used to price international transactions more accurately. Leave unknown if unsure — defaults to conservative 1.50%." },
-        { name: "refundRate",      label: "Refund Rate (%) — optional",     type: "number", placeholder: "e.g. 2.5", min: 0 },
-        { name: "chargebackRate",  label: "Chargeback Rate (%) — optional", type: "number", placeholder: "e.g. 0.5", min: 0 },
+        ], hint: "Used to price international transactions more accurately. Leave unknown if unsure â defaults to conservative 1.50%." },
+        { name: "refundRate",      label: "Refund Rate (%) â optional",     type: "number", placeholder: "e.g. 2.5", min: 0 },
+        { name: "chargebackRate",  label: "Chargeback Rate (%) â optional", type: "number", placeholder: "e.g. 0.5", min: 0 },
         { name: "holdsFunds",      label: "Does the business hold customer funds?", type: "select", options: [
           { value: "no",  label: "No" },
-          { value: "yes", label: "Yes — we hold funds before disbursing" },
+          { value: "yes", label: "Yes â we hold funds before disbursing" },
         ]},
         { name: "businessAge",     label: "Business Age", type: "select", required: false, options: [
           { value: "less_than_6",  label: "Less than 6 months" },
@@ -123,7 +123,7 @@
       subtitle: "Who do they process with today?",
       fields: [
         { name: "currentProvider", label: "Current Payment Provider", type: "select", options: [
-          { value: "",             label: "— Select provider —" },
+          { value: "",             label: "â Select provider â" },
           { value: "stripe",       label: "Stripe" },
           { value: "shopify",      label: "Shopify Payments" },
           { value: "square",       label: "Square" },
@@ -139,13 +139,13 @@
           { value: "other",        label: "Other" },
           { value: "none",         label: "None / processing directly" },
         ]},
-        { name: "currentMonthlyFees",  label: "Current Monthly Processing Fees (£) — optional", type: "number", placeholder: "e.g. 850", min: 0,
+        { name: "currentMonthlyFees",  label: "Current Monthly Processing Fees (Â£) â optional", type: "number", placeholder: "e.g. 850", min: 0,
           hint: "If known, enter what the merchant pays per month. Used to calculate savings." },
       ,
-        { name: "monthlyVolume",       label: "Monthly Processing Volume (£)", type: "number", required: true, placeholder: "e.g. 50000", min: 0 },
-        { name: "avgTransactionValue", label: "Average Transaction Value (£)",  type: "number", required: true, placeholder: "e.g. 45",    min: 0 },
+        { name: "monthlyVolume",       label: "Monthly Processing Volume (Â£)", type: "number", required: true, placeholder: "e.g. 50000", min: 0 },
+        { name: "avgTransactionValue", label: "Average Transaction Value (Â£)",  type: "number", required: true, placeholder: "e.g. 45",    min: 0 },
         { name: "_avgTicketWarning", label: "", type: "avg-ticket-warning" },
-        { name: "highestSingleTx",   label: "Highest Single Transaction (£)", type: "number", placeholder: "e.g. 500", min: 0 },],
+        { name: "highestSingleTx",   label: "Highest Single Transaction (Â£)", type: "number", placeholder: "e.g. 500", min: 0 },],
     },
     {
       id: 5,
@@ -176,7 +176,7 @@
     },
   ];
 
-  // ── Resume step helper ────────────────────────────────────
+  // ââ Resume step helper ââââââââââââââââââââââââââââââââââââ
   // Returns the first step that hasn't been filled yet.
   function getLastStep(lead) {
     if (!lead.businessName)                                           return 1;
@@ -193,7 +193,7 @@
     return 10;
   }
 
-  // ═══════════════════════════════════════════════════════════
+  // âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   class LeadFlow {
     constructor({ onClose, onSaved } = {}) {
       this.onClose = onClose || (() => {});
@@ -212,13 +212,13 @@
       this.overlay       = document.getElementById("lead-flow");
       this.quoteGenerated = false;
       this.isSubmitting   = false;
-      // Local pricing settings — null means use server defaults.
+      // Local pricing settings â null means use server defaults.
       // Populated when admin edits values in the Pricing Engine Settings panel.
       // Temporary: not persisted to DB yet.
       this._localPricingSettings = null;
     }
 
-    // ── Public: open (new or resume or show overview) ─────────
+    // ââ Public: open (new or resume or show overview) âââââââââ
     async open(existingLead) {
       this.isRejected    = false;
       this._rejectReason = "";
@@ -255,7 +255,7 @@
       this._render();
     }
 
-    // ── Public: close ──────────────────────────────────────
+    // ââ Public: close ââââââââââââââââââââââââââââââââââââââ
     close() {
       clearTimeout(this.saveTimeout);
       this.overlay.classList.add("hidden");
@@ -263,7 +263,7 @@
       this.onClose();
     }
 
-    // ── Render entire flow ─────────────────────────────────
+    // ââ Render entire flow âââââââââââââââââââââââââââââââââ
     _render() {
       if (this.showingOverview) {
         this.overlay.innerHTML = this._buildOverview();
@@ -277,11 +277,11 @@
       }
     }
 
-    // ── Build Lead Overview Page ───────────────────────────
+    // ââ Build Lead Overview Page âââââââââââââââââââââââââââ
     _buildOverview() {
       const lead = this.lead;
 
-      // ── Helpers ──────────────────────────────────────────
+      // ââ Helpers ââââââââââââââââââââââââââââââââââââââââââ
       const empty = (v) => v === undefined || v === null || v === "";
       const muted = `<span class="ov-empty">Not provided</span>`;
       const val   = (v, suffix = "") => empty(v) ? muted : `${String(v)}${suffix}`;
@@ -294,11 +294,11 @@
         return `<span class="lf-badge ${cls}">${text}</span>`;
       };
 
-      // ── Enum label formatters ─────────────────────────────
+      // ââ Enum label formatters âââââââââââââââââââââââââââââ
       const fmtBusinessAge = (v) => ({
         less_than_6: "Less than 6 months",
-        "6_to_12":   "6–12 months",
-        "1_to_2":    "1–2 years",
+        "6_to_12":   "6â12 months",
+        "1_to_2":    "1â2 years",
         "2_plus":    "2+ years",
       }[v] || v || null);
 
@@ -334,9 +334,9 @@
       const fmtCurrency = (n) => {
         const num = parseFloat(n);
         if (!num) return null;
-        if (num >= 1_000_000) return "£" + (num / 1_000_000).toFixed(2) + "m";
-        if (num >= 1_000)     return "£" + (num / 1_000).toFixed(1) + "k";
-        return "£" + num.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        if (num >= 1_000_000) return "Â£" + (num / 1_000_000).toFixed(2) + "m";
+        if (num >= 1_000)     return "Â£" + (num / 1_000).toFixed(1) + "k";
+        return "Â£" + num.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       };
 
       const fmtTs = (iso) => {
@@ -352,7 +352,7 @@
         return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
       };
 
-      // ── Computed values ───────────────────────────────────
+      // ââ Computed values âââââââââââââââââââââââââââââââââââ
       const vol    = parseFloat(lead.monthlyVolume) || 0;
       const avgTx  = parseFloat(lead.avgTransactionValue) || 0;
       const txCnt  = vol > 0 && avgTx > 0 ? Math.round(vol / avgTx) : 0;
@@ -367,7 +367,7 @@
 
       // Estimated monthly cost
       const estCost = (rate && fee && vol && txCnt)
-        ? "£" + ((vol * rate / 100) + (txCnt * fee / 100)).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        ? "Â£" + ((vol * rate / 100) + (txCnt * fee / 100)).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         : null;
 
       // Badges
@@ -390,9 +390,9 @@
         quote_generated:"Quote generated",
       };
       const activityIcons = {
-        lead_created:    "ð", status_changed: "ð", note_added:      "ð",
-        kyb_submitted:   "ð", archived:       "ð¦", reassigned:      "ð¤",
-        zoho_pushed:     "☁ï¸", quote_generated: "ð",
+        lead_created:    "Ã°ÂÂÂ", status_changed: "Ã°ÂÂÂ", note_added:      "Ã°ÂÂÂ",
+        kyb_submitted:   "Ã°ÂÂÂ", archived:       "Ã°ÂÂÂ¦", reassigned:      "Ã°ÂÂÂ¤",
+        zoho_pushed:     "âÃ¯Â¸Â", quote_generated: "Ã°ÂÂÂ",
       };
       const groupedActivity = [...activity].reverse().reduce((acc, a) => {
         const dk = fmtDate(a.timestamp);
@@ -403,7 +403,7 @@
 
       const notes = Array.isArray(lead.notes) ? lead.notes : [];
 
-      // ── Field row helper ──────────────────────────────────
+      // ââ Field row helper ââââââââââââââââââââââââââââââââââ
       const row = (label, value, opts = {}) => {
         if (opts.hideEmpty && (value === null || value === undefined || value === "")) return "";
         const display = (value === null || value === undefined || value === "")
@@ -416,11 +416,11 @@
           </div>`;
       };
 
-      // ── BUILD HTML ────────────────────────────────────────
+      // ââ BUILD HTML ââââââââââââââââââââââââââââââââââââââââ
       return `
         <div class="ov-page">
 
-          <!-- ═══ STICKY TOPBAR ═══ -->
+          <!-- âââ STICKY TOPBAR âââ -->
           <div class="ov-topbar">
             <button class="ov-back-btn" id="lf-overview-close">
               <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
@@ -442,18 +442,18 @@
             </div>
           </div>
 
-          <!-- ═══ BODY ═══ -->
+          <!-- âââ BODY âââ -->
           <div class="ov-body">
             <div class="ov-layout">
 
-              <!-- ══════ LEFT COLUMN ══════ -->
+              <!-- ââââââ LEFT COLUMN ââââââ -->
               <div class="ov-col-main">
 
                 <!-- A. Pricing Summary Card (shown once, only if pricing exists) -->
                 ${hasPricing ? `
                 <div class="ov-card">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">ð°</span>
+                    <span class="ov-card-icon">Ã°ÂÂÂ°</span>
                     Pricing Summary
                   </div>
                   <div class="ov-pricing-grid">
@@ -497,7 +497,7 @@
                 <!-- B. Business Info Card -->
                 <div class="ov-card">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">ð¢</span>
+                    <span class="ov-card-icon">Ã°ÂÂÂ¢</span>
                     Business Info
                   </div>
                   <div class="ov-card-body">
@@ -520,7 +520,7 @@
                 <!-- C. Risk Signals Card -->
                 <div class="ov-card">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">ð</span>
+                    <span class="ov-card-icon">Ã°ÂÂÂ</span>
                     Risk Signals
                   </div>
                   <div class="ov-card-body">
@@ -535,7 +535,7 @@
                         !empty(lead.chargebackRate) ? lead.chargebackRate + "%" : "")}
                     ${row("Holds Customer Funds",
                         lead.holdsFunds === "yes"
-                          ? badge("YES — holds funds", "amber")
+                          ? badge("YES â holds funds", "amber")
                           : "No", { html: true })}
                     ${row("Business Age",    fmtBusinessAge(lead.businessAge))}
                     ${row("Delivery Time",   fmtDelivery(lead.deliveryTime))}
@@ -545,7 +545,7 @@
                 <!-- D. Volume & Setup Card -->
                 <div class="ov-card">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">ð</span>
+                    <span class="ov-card-icon">Ã°ÂÂÂ</span>
                     Volume & Setup
                   </div>
                   <div class="ov-card-body">
@@ -559,7 +559,7 @@
                         paypal:"PayPal / Braintree", elavon:"Elavon", paymentsense:"Paymentsense",
                         other:"Other", none:"None / direct"
                       }[lead.currentProvider]) || lead.currentProvider)}
-                    ${row("Current Monthly Fees", lead.currentMonthlyFees ? "£" + parseFloat(lead.currentMonthlyFees).toLocaleString("en-GB", {minimumFractionDigits:2,maximumFractionDigits:2}) : null, { hideEmpty: true })}
+                    ${row("Current Monthly Fees", lead.currentMonthlyFees ? "Â£" + parseFloat(lead.currentMonthlyFees).toLocaleString("en-GB", {minimumFractionDigits:2,maximumFractionDigits:2}) : null, { hideEmpty: true })}
                     ${row("Platform",          fmtPlatform(lead.platform))}
                     ${row("Accounting",        lead.accountingSoftware, { hideEmpty: true })}
                     ${row("Integrations",      lead.integrations, { hideEmpty: true })}
@@ -570,7 +570,7 @@
                 <!-- E. Contact Card -->
                 <div class="ov-card">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">ð¤</span>
+                    <span class="ov-card-icon">Ã°ÂÂÂ¤</span>
                     Contact
                   </div>
                   <div class="ov-card-body">
@@ -585,41 +585,41 @@
 
               </div><!-- /ov-col-main -->
 
-              <!-- ══════ RIGHT COLUMN ══════ -->
+              <!-- ââââââ RIGHT COLUMN ââââââ -->
               <div class="ov-col-side">
 
                 <!-- Actions Card -->
                 <div class="ov-card ov-card-sticky">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">ð</span>
+                    <span class="ov-card-icon">Ã°ÂÂÂ</span>
                     Actions
                   </div>
                   <div class="ov-actions-list">
                     <button class="ov-act-btn ov-act-primary" id="lf-overview-quote"
                             ${hasPricing && !hasQuote ? "" : "disabled"}>
-                      ${hasQuote ? "✓ Quote Generated" : "ð Generate Quote"}
+                      ${hasQuote ? "â Quote Generated" : "Ã°ÂÂÂ Generate Quote"}
                     </button>
                     ${hasQuote ? `
                     <a class="ov-act-btn ov-act-link" href="/quote.html?quote=${lead.quote_id}&admin=1" target="_blank">
-                      ð View Quote (Admin)
+                      Ã°ÂÂÂ View Quote (Admin)
                     </a>
                     <button class="ov-act-btn ov-act-secondary" id="lf-send-quote-email">
-                      ð§ Send to Merchant
+                      Ã°ÂÂÂ§ Send to Merchant
                     </button>
                     <button class="ov-act-btn ov-act-secondary" id="lf-copy-quote-link">
-                      ð Copy Merchant Link
+                      Ã°ÂÂÂ Copy Merchant Link
                     </button>
                     <button class="ov-act-btn ov-act-secondary" id="lf-download-quote-pdf">
-                      ⬇ï¸ Download PDF
+                      â¬Ã¯Â¸Â Download PDF
                     </button>` : ""}
                     <div class="ov-act-divider"></div>
                     <button class="ov-act-btn ov-act-secondary" id="lf-ov-push-zoho"
                             ${!lead.zohoPushed ? "" : "disabled"}>
-                      ${lead.zohoPushed ? "✓ Pushed to Zoho" : "☁ï¸ Push to Zoho"}
+                      ${lead.zohoPushed ? "â Pushed to Zoho" : "âÃ¯Â¸Â Push to Zoho"}
                     </button>
                     <button class="ov-act-btn ${isKYB ? "ov-act-done" : "ov-act-kyb"}" id="lf-ov-mark-kyb"
                             ${isKYB ? "disabled" : ""}>
-                      ${isKYB ? "✓ KYB Pending" : "ð Mark as KYB Ready"}
+                      ${isKYB ? "â KYB Pending" : "Ã°ÂÂÂ Mark as KYB Ready"}
                     </button>
                   </div>
                   <div class="ov-meta-rows">
@@ -645,7 +645,7 @@
                 <!-- Pipeline Management Card -->
                 <div class="ov-card ov-card-pipeline">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">ð</span>
+                    <span class="ov-card-icon">Ã°ÂÂÂ</span>
                     <span class="ov-card-title">Pipeline</span>
                   </div>
 
@@ -690,7 +690,7 @@
                     <label class="ov-pipe-label">Rejection Reason</label>
                     <select class="ov-pipe-select" id="ov-rejection-reason"
                       onchange="window.ovSaveField('${lead.id}', 'rejectionReason', this.value, this)">
-                      <option value="">Select reason…</option>
+                      <option value="">Select reasonâ¦</option>
                       <option value="price_too_high" ${lead.rejectionReason==='price_too_high'?'selected':''}>Price too high</option>
                       <option value="uncontactable" ${lead.rejectionReason==='uncontactable'?'selected':''}>Uncontactable</option>
                       <option value="went_elsewhere" ${lead.rejectionReason==='went_elsewhere'?'selected':''}>Went elsewhere</option>
@@ -705,7 +705,7 @@
                     <label class="ov-pipe-label">Log Contact</label>
                     <div class="ov-pipe-log-wrap">
                       <select id="ov-call-outcome" class="ov-pipe-select">
-                        <option value="">Outcome…</option>
+                        <option value="">Outcomeâ¦</option>
                         <option value="no_answer">No answer</option>
                         <option value="left_voicemail">Left voicemail</option>
                         <option value="spoke_to_merchant">Spoke to merchant</option>
@@ -723,7 +723,7 @@
                   <div class="ov-call-history">
                     ${[...lead.callLog].reverse().slice(0,5).map(entry => `
                     <div class="ov-call-entry">
-                      <span class="ov-call-outcome">${{no_answer:'ðµ No answer',left_voicemail:'ð¨ Voicemail',spoke_to_merchant:'✅ Spoke to merchant',meeting_booked:'ð Meeting booked',not_interested:'❌ Not interested',email_sent:'ð§ Email sent'}[entry.outcome] || entry.outcome}</span>
+                      <span class="ov-call-outcome">${{no_answer:'Ã°ÂÂÂµ No answer',left_voicemail:'Ã°ÂÂÂ¨ Voicemail',spoke_to_merchant:'â Spoke to merchant',meeting_booked:'Ã°ÂÂÂ Meeting booked',not_interested:'â Not interested',email_sent:'Ã°ÂÂÂ§ Email sent'}[entry.outcome] || entry.outcome}</span>
                       ${entry.note ? `<span class="ov-call-note">${entry.note}</span>` : ''}
                       <span class="ov-call-date">${new Date(entry.timestamp).toLocaleDateString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
                     </div>
@@ -735,7 +735,7 @@
                 <!-- Activity Timeline -->
                 <div class="ov-card">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">ð</span>
+                    <span class="ov-card-icon">Ã°ÂÂÂ</span>
                     Activity
                   </div>
                   <div class="ov-timeline">
@@ -749,10 +749,10 @@
                                 <div class="ov-tl-dot"></div>
                                 <div class="ov-tl-body">
                                   <div class="ov-tl-text">
-                                    ${activityIcons[a.type] || "ð"}
+                                    ${activityIcons[a.type] || "Ã°ÂÂÂ"}
                                     ${activityLabels[a.type] || a.type}
-                                    ${a.oldStatus && a.newStatus ? `<span class="ov-tl-tag">${a.oldStatus} → ${a.newStatus}</span>` : ""}
-                                    ${a.newAssignedTo ? `<span class="ov-tl-tag">→ ${a.newAssignedTo}</span>` : ""}
+                                    ${a.oldStatus && a.newStatus ? `<span class="ov-tl-tag">${a.oldStatus} â ${a.newStatus}</span>` : ""}
+                                    ${a.newAssignedTo ? `<span class="ov-tl-tag">â ${a.newAssignedTo}</span>` : ""}
                                   </div>
                                   <div class="ov-tl-time">${fmtTs(a.timestamp)}</div>
                                 </div>
@@ -764,7 +764,7 @@
                 <!-- Notes -->
                 <div class="ov-card">
                   <div class="ov-card-hdr">
-                    <span class="ov-card-icon">ð</span>
+                    <span class="ov-card-icon">Ã°ÂÂÂ</span>
                     Notes
                     ${notes.length > 0 ? `<span class="ov-card-count">${notes.length}</span>` : ""}
                   </div>
@@ -777,7 +777,7 @@
                             <div class="ov-note-time">${fmtTs(n.timestamp)}</div>
                           </div>`).join("")}
                     <div class="ov-note-add">
-                      <textarea class="ov-note-input" id="lf-ov-note-input" placeholder="Add a note…" rows="2"></textarea>
+                      <textarea class="ov-note-input" id="lf-ov-note-input" placeholder="Add a noteâ¦" rows="2"></textarea>
                       <button class="ov-note-btn" id="lf-ov-add-note">Add Note</button>
                     </div>
                   </div>
@@ -791,7 +791,7 @@
     }
 
 
-    // ── Main layout skeleton ───────────────────────────────
+    // ââ Main layout skeleton âââââââââââââââââââââââââââââââ
     _buildLayout() {
       const progress = Math.round((this.currentStep / (this.totalSteps - 1)) * 100);
       const stepDef  = STEPS[this.currentStep - 1];
@@ -816,7 +816,7 @@
             <div class="lf-progress-bar">
               <div class="lf-progress-fill" style="width:${progress}%"></div>
             </div>
-            <div class="lf-step-label">Step ${Math.min(this.currentStep, this.totalSteps - 1)} of ${this.totalSteps - 1} — <em>${stepDef.title}</em></div>
+            <div class="lf-step-label">Step ${Math.min(this.currentStep, this.totalSteps - 1)} of ${this.totalSteps - 1} â <em>${stepDef.title}</em></div>
           </div>
           <div class="lf-save-status" id="lf-save-status">
             <span class="lf-save-dot"></span> Saved
@@ -831,7 +831,7 @@
       `;
     }
 
-    // ── Step body content ──────────────────────────────────
+    // ââ Step body content ââââââââââââââââââââââââââââââââââ
     _buildStep() {
       const s = STEPS[this.currentStep - 1];
       if (s.isOutput) return this._buildOutput();
@@ -888,7 +888,7 @@
       `;
     }
 
-    // ── CSV Upload Tab for Step 7 ───────────────────────────
+    // ââ CSV Upload Tab for Step 7 âââââââââââââââââââââââââââ
     _buildCSVUploadTab() {
       const hasError   = this.lead.csvParseError || false;
       const isLoading  = this.lead.csvLoading    || false;
@@ -901,19 +901,19 @@
           ${isLoading ? `
           <div class="lf-csv-loading">
             <div class="lf-spinner"></div>
-            <p style="margin-top:10px;font-size:13px;color:var(--g3)">Parsing CSV file…</p>
+            <p style="margin-top:10px;font-size:13px;color:var(--g3)">Parsing CSV fileâ¦</p>
           </div>` : `
 
           ${hasError ? `
           <div class="lf-csv-error-banner">
-            <span>⚠ï¸</span>
+            <span>â Ã¯Â¸Â</span>
             <span>${this.lead.csvParseError}</span>
           </div>` : ""}
 
           ${hasResult ? `
           <div class="lf-csv-success-banner">
             <div class="lf-csv-success-top">
-              <span class="lf-csv-success-icon">✓</span>
+              <span class="lf-csv-success-icon">â</span>
               <div class="lf-csv-success-body">
                 <div class="lf-csv-success-title">
                   ${fileName || "Statement analysed"}
@@ -921,10 +921,10 @@
                   ${this.lead.csvProcessor ? `<span style="display:inline-block;font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;background:var(--g6);color:var(--g3);margin-left:4px;vertical-align:middle">${this.lead.csvProcessor}</span>` : ""}
                 </div>
                 <div class="lf-csv-success-vals">
-                  <span>Volume: <strong>£${parseFloat(this.lead.monthlyVolume).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong></span>
+                  <span>Volume: <strong>Â£${parseFloat(this.lead.monthlyVolume).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong></span>
                   ${this.lead.transactionCount ? `<span>${Number(this.lead.transactionCount).toLocaleString("en-GB")} transactions</span>` : ""}
-                  ${this.lead.avgTransactionValue ? `<span>Avg: <strong>£${parseFloat(this.lead.avgTransactionValue).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></span>` : ""}
-                  ${this.lead.currentMonthlyFees ? `<span>Current fees: <strong>£${parseFloat(this.lead.currentMonthlyFees).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong></span>` : ""}
+                  ${this.lead.avgTransactionValue ? `<span>Avg: <strong>Â£${parseFloat(this.lead.avgTransactionValue).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></span>` : ""}
+                  ${this.lead.currentMonthlyFees ? `<span>Current fees: <strong>Â£${parseFloat(this.lead.currentMonthlyFees).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong></span>` : ""}
                   ${this.lead.csvCurrentRate ? `<span>Current rate: <strong style="color:${parseFloat(this.lead.csvCurrentRate)<1?"var(--green)":parseFloat(this.lead.csvCurrentRate)<2.2?"var(--amber)":"var(--red)"}">${parseFloat(this.lead.csvCurrentRate).toFixed(2)}%</strong></span>` : ""}
                   ${this.lead.csvDebitFrac ? `<span>${Math.round(parseFloat(this.lead.csvDebitFrac)*100)}% debit / ${Math.round((1-parseFloat(this.lead.csvDebitFrac))*100)}% credit</span>` : ""}
                   ${(() => {
@@ -945,10 +945,10 @@
           </div>` : `
 
           <label class="lf-dropzone" id="lf-csv-dropzone" for="lf-csv-file-input">
-            <span class="lf-dz-icon">ð</span>
+            <span class="lf-dz-icon">Ã°ÂÂÂ</span>
             <span class="lf-dz-title">Drag & drop your statement here, or <u>click to browse</u></span>
-            <span class="lf-dz-hint">Stripe · Worldpay · Barclaycard · any card processor export</span>
-            <span class="lf-dz-hint" style="margin-top:2px;font-size:10px">Extracts: volume · fees · effective rate · card mix · debit fraction</span>
+            <span class="lf-dz-hint">Stripe Â· Worldpay Â· Barclaycard Â· any card processor export</span>
+            <span class="lf-dz-hint" style="margin-top:2px;font-size:10px">Extracts: volume Â· fees Â· effective rate Â· card mix Â· debit fraction</span>
           </label>
           <input type="file" id="lf-csv-file-input" accept=".csv"
                  style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;">
@@ -959,7 +959,7 @@
       `;
     }
 
-    // ── Individual field renderer ──────────────────────────
+    // ââ Individual field renderer ââââââââââââââââââââââââââ
     _buildField(f) {
       if (f.showIf && !f.showIf(this.lead)) {
         return `<div class="lf-field hidden" data-field="${f.name}"></div>`;
@@ -973,13 +973,13 @@
                           placeholder="${f.placeholder || ""}" rows="3">${val}</textarea>`;
       } else if (f.type === "select") {
         ctrl = `<select class="lf-ctrl" id="lf-${f.name}" name="${f.name}">
-                  <option value="">— Select —</option>
+                  <option value="">â Select â</option>
                   ${(f.options || []).map(o =>
                     `<option value="${o.value}" ${val === o.value ? "selected" : ""}>${o.label}</option>`
                   ).join("")}
                 </select>`;
       } else if (f.type === "industry-autocomplete") {
-        // Industry typeahead — text input with filtered suggestions
+        // Industry typeahead â text input with filtered suggestions
         const cats = (window.RiskEngine?.INDUSTRY_CATEGORIES || []).map(c => c.label);
         const restricted = (window.RiskEngine?.RESTRICTED_INDUSTRIES || []);
         const prohibited = (window.RiskEngine?.PROHIBITED_INDUSTRIES || []);
@@ -992,8 +992,8 @@
             <input class="lf-ctrl lf-industry-input ${warnClass}" id="lf-${f.name}" name="${f.name}"
                    type="text" value="${val}" placeholder="${f.placeholder || ""}"
                    autocomplete="off">
-            ${isProhibited ? `<div class="lf-industry-status lf-industry-status-red">ð« Prohibited industry — this lead cannot proceed</div>` :
-              isRestricted ? `<div class="lf-industry-status lf-industry-status-amber">⚠ï¸ Restricted industry — additional review required</div>` : ""}
+            ${isProhibited ? `<div class="lf-industry-status lf-industry-status-red">Ã°ÂÂÂ« Prohibited industry â this lead cannot proceed</div>` :
+              isRestricted ? `<div class="lf-industry-status lf-industry-status-amber">â Ã¯Â¸Â Restricted industry â additional review required</div>` : ""}
             <div class="lf-industry-dropdown" id="lf-industry-dropdown" style="display:none">
               ${cats.map(c => {
                 const cLower = c.toLowerCase();
@@ -1007,7 +1007,7 @@
             </div>
           </div>`;
       } else if (f.type === "datalist") {
-        // Country typeahead — custom dropdown for reliable cross-browser filtering
+        // Country typeahead â custom dropdown for reliable cross-browser filtering
         const prohibited = window.RiskEngine?.PROHIBITED_COUNTRIES || [];
         const restricted = window.RiskEngine?.RESTRICTED_COUNTRIES || [];
         const valLower   = val.toLowerCase();
@@ -1019,8 +1019,8 @@
             <input class="lf-ctrl lf-country-input ${warnClass}" id="lf-${f.name}" name="${f.name}"
                    type="text" value="${val}" placeholder="${f.placeholder || ""}"
                    autocomplete="off" aria-autocomplete="list">
-            ${isProhibited ? `<div class="lf-industry-status lf-industry-status-red">ð« We do not accept merchants from this country</div>` :
-              isRestricted ? `<div class="lf-industry-status lf-industry-status-amber">⚠ï¸ Higher-risk jurisdiction — additional review required</div>` : ""}
+            ${isProhibited ? `<div class="lf-industry-status lf-industry-status-red">Ã°ÂÂÂ« We do not accept merchants from this country</div>` :
+              isRestricted ? `<div class="lf-industry-status lf-industry-status-amber">â Ã¯Â¸Â Higher-risk jurisdiction â additional review required</div>` : ""}
             <div class="lf-industry-dropdown" id="lf-country-dropdown" style="display:none">
               ${(f.options || []).map(country => {
                 const cl = country.toLowerCase();
@@ -1040,9 +1040,9 @@
           const fixedPct = ((0.143 / avg) * 100).toFixed(1);
           return `
             <div class="lf-avg-ticket-warning" id="lf-avg-ticket-warning">
-              ⚠ï¸ <strong>Low average ticket (£${avg.toFixed(2)})</strong> — our fixed costs (~£0.14/tx) represent
+              â Ã¯Â¸Â <strong>Low average ticket (Â£${avg.toFixed(2)})</strong> â our fixed costs (~Â£0.14/tx) represent
               <strong>${fixedPct}%</strong> of this transaction value.
-              Competitive pricing is difficult below £15 avg ticket.
+              Competitive pricing is difficult below Â£15 avg ticket.
               Consider the <strong>Acquisition</strong> profile and review margin carefully.
             </div>`;
         }
@@ -1064,7 +1064,7 @@
       `;
     }
 
-    // ── Get risk reason explanation ────────────────────────
+    // ââ Get risk reason explanation ââââââââââââââââââââââââ
     _getRiskReasonText(riskLevel, lead) {
       const factors = [];
       const intl      = parseFloat(lead.intlPercentage) || 0;
@@ -1088,10 +1088,10 @@
       // Holds funds
       if (lead.holdsFunds === "yes") factors.push("Holds customer funds before disbursing");
 
-      // Business age — use enum string labels, never parseFloat
+      // Business age â use enum string labels, never parseFloat
       if      (ageEnum === "less_than_6") factors.push("Business is less than 6 months old");
-      else if (ageEnum === "6_to_12")     factors.push("Business is 6–12 months old (early stage)");
-      // "1_to_2" and "2_plus" → no risk factor added
+      else if (ageEnum === "6_to_12")     factors.push("Business is 6â12 months old (early stage)");
+      // "1_to_2" and "2_plus" â no risk factor added
 
       // Delivery time
       if (lead.deliveryTime === "delayed") factors.push("Delayed delivery model");
@@ -1104,22 +1104,22 @@
       if (factors.length === 0) {
         // Provide a positive confirmation when no risk factors found
         const ageLabel = ageEnum === "2_plus"  ? "Established business (2+ years), "
-                       : ageEnum === "1_to_2"  ? "Established business (1–2 years), "
+                       : ageEnum === "1_to_2"  ? "Established business (1â2 years), "
                        : "";
         return ageLabel + "low-risk profile based on submitted data.";
       }
 
-      return factors.slice(0, 4).join(" · ");
+      return factors.slice(0, 4).join(" Â· ");
     }
 
-    // ── Output step (Step 10) ───────────────────────────────
+    // ââ Output step (Step 10) âââââââââââââââââââââââââââââââ
     _buildOutput() {
       if (this.isCalculating || !this.pricingResult) {
         return `
           <div class="lf-step-wrap lf-output">
             <div class="lf-calculating">
               <div class="lf-spinner"></div>
-              <p>Calculating pricing &amp; risk assessment…</p>
+              <p>Calculating pricing &amp; risk assessmentâ¦</p>
             </div>
           </div>`;
       }
@@ -1134,7 +1134,7 @@
       // Enforce fixed fee floor
       if (p.fixed_fee < 10) p.fixed_fee = 10;
 
-      // ── Current fee data — all sources ───────────────────────────────────
+      // ââ Current fee data â all sources âââââââââââââââââââââââââââââââââââ
       const rawFeeManual   = parseFloat(this.lead.currentMonthlyFees)           || 0;
       const rawFeePricing  = parseFloat(this.lead.pricing?.currentMonthlyFees)  || 0;
       const csvCurRate     = parseFloat(this.lead.csvCurrentRate)               || 0;
@@ -1191,13 +1191,13 @@
       const fPct     = Math.round(((simFixed - minFixed) / (maxFixed - minFixed)) * 100);
       const rZone    = simRate < 1.5 ? "var(--green)" : simRate < 2.5 ? "var(--amber)" : "var(--red)";
 
-      const fmt2 = (n) => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      const fmtK = (n) => { const a = Math.abs(n); if (a >= 1e6) return "£" + (a / 1e6).toFixed(2) + "m"; if (a >= 1e3) return "£" + (a / 1e3).toFixed(1) + "k"; return "£" + a.toFixed(2); };
+      const fmt2 = (n) => "Â£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const fmtK = (n) => { const a = Math.abs(n); if (a >= 1e6) return "Â£" + (a / 1e6).toFixed(2) + "m"; if (a >= 1e3) return "Â£" + (a / 1e3).toFixed(1) + "k"; return "Â£" + a.toFixed(2); };
 
       return `
         <div class="lf-output-page">
 
-          <!-- ══ HEADER ══ -->
+          <!-- ââ HEADER ââ -->
           <div class="lf-op-head">
             <div>
               <h2 class="lf-op-title">${this.lead.businessName || "Pricing Output"}</h2>
@@ -1214,41 +1214,41 @@
             </div>
           </div>
 
-          <!-- ══ RESTRICTED INDUSTRY BANNER ══ -->
+          <!-- ââ RESTRICTED INDUSTRY BANNER ââ -->
           ${this.lead.industryStatus === "restricted" ? `
           <div style="background:#fef3c7;border:1px solid #fcd34d;border-left:3px solid #d97706;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:#92400e;line-height:1.5">
-            ⚠ï¸ <strong>Restricted industry — manual review required.</strong>
+            â Ã¯Â¸Â <strong>Restricted industry â manual review required.</strong>
             This merchant selected <strong>${this.lead.industry ? this.lead.industry.split("|")[0].replace(/^\w/,c=>c.toUpperCase()) : "a restricted industry"}</strong>. Verify business documentation and obtain approval before generating a quote.
           </div>` : ""}
 
-          <!-- ══ NOT-COMPETITIVE BANNER ══ -->
+          <!-- ââ NOT-COMPETITIVE BANNER ââ -->
           ${(p.not_competitive || (avgTx > 0 && avgTx < 15)) ? `
           <div style="background:#fff1f2;border:1px solid #fecdd3;border-left:3px solid #e11d48;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:#9f1239;line-height:1.5">
-            ð« <strong>Not competitive at this ticket size.</strong>
-            Average transaction of <strong>£${avgTx.toFixed(2)}</strong> is below the £15 threshold where our fixed cost (~14p/tx) makes pricing uncompetitive.
-            Only proceed if monthly volume exceeds £50k or using the Acquisition profile.
+            Ã°ÂÂÂ« <strong>Not competitive at this ticket size.</strong>
+            Average transaction of <strong>Â£${avgTx.toFixed(2)}</strong> is below the Â£15 threshold where our fixed cost (~14p/tx) makes pricing uncompetitive.
+            Only proceed if monthly volume exceeds Â£50k or using the Acquisition profile.
           </div>` : ""}
 
-          <!-- ══ A: CUSTOMER OVERVIEW ══ -->
+          <!-- ââ A: CUSTOMER OVERVIEW ââ -->
           <div class="lf-op-section">
             <div class="lf-op-section-title">Customer Overview</div>
             <div class="lf-op-metrics">
               <div class="lf-op-metric">
                 <div class="lf-op-metric-lbl">Monthly Volume</div>
-                <div class="lf-op-metric-val">${vol > 0 ? fmtK(vol) : "—"}</div>
+                <div class="lf-op-metric-val">${vol > 0 ? fmtK(vol) : "â"}</div>
               </div>
               <div class="lf-op-metric">
                 <div class="lf-op-metric-lbl">Transactions / mo</div>
-                <div class="lf-op-metric-val">${txCnt > 0 ? txCnt.toLocaleString("en-GB") : "—"}</div>
+                <div class="lf-op-metric-val">${txCnt > 0 ? txCnt.toLocaleString("en-GB") : "â"}</div>
               </div>
               <div class="lf-op-metric">
                 <div class="lf-op-metric-lbl">Avg Transaction</div>
-                <div class="lf-op-metric-val">${avgTx > 0 ? fmt2(avgTx) : "—"}</div>
+                <div class="lf-op-metric-val">${avgTx > 0 ? fmt2(avgTx) : "â"}</div>
               </div>
               <div class="lf-op-metric">
                 <div class="lf-op-metric-lbl">Current Effective Rate</div>
                 <div class="lf-op-metric-val" style="color:${curRate !== null ? (curRate < 1 ? "var(--green)" : curRate < 2.2 ? "var(--amber)" : "var(--red)") : "var(--g4)"}">
-                  ${curRate !== null ? curRate.toFixed(2) + "%" : "—"}
+                  ${curRate !== null ? curRate.toFixed(2) + "%" : "â"}
                 </div>
               </div>
             </div>
@@ -1261,7 +1261,7 @@
                 <div class="lf-op-rate-big" style="color:var(--red)">${curRate.toFixed(2)}<span class="lf-op-rate-pct">%</span></div>
                 <div class="lf-op-rate-sub">effective rate on submitted data</div>
               </div>
-              <div class="lf-op-rate-arrow">→</div>` : ""}
+              <div class="lf-op-rate-arrow">â</div>` : ""}
               <div class="lf-op-rate-block lf-op-rate-mp${curRate === null ? " lf-op-rate-solo" : ""}">
                 <div class="lf-op-rate-lbl">MintedPay rate</div>
                 <div class="lf-op-rate-big" style="color:var(--brand)">${simRate.toFixed(2)}<span class="lf-op-rate-pct">%</span></div>
@@ -1297,36 +1297,36 @@
             </div>` : ""}
           </div>
 
-          <!-- ══ B: PAYMENT ANALYTICS ══ -->
+          <!-- ââ B: PAYMENT ANALYTICS ââ -->
           <div class="lf-op-section">
             <div class="lf-op-section-title">Payment Analytics</div>
             <div class="lf-op-analytics-grid">
               <div class="lf-op-analytic">
                 <div class="lf-op-analytic-lbl">Est. Monthly Processing Cost</div>
-                <div class="lf-op-analytic-val">${simRev > 0 ? fmt2(simRev) : "—"}</div>
+                <div class="lf-op-analytic-val">${simRev > 0 ? fmt2(simRev) : "â"}</div>
                 <div class="lf-op-analytic-sub">at ${simRate}% + ${simFixed}p/tx</div>
               </div>
               <div class="lf-op-analytic">
                 <div class="lf-op-analytic-lbl">Effective Rate</div>
-                <div class="lf-op-analytic-val">${effectiveRate !== null ? effectiveRate + "%" : "—"}</div>
+                <div class="lf-op-analytic-val">${effectiveRate !== null ? effectiveRate + "%" : "â"}</div>
                 <div class="lf-op-analytic-sub">all-in blended rate</div>
               </div>
               <div class="lf-op-analytic">
                 <div class="lf-op-analytic-lbl">Est. Gross Margin</div>
-                <div class="lf-op-analytic-val">~${estMrg}%</div>
-                <div class="lf-op-analytic-sub">above cost (0.46% base)</div>
+                <div class="lf-op-analytic-val" style="${parseFloat(estMrg) < 0 ? 'color:var(--red)' : ''}">~${estMrg}%</div>
+                <div class="lf-op-analytic-sub">${parseFloat(estMrg) < 0 ? 'below cost — loss-making' : 'est. gross margin'}</div>
               </div>
               <div class="lf-op-analytic">
                 <div class="lf-op-analytic-lbl">Intl Transactions</div>
-                <div class="lf-op-analytic-val">${this.lead.intlPercentage !== undefined && this.lead.intlPercentage !== "" ? this.lead.intlPercentage + "%" : "—"}</div>
+                <div class="lf-op-analytic-val">${this.lead.intlPercentage !== undefined && this.lead.intlPercentage !== "" ? this.lead.intlPercentage + "%" : "â"}</div>
                 <div class="lf-op-analytic-sub">${({eea:"EEA / Europe",mixed:"Mixed EEA + RoW",row:"Rest of World"}[this.lead.intlRegion]) || "region unknown"}</div>
               </div>
               <div class="lf-op-analytic">
                 <div class="lf-op-analytic-lbl">Chargeback Rate</div>
                 <div class="lf-op-analytic-val" style="color:${parseFloat(this.lead.chargebackRate) > 1 ? "var(--red)" : "var(--green)"}">
-                  ${this.lead.chargebackRate ? this.lead.chargebackRate + "%" : "—"}
+                  ${this.lead.chargebackRate ? this.lead.chargebackRate + "%" : "â"}
                 </div>
-                <div class="lf-op-analytic-sub">${parseFloat(this.lead.chargebackRate) > 1 ? "⚠ï¸ elevated" : "within threshold"}</div>
+                <div class="lf-op-analytic-sub">${parseFloat(this.lead.chargebackRate) > 1 ? "â Ã¯Â¸Â elevated" : "within threshold"}</div>
               </div>
               <div class="lf-op-analytic">
                 <div class="lf-op-analytic-lbl">Risk Level</div>
@@ -1354,19 +1354,19 @@
               <div class="lf-op-fee-chip">
                 <input type="checkbox" id="lf-toggle-chargeback" checked>
                 <label for="lf-toggle-chargeback">Chargeback</label>
-                <span>£</span>
+                <span>Â£</span>
                 <input type="number" class="lf-op-fee-inp" id="lf-chargeback-input" value="15" min="0" step="1">
               </div>
               <div class="lf-op-fee-chip">
                 <input type="checkbox" id="lf-toggle-refund" checked>
                 <label for="lf-toggle-refund">Refund</label>
-                <span>£</span>
+                <span>Â£</span>
                 <input type="number" class="lf-op-fee-inp" id="lf-refund-input" value="1" min="0" step="1">
               </div>
             </div>
           </div>
 
-          <!-- ══ C: RATE SIMULATOR ══ -->
+          <!-- ââ C: RATE SIMULATOR ââ -->
           <div class="lf-op-section">
             <div class="lf-op-section-title">Rate Simulator</div>
             <div class="lf-op-sim">
@@ -1374,10 +1374,10 @@
                 <div class="lf-op-sim-ctrl">
                   <div class="lf-op-sim-ctrl-lbl">Processing Rate</div>
                   <div class="lf-op-sim-spin-wrap lf-op-sim-spin-brand">
-                    <button class="lf-op-sim-btn" id="lf-sim-rate-up">▲</button>
+                    <button class="lf-op-sim-btn" id="lf-sim-rate-up">â²</button>
                     <input type="number" class="lf-op-sim-box" id="lf-sim-rate"
                            value="${simRate}" min="${minRate}" max="${maxRate}" step="0.01">
-                    <button class="lf-op-sim-btn" id="lf-sim-rate-dn">▼</button>
+                    <button class="lf-op-sim-btn" id="lf-sim-rate-dn">â¼</button>
                   </div>
                   <span class="lf-op-sim-pct">%</span>
                 </div>
@@ -1385,10 +1385,10 @@
                 <div class="lf-op-sim-ctrl">
                   <div class="lf-op-sim-ctrl-lbl">Fixed Fee</div>
                   <div class="lf-op-sim-spin-wrap lf-op-sim-spin-green">
-                    <button class="lf-op-sim-btn" id="lf-sim-fixed-up">▲</button>
+                    <button class="lf-op-sim-btn" id="lf-sim-fixed-up">â²</button>
                     <input type="number" class="lf-op-sim-box lf-op-sim-box-green" id="lf-sim-fixed"
                            value="${simFixed}" min="${minFixed}" max="${maxFixed}" step="1">
-                    <button class="lf-op-sim-btn" id="lf-sim-fixed-dn">▼</button>
+                    <button class="lf-op-sim-btn" id="lf-sim-fixed-dn">â¼</button>
                   </div>
                   <span class="lf-op-sim-pct" style="color:var(--green)">p</span>
                 </div>
@@ -1400,9 +1400,9 @@
                 <input type="range" class="lf-op-sim-range" id="lf-sim-rate-range"
                        min="${minRate}" max="${maxRate}" step="0.01" value="${simRate}">
                 <div class="lf-op-sim-ticks">
-                  <span style="color:var(--green)">▼ Floor</span>
+                  <span style="color:var(--green)">â¼ Floor</span>
                   <span style="color:var(--amber);text-align:center">Market</span>
-                  <span style="color:var(--red);text-align:right">Premium ▲</span>
+                  <span style="color:var(--red);text-align:right">Premium â²</span>
                 </div>
               </div>
 
@@ -1410,11 +1410,11 @@
               <div class="lf-op-sim-strip">
                 <div class="lf-op-sim-cell">
                   <div class="lf-op-sim-cell-lbl">Monthly Cost</div>
-                  <div class="lf-op-sim-cell-val" id="lf-sim-out-cost">${vol > 0 ? fmt2(simRev) : "—"}</div>
+                  <div class="lf-op-sim-cell-val" id="lf-sim-out-cost">${vol > 0 ? fmt2(simRev) : "â"}</div>
                 </div>
                 <div class="lf-op-sim-cell">
                   <div class="lf-op-sim-cell-lbl">Effective Rate</div>
-                  <div class="lf-op-sim-cell-val" id="lf-sim-out-eff">${effectiveRate !== null ? effectiveRate + "%" : "—"}</div>
+                  <div class="lf-op-sim-cell-val" id="lf-sim-out-eff">${effectiveRate !== null ? effectiveRate + "%" : "â"}</div>
                 </div>
                 <div class="lf-op-sim-cell">
                   <div class="lf-op-sim-cell-lbl">Est. Margin</div>
@@ -1423,19 +1423,19 @@
                 <div class="lf-op-sim-cell">
                   <div class="lf-op-sim-cell-lbl">Monthly Saving</div>
                   <div class="lf-op-sim-cell-val" id="lf-sim-out-save" style="color:${mSave > 0 ? "var(--green)" : "var(--g3)"}">
-                    ${mSave > 0 ? fmt2(mSave) : "—"}
+                    ${mSave > 0 ? fmt2(mSave) : "â"}
                   </div>
                 </div>
               </div>
 
               <div class="lf-op-sim-actions">
-                <button class="lf-op-sim-apply" id="lf-apply-override">✓ Apply This Rate to Quote</button>
-                <button class="lf-op-sim-reset" id="lf-sim-reset">↺ Reset to System Rate</button>
+                <button class="lf-op-sim-apply" id="lf-apply-override">â Apply This Rate to Quote</button>
+                <button class="lf-op-sim-reset" id="lf-sim-reset">âº Reset to System Rate</button>
               </div>
             </div>
           </div>
 
-          <!-- ══ D: QUOTE PREVIEW ══ -->
+          <!-- ââ D: QUOTE PREVIEW ââ -->
           <div class="lf-op-section">
             <div class="lf-op-section-title" style="display:flex;align-items:center;justify-content:space-between">
               Quote Preview
@@ -1449,7 +1449,7 @@
                 <div style="font-size:10px;color:var(--g3)">Payment Processing Proposal</div>
               </div>
               <div style="text-align:right;font-size:11px;color:var(--g3)">
-                <strong style="color:var(--black)">${this.lead.businessName || this.lead.contactName || "—"}</strong><br>
+                <strong style="color:var(--black)">${this.lead.businessName || this.lead.contactName || "â"}</strong><br>
                 ${new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"long",year:"numeric"})}<br>
                 Valid for 30 days
               </div>
@@ -1459,9 +1459,9 @@
             ${vol > 0 ? `
             <div class="lf-op-snapshot">
               <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Volume Analysed</div><div class="lf-op-snap-val">${fmtK(vol)}</div></div>
-              <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Transactions</div><div class="lf-op-snap-val">${txCnt > 0 ? txCnt.toLocaleString("en-GB") : "—"}</div></div>
-              <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Avg Transaction</div><div class="lf-op-snap-val">${avgTx > 0 ? fmt2(avgTx) : "—"}</div></div>
-              <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Current Rate</div><div class="lf-op-snap-val" style="color:${curRate !== null ? (curRate < 1 ? "var(--green)" : curRate < 2.2 ? "var(--amber)" : "var(--red)") : "var(--g4)"}">${curRate !== null ? curRate.toFixed(2) + "%" : "—"}</div></div>
+              <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Transactions</div><div class="lf-op-snap-val">${txCnt > 0 ? txCnt.toLocaleString("en-GB") : "â"}</div></div>
+              <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Avg Transaction</div><div class="lf-op-snap-val">${avgTx > 0 ? fmt2(avgTx) : "â"}</div></div>
+              <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Current Rate</div><div class="lf-op-snap-val" style="color:${curRate !== null ? (curRate < 1 ? "var(--green)" : curRate < 2.2 ? "var(--amber)" : "var(--red)") : "var(--g4)"}">${curRate !== null ? curRate.toFixed(2) + "%" : "â"}</div></div>
             </div>` : ""}
 
             <!-- Pricing table -->
@@ -1486,12 +1486,12 @@
                   </tr>
                   <tr id="lf-qp-cb-row">
                     <td>Chargebacks</td>
-                    <td class="lf-op-ptable-rate" style="color:var(--red)" id="lf-qp-cb-val">£15.00 per chargeback</td>
+                    <td class="lf-op-ptable-rate" style="color:var(--red)" id="lf-qp-cb-val">Â£15.00 per chargeback</td>
                     <td class="lf-op-ptable-note">Fee applied when a dispute is received</td>
                   </tr>
                   <tr id="lf-qp-ref-row">
                     <td>Refunds</td>
-                    <td class="lf-op-ptable-rate" id="lf-qp-ref-val">£1.00 per refund</td>
+                    <td class="lf-op-ptable-rate" id="lf-qp-ref-val">Â£1.00 per refund</td>
                     <td class="lf-op-ptable-note">Fee applied when processing refunds</td>
                   </tr>
                 </tbody>
@@ -1499,7 +1499,7 @@
             </div>
           </div>
 
-          <!-- ══ E: ADMIN ACTIONS ══ -->
+          <!-- ââ E: ADMIN ACTIONS ââ -->
           <div class="lf-op-section lf-op-actions-section">
             <div class="lf-op-section-title">Admin Actions</div>
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--g6)">
@@ -1515,31 +1515,31 @@
             <div class="lf-op-action-row">
               <button class="lf-op-act-btn lf-op-act-primary" id="lf-gen-quote"
                       ${this.pricingResult && !this.quoteGenerated ? "" : "disabled"}>
-                ${this.lead.quote_id ? "✓ Quote Generated" : "ð Generate Quote Link"}
+                ${this.lead.quote_id ? "â Quote Generated" : "Ã°ÂÂÂ Generate Quote Link"}
               </button>
               <button class="lf-op-act-btn lf-op-act-secondary" id="lf-push-zoho"
                       ${!this.lead.zohoPushed ? "" : "disabled"}>
-                ${this.lead.zohoPushed ? "✓ Pushed to Zoho" : "☁ï¸ Push to Zoho"}
+                ${this.lead.zohoPushed ? "â Pushed to Zoho" : "âÃ¯Â¸Â Push to Zoho"}
               </button>
               <button class="lf-op-act-btn ${isKYB ? "lf-op-act-done" : "lf-op-act-kyb"}" id="lf-mark-kyb"
                       ${isKYB ? "disabled" : ""}>
-                ${isKYB ? "✓ KYB Pending" : "ð Mark KYB Ready"}
+                ${isKYB ? "â KYB Pending" : "Ã°ÂÂÂ Mark KYB Ready"}
               </button>
             </div>
             ${this.lead.quote_id ? `
             <div class="lf-op-quote-notice">
-              ✓ Quote <strong>${this.lead.quote_id}</strong> generated.
-              <a href="/quote.html?quote=${this.lead.quote_id}&admin=1" target="_blank">View (Admin) →</a>
-              &nbsp;·&nbsp;
-              <a href="/quote.html?quote=${this.lead.quote_id}" target="_blank">View (Merchant) →</a>
+              â Quote <strong>${this.lead.quote_id}</strong> generated.
+              <a href="/quote.html?quote=${this.lead.quote_id}&admin=1" target="_blank">View (Admin) â</a>
+              &nbsp;Â·&nbsp;
+              <a href="/quote.html?quote=${this.lead.quote_id}" target="_blank">View (Merchant) â</a>
             </div>` : ""}
             ${isKYB ? `
             <div class="lf-op-kyb-notice">
-              ð This lead is marked KYB Ready and added to the onboarding pipeline.
+              Ã°ÂÂÂ This lead is marked KYB Ready and added to the onboarding pipeline.
             </div>` : ""}
           </div>
 
-          <!-- ══ F: PRICING ENGINE SETTINGS (READ-ONLY) ══ -->
+          <!-- ââ F: PRICING ENGINE SETTINGS (READ-ONLY) ââ -->
           ${this._buildPricingEnginePanel()}
 
         </div>
@@ -1547,13 +1547,13 @@
     }
 
 
-    // ── Pricing Engine Settings — editable, in-memory only ────────
+    // ââ Pricing Engine Settings â editable, in-memory only ââââââââ
     // Values sourced from _localPricingSettings when set, otherwise from
     // the hardcoded defaults matching routes/pricing.js exactly.
-    // Changes are temporary — no DB persistence yet.
+    // Changes are temporary â no DB persistence yet.
     _buildPricingEnginePanel() {
 
-      // ── Default constants (mirrors routes/pricing.js) ─────────────────────
+      // ââ Default constants (mirrors routes/pricing.js) âââââââââââââââââââââ
       const DEFAULTS = {
         baseCosts: { uk: 1.10, eea: 1.60, international: 2.60, wespell: 0.0435 },
         profiles: {
@@ -1574,7 +1574,7 @@
       const gr = s.globalRules;
       const isModified = this._localPricingSettings !== null;
 
-      // ── Derived sell rates (same formula as server) ───────────────────────
+      // ââ Derived sell rates (same formula as server) âââââââââââââââââââââââ
       const sellRate = (base, wespell, margin, floor) =>
         Math.ceil(Math.max(base + wespell + margin, floor) * 100) / 100;
 
@@ -1586,21 +1586,21 @@
         };
       }
 
-      // ── Input helper ──────────────────────────────────────────────────────
+      // ââ Input helper ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
       const inp = (id, val, step = "0.01", min = "0") =>
         `<input id="${id}" type="number" step="${step}" min="${min}" value="${val}"
           style="width:80px;padding:4px 7px;border:1.5px solid var(--g5);border-radius:var(--r);
                  font-size:12px;font-family:'Inter',sans-serif;text-align:right;outline:none"
           onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--g5)'">`;
 
-      // ── Profile column builder ────────────────────────────────────────────
+      // ââ Profile column builder ââââââââââââââââââââââââââââââââââââââââââââ
       const profileCol = (name, p, d) => {
         const isStd = name === "standard";
         return `
           <div style="background:var(--g8);border:1px solid var(--g6);border-radius:var(--r);overflow:hidden;flex:1;min-width:160px">
             <div style="background:${isStd ? "var(--brand)" : "var(--g6)"};padding:8px 12px">
               <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${isStd ? "var(--white)" : "var(--g3)"}">
-                ${name.charAt(0).toUpperCase() + name.slice(1)}${isStd ? " ✦ Default" : ""}
+                ${name.charAt(0).toUpperCase() + name.slice(1)}${isStd ? " â¦ Default" : ""}
               </div>
             </div>
             <div style="padding:10px 12px;display:flex;flex-direction:column;gap:8px">
@@ -1638,10 +1638,10 @@
       return `
         <div class="lf-op-section" style="border-left:3px solid var(--brand)" data-ps-panel="1">
           <div class="lf-op-section-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            ⚙ Pricing Engine Settings
+            â Pricing Engine Settings
             ${isModified
-              ? `<span style="font-size:9px;font-weight:600;background:#fef3c7;color:#b45309;border:1px solid #fde68a;padding:1px 7px;border-radius:20px;letter-spacing:.5px">⚠ Changes are temporary (not saved)</span>`
-              : `<span style="font-size:9px;font-weight:600;background:var(--green-lt);color:var(--green);border:1px solid var(--green-bd);padding:1px 7px;border-radius:20px;letter-spacing:.5px">✓ Using server defaults</span>`
+              ? `<span style="font-size:9px;font-weight:600;background:#fef3c7;color:#b45309;border:1px solid #fde68a;padding:1px 7px;border-radius:20px;letter-spacing:.5px">â  Changes are temporary (not saved)</span>`
+              : `<span style="font-size:9px;font-weight:600;background:var(--green-lt);color:var(--green);border:1px solid var(--green-bd);padding:1px 7px;border-radius:20px;letter-spacing:.5px">â Using server defaults</span>`
             }
           </div>
 
@@ -1691,7 +1691,7 @@
                 ${gr.volumeMargins.map((t, i) => `
                 <tr>
                   <td style="padding:8px 12px;font-size:12px;color:var(--g3);border-bottom:1px solid var(--g6)">
-                    ${i === 0 ? "Under £50k / mo" : i === 1 ? "£50k – £200k / mo" : "£200k+ / mo"}
+                    ${i === 0 ? "Under Â£50k / mo" : i === 1 ? "Â£50k â Â£200k / mo" : "Â£200k+ / mo"}
                   </td>
                   <td style="padding:8px 12px;border-bottom:1px solid var(--g6);text-align:right">
                     ${inp("ps-vmarg-" + i, t.margin.toFixed(2))}
@@ -1713,7 +1713,7 @@
                 ${gr.fixedFeeTiers.map((t, i) => `
                 <tr>
                   <td style="padding:8px 12px;font-size:12px;color:var(--g3);border-bottom:1px solid var(--g6)">
-                    ${i === 0 ? "Under £100k / mo" : i === 1 ? "£100k – £200k / mo" : "£200k+ / mo"}
+                    ${i === 0 ? "Under Â£100k / mo" : i === 1 ? "Â£100k â Â£200k / mo" : "Â£200k+ / mo"}
                   </td>
                   <td style="padding:8px 12px;border-bottom:1px solid var(--g6);text-align:right">
                     ${inp("ps-ftier-" + i, t.fee.toFixed(0), "1", "1")}
@@ -1734,11 +1734,11 @@
           <!-- Apply + Reset -->
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <button id="ps-apply" style="background:var(--brand);color:var(--white);border:none;padding:9px 20px;border-radius:var(--r);font-size:13px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer">
-              ✓ Apply Changes
+              â Apply Changes
             </button>
             ${isModified ? `
             <button id="ps-reset" style="background:var(--white);color:var(--g3);border:1.5px solid var(--g5);padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer">
-              ↺ Reset to Defaults
+              âº Reset to Defaults
             </button>` : ""}
             <span style="font-size:11px;color:var(--g3)" id="ps-status"></span>
           </div>
@@ -1748,26 +1748,26 @@
           <div style="border-top:1px solid var(--g6)">
             ${["Manual intl % always overrides CSV-detected intl %",
                "CSV intl detection uses card issue country column only",
-               "CSV intl detection requires ≥80% country coverage",
+               "CSV intl detection requires â¥80% country coverage",
                "Blended rate only shown when real intl data exists",
                "Blended rate suppressed at 0% and 100% international",
                "Unknown or missing profile defaults to Standard"]
               .map(t => `<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--g6);font-size:12px">
-                <span style="color:var(--green);font-size:13px;flex-shrink:0">✓</span>
+                <span style="color:var(--green);font-size:13px;flex-shrink:0">â</span>
                 <span style="color:var(--black);line-height:1.4">${t}</span>
               </div>`).join("")}
           </div>
         </div>`;
     }
 
-    // ── Apply Pricing Engine Settings ──────────────────────────
+    // ââ Apply Pricing Engine Settings ââââââââââââââââââââââââââ
     // Reads all input values from the panel, validates them,
     // stores to this._localPricingSettings, and triggers recalculation.
     _applyPricingSettings() {
       const g = id => document.getElementById(id);
       const v = id => parseFloat(g(id)?.value);
 
-      // Validate all inputs — must be finite positive numbers
+      // Validate all inputs â must be finite positive numbers
       const ids = [
         "ps-base-uk","ps-base-intl","ps-base-wespell",
         "ps-rule-minmargin","ps-rule-undercut","ps-rule-floor",
@@ -1783,16 +1783,16 @@
           const el = g(id);
           if (el) { el.style.borderColor = "var(--red)"; setTimeout(() => el.style.borderColor = "var(--g5)", 2000); }
           const status = g("ps-status");
-          if (status) status.textContent = "⚠ Please fix invalid values before applying.";
+          if (status) status.textContent = "â  Please fix invalid values before applying.";
           return;
         }
       }
 
-      // Build settings object — same structure as getPricingSettings()
+      // Build settings object â same structure as getPricingSettings()
       this._localPricingSettings = {
         baseCosts: {
           uk:            v("ps-base-uk"),
-          eea:           1.60,   // EEA not editable yet — keep default
+          eea:           1.60,   // EEA not editable yet â keep default
           international: v("ps-base-intl"),
           wespell:       v("ps-base-wespell"),
         },
@@ -1831,7 +1831,7 @@
             { maxVol: Infinity, fee: v("ps-ftier-2") },
           ],
           fixedFeeMinimum: v("ps-ftier-0"),  // minimum = smallest fee tier
-          gatewayFeeTiers: [                  // gateway costs unchanged — not editable yet
+          gatewayFeeTiers: [                  // gateway costs unchanged â not editable yet
             { maxVol: 100000,   fee: 0.10 },
             { maxVol: 200000,   fee: 0.08 },
             { maxVol: Infinity, fee: 0.05 },
@@ -1847,12 +1847,12 @@
         },
       };
 
-      // Invalidate cached result — next recalc will use new settings
+      // Invalidate cached result â next recalc will use new settings
       this.pricingResult = null;
 
-      // ── Persist to DB via API ───────────────────────────────────
+      // ââ Persist to DB via API âââââââââââââââââââââââââââââââââââ
       const status = document.getElementById("ps-status");
-      if (status) status.textContent = "Saving…";
+      if (status) status.textContent = "Savingâ¦";
 
       fetch("/api/settings", {
         method:  "PUT",
@@ -1862,26 +1862,26 @@
         .then(r => r.json())
         .then(data => {
           if (data.success) {
-            // Server echoes back the live settings — update local copy to match DB
+            // Server echoes back the live settings â update local copy to match DB
             this._localPricingSettings = data.settings;
             this.pricingResult = null;
             this._render();
             const s = document.getElementById("ps-status");
-            if (s) { s.textContent = "✓ Saved to server"; setTimeout(() => { if(s) s.textContent = ""; }, 3000); }
+            if (s) { s.textContent = "â Saved to server"; setTimeout(() => { if(s) s.textContent = ""; }, 3000); }
           } else {
             const s = document.getElementById("ps-status");
-            if (s) s.textContent = "⚠ Save failed: " + (data.error || "unknown error");
+            if (s) s.textContent = "â  Save failed: " + (data.error || "unknown error");
           }
         })
         .catch(err => {
           const s = document.getElementById("ps-status");
-          if (s) s.textContent = "⚠ Network error — changes applied locally only";
+          if (s) s.textContent = "â  Network error â changes applied locally only";
           // Keep _localPricingSettings so the override still works in memory
           this._render();
         });
     }
 
-    // ── Load pricing settings from API ─────────────────────────
+    // ââ Load pricing settings from API âââââââââââââââââââââââââ
     // Called once when Step 10 renders. Populates _localPricingSettings
     // with whatever the server currently has (DB or defaults).
     // This ensures the admin panel always shows live values.
@@ -1891,7 +1891,7 @@
         const data = await resp.json();
         if (data.success && data.settings) {
           this._localPricingSettings = data.settings;
-          // Re-render panel with loaded values — don't invalidate pricingResult
+          // Re-render panel with loaded values â don't invalidate pricingResult
           // (settings were just loaded, they haven't changed)
           const panel = document.querySelector(".lf-op-section[data-ps-panel]");
           if (panel) {
@@ -1900,15 +1900,15 @@
           }
         }
       } catch (e) {
-        // Silently fail — panel will show hardcoded DEFAULTS, which is correct behaviour
+        // Silently fail â panel will show hardcoded DEFAULTS, which is correct behaviour
       }
     }
 
-    // ── Rejection screen ───────────────────────────────────
+    // ââ Rejection screen âââââââââââââââââââââââââââââââââââ
     _buildRejected() {
       return `
         <div class="lf-step-wrap lf-rejected">
-          <div class="lf-rejected-icon">ð«</div>
+          <div class="lf-rejected-icon">Ã°ÂÂÂ«</div>
           <h2 class="lf-rejected-title">Business Not Supported</h2>
           <p class="lf-rejected-msg">${this._rejectReason || "This business does not meet our onboarding criteria."}</p>
           <div class="lf-rejected-detail">
@@ -1920,26 +1920,26 @@
             This lead has been saved with status <strong>Rejected</strong>.
             You can go back and correct the information if this was entered incorrectly.
           </p>
-          <button class="lf-act-btn lf-act-secondary" id="lf-rej-back">← Go Back &amp; Edit</button>
+          <button class="lf-act-btn lf-act-secondary" id="lf-rej-back">â Go Back &amp; Edit</button>
         </div>`;
     }
 
-    // ── Navigation footer ──────────────────────────────────
+    // ââ Navigation footer ââââââââââââââââââââââââââââââââââ
     _buildFooter() {
       const isLast = this.currentStep === this.totalSteps - 1;
       return `
         <div class="lf-footer">
           <button class="lf-nav-btn lf-nav-back" id="lf-prev"
                   style="${this.currentStep === 1 ? "visibility:hidden" : ""}">
-            ← Back
+            â Back
           </button>
           <button class="lf-nav-btn lf-nav-next" id="lf-next">
-            ${isLast ? "Review →" : "Next →"}
+            ${isLast ? "Review â" : "Next â"}
           </button>
         </div>`;
     }
 
-    // ── Bind all events after render ───────────────────────
+    // ââ Bind all events after render âââââââââââââââââââââââ
     _bindEvents() {
       const q = id => document.getElementById(id);
 
@@ -1974,11 +1974,11 @@
         const merchantUrl = `${window.location.origin}/quote.html?quote=${this.lead.quote_id}`;
         navigator.clipboard.writeText(merchantUrl).then(() => {
           const btn = q("lf-copy-quote-link");
-          if (btn) { btn.textContent = "✓ Copied!"; setTimeout(() => { btn.textContent = "ð Copy Merchant Link"; }, 2000); }
+          if (btn) { btn.textContent = "â Copied!"; setTimeout(() => { btn.textContent = "Ã°ÂÂÂ Copy Merchant Link"; }, 2000); }
         }).catch(() => alert("Failed to copy. Please try again."));
       });
       q("lf-download-quote-pdf")?.addEventListener("click", () => {
-        // Open the admin PDF view — the quote.html page handles PDF export
+        // Open the admin PDF view â the quote.html page handles PDF export
         window.open(`/quote.html?quote=${this.lead.quote_id}&admin=1&autoprint=1`, "_blank");
       });
       q("lf-ov-add-note")?.addEventListener("click", async () => {
@@ -2019,7 +2019,7 @@
 
       q("lf-apply-override")?.addEventListener("click", () => this._applyPricingOverride());
 
-      // ── Pricing Engine Settings buttons ───────────────────────
+      // ââ Pricing Engine Settings buttons âââââââââââââââââââââââ
       q("ps-apply")?.addEventListener("click", () => this._applyPricingSettings());
       q("ps-reset")?.addEventListener("click", () => {
         this._localPricingSettings = null;
@@ -2033,7 +2033,7 @@
         this._loadPricingSettings();
       }
 
-      // ── Pricing profile selector ───────────────────────────
+      // ââ Pricing profile selector âââââââââââââââââââââââââââ
       q("lf-pricing-profile")?.addEventListener("change", (e) => {
         this.lead.pricingProfile = e.target.value;
         // Clear cached result so Step 10 recalculates with the new profile
@@ -2042,7 +2042,7 @@
         this._render();
       });
 
-      // ── Rate Simulator live updates ────────────────────────
+      // ââ Rate Simulator live updates ââââââââââââââââââââââââ
       const simRateEl  = q("lf-sim-rate");
       const simFixedEl = q("lf-sim-fixed");
       const simRange   = q("lf-sim-rate-range");
@@ -2054,7 +2054,7 @@
         const avgTx  = parseFloat(this.lead.avgTransactionValue) || 55;
         const txCnt  = avgTx > 0 ? Math.round(vol / avgTx) : 0;
         const rev    = vol > 0 ? ((vol * sr / 100) + (txCnt * sf / 100)) : 0;
-        const effR   = vol > 0 ? ((rev / vol) * 100).toFixed(2) + "%" : "—";
+        const effR   = vol > 0 ? ((rev / vol) * 100).toFixed(2) + "%" : "â";
         const mrg    = Math.max(0, sr - 0.46).toFixed(2);
         const rawFeeManual  = parseFloat(this.lead.currentMonthlyFees)          || 0;
         const rawFeePricing = parseFloat(this.lead.pricing?.currentMonthlyFees) || 0;
@@ -2067,13 +2067,13 @@
         const curPay  = simCurFees > 0 ? simCurFees : (curRate && vol > 0 ? (curRate / 100) * vol : null);
         const save    = curPay !== null ? Math.max(0, curPay - rev) : 0;
 
-        const fmt2 = (n) => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const fmt2 = (n) => "Â£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-        if (q("lf-sim-out-cost"))  q("lf-sim-out-cost").textContent  = vol > 0 ? fmt2(rev)  : "—";
+        if (q("lf-sim-out-cost"))  q("lf-sim-out-cost").textContent  = vol > 0 ? fmt2(rev)  : "â";
         if (q("lf-sim-out-eff"))   q("lf-sim-out-eff").textContent   = effR;
         if (q("lf-sim-out-mrg"))   q("lf-sim-out-mrg").textContent   = "~" + mrg + "%";
         if (q("lf-sim-out-save")) {
-          q("lf-sim-out-save").textContent  = save > 0 ? fmt2(save) : "—";
+          q("lf-sim-out-save").textContent  = save > 0 ? fmt2(save) : "â";
           q("lf-sim-out-save").style.color  = save > 0 ? "var(--green)" : "var(--g3)";
         }
         // Keep range in sync with number input
@@ -2131,7 +2131,7 @@
         updateSimOutputs();
       });
 
-      // ── Fee toggles + optional fee row visibility ──────────
+      // ââ Fee toggles + optional fee row visibility ââââââââââ
       const updateFeeRows = () => {
         const amexOn = q("lf-toggle-amex")?.checked;
         const fxOn   = q("lf-toggle-fx")?.checked;
@@ -2152,8 +2152,8 @@
 
         if (q("lf-qp-amex-val")) q("lf-qp-amex-val").textContent = amexPct.toFixed(2) + "% + " + (q("lf-amex-input")?.dataset?.fixed || "20") + "p per transaction";
         if (q("lf-qp-fx-val"))   q("lf-qp-fx-val").textContent   = fxPct.toFixed(2) + "%";
-        if (q("lf-qp-cb-val"))   q("lf-qp-cb-val").textContent   = "£" + cbAmt.toFixed(2) + " per chargeback";
-        if (q("lf-qp-ref-val"))  q("lf-qp-ref-val").textContent  = "£" + refAmt.toFixed(2) + " per refund";
+        if (q("lf-qp-cb-val"))   q("lf-qp-cb-val").textContent   = "Â£" + cbAmt.toFixed(2) + " per chargeback";
+        if (q("lf-qp-ref-val"))  q("lf-qp-ref-val").textContent  = "Â£" + refAmt.toFixed(2) + " per refund";
       };
 
       ["amex", "fx", "chargeback", "refund"].forEach(fee => {
@@ -2174,7 +2174,7 @@
         });
       });
 
-      // ── Step 7: Live avg ticket warning ───────────────────────────
+      // ââ Step 7: Live avg ticket warning âââââââââââââââââââââââââââ
       const updateAvgTicketWarning = () => {
         if (this.currentStep !== 7) return;
         const vol = parseFloat(document.getElementById("lf-monthlyVolume")?.value) || 0;
@@ -2182,7 +2182,7 @@
         let warn = document.getElementById("lf-avg-ticket-warning");
         if (avg > 0 && avg < 15) {
           const fixedPct = ((0.143 / avg) * 100).toFixed(1);
-          const msg = `⚠ï¸ <strong>Low average ticket (£${avg.toFixed(2)})</strong> — our fixed costs (~£0.14/tx) represent <strong>${fixedPct}%</strong> of this transaction value. Competitive pricing is difficult below £15. Consider the <strong>Acquisition</strong> profile.`;
+          const msg = `â Ã¯Â¸Â <strong>Low average ticket (Â£${avg.toFixed(2)})</strong> â our fixed costs (~Â£0.14/tx) represent <strong>${fixedPct}%</strong> of this transaction value. Competitive pricing is difficult below Â£15. Consider the <strong>Acquisition</strong> profile.`;
           if (!warn) {
             warn = document.createElement("div");
             warn.id = "lf-avg-ticket-warning";
@@ -2267,13 +2267,13 @@
             industryInput.classList.add("lf-industry-prohibited");
             const div = document.createElement("div");
             div.className = "lf-industry-status lf-industry-status-red";
-            div.textContent = "ð« Prohibited industry — this lead cannot proceed";
+            div.textContent = "Ã°ÂÂÂ« Prohibited industry â this lead cannot proceed";
             industryInput.insertAdjacentElement("afterend", div);
           } else if (isR) {
             industryInput.classList.add("lf-industry-restricted");
             const div = document.createElement("div");
             div.className = "lf-industry-status lf-industry-status-amber";
-            div.textContent = "⚠ï¸ Restricted industry — additional review may be required";
+            div.textContent = "â Ã¯Â¸Â Restricted industry â additional review may be required";
             industryInput.insertAdjacentElement("afterend", div);
           }
         };
@@ -2305,7 +2305,7 @@
         }, { capture: true });
       }
 
-      // ── Country typeahead wiring ───────────────────────────
+      // ââ Country typeahead wiring âââââââââââââââââââââââââââ
       const countryInput    = q("lf-country");
       const countryDropdown = q("lf-country-dropdown");
       if (countryInput && countryDropdown) {
@@ -2336,13 +2336,13 @@
             countryInput.classList.add("lf-industry-prohibited");
             const div = document.createElement("div");
             div.className = "lf-industry-status lf-industry-status-red";
-            div.textContent = "ð« We do not accept merchants from this country";
+            div.textContent = "Ã°ÂÂÂ« We do not accept merchants from this country";
             countryInput.insertAdjacentElement("afterend", div);
           } else if (isR) {
             countryInput.classList.add("lf-industry-restricted");
             const div = document.createElement("div");
             div.className = "lf-industry-status lf-industry-status-amber";
-            div.textContent = "⚠ï¸ Higher-risk jurisdiction — additional review required";
+            div.textContent = "â Ã¯Â¸Â Higher-risk jurisdiction â additional review required";
             countryInput.insertAdjacentElement("afterend", div);
           }
         };
@@ -2399,13 +2399,13 @@
         });
       });
 
-      // ── CSV Upload wiring ──────────────────────────────────
+      // ââ CSV Upload wiring ââââââââââââââââââââââââââââââââââ
       const dropzone  = document.getElementById("lf-csv-dropzone");
       const fileInput = document.getElementById("lf-csv-file-input");
       const clearBtn  = document.getElementById("lf-csv-clear");
 
       if (fileInput) {
-        // fileInput change — primary upload path
+        // fileInput change â primary upload path
         fileInput.addEventListener("change", async (e) => {
           const file = e.target.files && e.target.files[0];
           if (!file) return;
@@ -2469,7 +2469,7 @@
       }
     }
 
-    // ── Update qualification warning banners for Step 1 ──────
+    // ââ Update qualification warning banners for Step 1 ââââââ
     _updateQualificationWarning() {
       const oldWarning = this.overlay.querySelector(".lf-qual-warning");
       if (oldWarning) oldWarning.remove();
@@ -2491,14 +2491,14 @@
         const industryCheck = window.RiskEngine.checkQualification("United Kingdom", industry, indDetail);
         let msg;
         if (!countryCheck.allowed) {
-          msg = `ð« We do not accept merchants operating from <strong>${country}</strong>. This lead cannot proceed.`;
+          msg = `Ã°ÂÂÂ« We do not accept merchants operating from <strong>${country}</strong>. This lead cannot proceed.`;
         } else if (!industryCheck.allowed) {
           const industryLabel = indDetail || industry;
-          msg = `ð« We do not accept merchants in the <strong>${industryLabel}</strong> industry. This lead cannot proceed.`;
+          msg = `Ã°ÂÂÂ« We do not accept merchants in the <strong>${industryLabel}</strong> industry. This lead cannot proceed.`;
         } else {
-          msg = `ð« ${check.reason || "This combination is not supported. This lead cannot proceed."}`;
+          msg = `Ã°ÂÂÂ« ${check.reason || "This combination is not supported. This lead cannot proceed."}`;
         }
-        banner.innerHTML = `<span class="lf-qual-icon">ð«</span><span class="lf-qual-text">${msg}</span>`;
+        banner.innerHTML = `<span class="lf-qual-icon">Ã°ÂÂÂ«</span><span class="lf-qual-text">${msg}</span>`;
         const fieldsContainer = this.overlay.querySelector(".lf-fields");
         if (fieldsContainer) fieldsContainer.parentElement.insertBefore(banner, fieldsContainer);
       } else if (check.restricted) {
@@ -2507,17 +2507,17 @@
         const countryRestrictedCheck = window.RiskEngine.checkQualification(country, "");
         let msg;
         if (countryRestrictedCheck.restricted) {
-          msg = `⚠ï¸ <strong>${country}</strong> is a higher-risk jurisdiction. This lead can proceed but will require additional compliance review.`;
+          msg = `â Ã¯Â¸Â <strong>${country}</strong> is a higher-risk jurisdiction. This lead can proceed but will require additional compliance review.`;
         } else {
-          msg = `⚠ï¸ ${check.reason || "This country/industry is restricted. Additional review may be required."}`;
+          msg = `â Ã¯Â¸Â ${check.reason || "This country/industry is restricted. Additional review may be required."}`;
         }
-        banner.innerHTML = `<span class="lf-qual-icon">⚠ï¸</span><span class="lf-qual-text">${msg}</span>`;
+        banner.innerHTML = `<span class="lf-qual-icon">â Ã¯Â¸Â</span><span class="lf-qual-text">${msg}</span>`;
         const fieldsContainer = this.overlay.querySelector(".lf-fields");
         if (fieldsContainer) fieldsContainer.parentElement.insertBefore(banner, fieldsContainer);
       }
     }
 
-    // ── Show/hide subscriptionFrequency when paymentTypes changes
+    // ââ Show/hide subscriptionFrequency when paymentTypes changes
     _updateConditional() {
       const wrap = this.overlay.querySelector('[data-field="subscriptionFrequency"]');
       if (!wrap) return;
@@ -2536,9 +2536,9 @@
       }
     }
 
-    // ── Handle CSV File Upload ──────────────────────────────
-    // ── Handle CSV File Upload ─────────────────────────────────────────────
-    // Full statement analysis — same logic as the public quote builder.
+    // ââ Handle CSV File Upload ââââââââââââââââââââââââââââââ
+    // ââ Handle CSV File Upload âââââââââââââââââââââââââââââââââââââââââââââ
+    // Full statement analysis â same logic as the public quote builder.
     // Extracts: volume, fees, current effective rate, card mix, debit fraction,
     // merchant tier, processor detection. All values persisted onto lead.
     async _handleCSVFile(file) {
@@ -2551,18 +2551,18 @@
         const result = this._analyseStatement(text, file.name);
         const s      = result.summary;
 
-        // ── Persist ALL statement-derived fields ──────────────────────────
+        // ââ Persist ALL statement-derived fields ââââââââââââââââââââââââââ
         this.lead.monthlyVolume       = s.vol;
         this.lead.avgTransactionValue = s.cnt > 0 ? Number((s.vol / s.cnt).toFixed(2)) : "";
         this.lead.transactionCount    = s.cnt || "";
-        // currentMonthlyFees → feeds "Currently Paying" and pricing engine
+        // currentMonthlyFees â feeds "Currently Paying" and pricing engine
         this.lead.currentMonthlyFees  = s.totalFees > 0 ? Number(s.totalFees.toFixed(2)) : "";
-        // csvDebitFrac → actual card mix, replaces hardcoded 0.70 in pricing call
+        // csvDebitFrac â actual card mix, replaces hardcoded 0.70 in pricing call
         this.lead.csvDebitFrac        = s.debitFrac;
-        // csvIntlFrac → statement-derived international fraction (null when undetectable)
-        // Manual intlPercentage always wins — only set csvIntlFrac, never overwrite intlPercentage
+        // csvIntlFrac â statement-derived international fraction (null when undetectable)
+        // Manual intlPercentage always wins â only set csvIntlFrac, never overwrite intlPercentage
         this.lead.csvIntlFrac         = s.csvIntlFrac;
-        // csvCurrentRate → pre-calculated effective rate for Step 10 display fallback
+        // csvCurrentRate â pre-calculated effective rate for Step 10 display fallback
         this.lead.csvCurrentRate      = s.currentRate > 0 ? Number(s.currentRate.toFixed(4)) : "";
         this.lead.csvCardMix          = s.cardMix ? JSON.stringify(s.cardMix) : "";
         this.lead.csvTierLabel        = s.tierLabel || "";
@@ -2584,7 +2584,7 @@
       }
     }
 
-    // ── Statement analyser — identical logic to processCSV() in public quote builder ──
+    // ââ Statement analyser â identical logic to processCSV() in public quote builder ââ
     _analyseStatement(csvText, fileName) {
       if (!csvText || !String(csvText).trim()) {
         throw new Error("CSV file is empty");
@@ -2623,9 +2623,9 @@
 
       if (!rows.length) throw new Error("No data rows found in CSV");
 
-      // ── Column detection — same HINTS as public quote builder ─────────────
+      // ââ Column detection â same HINTS as public quote builder âââââââââââââ
       const HINTS = {
-        // "payment" removed — matches "Payment Method" before real amount columns.
+        // "payment" removed â matches "Payment Method" before real amount columns.
         // amount detection handled separately below with two-pass priority logic.
         amount:   ["amount","gross","total","value","sale","charge","net"],
         fee:      ["fee","fees","processing","commission","cost","charge_amount","charge"],
@@ -2633,13 +2633,13 @@
         // rowType: "type" is exact-only to prevent matching "Card Type", "Payment Type" etc.
         // Multi-word phrases use includes() via the existing isMultiWord path.
         rowType:  ["transaction type","entry type","record type","transaction_type","entry_type","record_type","__exact__type"],
-        // ── International detection columns ─────────────────────────────────
+        // ââ International detection columns âââââââââââââââââââââââââââââââââ
         // Priority 1: card/issuing country (Stripe: "Card Issue Country", Adyen: "Issued Country")
         country:  ["card issue country","issued country","card country","issuing country","card_country","card_issue_country"],
         currency: ["currency","converted currency","transaction currency"],
-        // ── Payment method — used to skip non-card rows (Klarna, iDEAL etc)
+        // ââ Payment method â used to skip non-card rows (Klarna, iDEAL etc)
         paymentMethod: ["payment method name","payment method","payment_method","tender type","tender_type"],
-        // ── Presentment currency — Shopify: non-GBP = international card
+        // ââ Presentment currency â Shopify: non-GBP = international card
         presentmentCurrency: ["presentment currency","presentment_currency","billing currency","original currency"],
       };
       const colMap = {};
@@ -2662,10 +2662,10 @@
         }
       }
 
-      // ── Amount column — two-pass selection ───────────────────────────────
+      // ââ Amount column â two-pass selection âââââââââââââââââââââââââââââââ
       // Pass 1: collect all candidate headers that match any amount hint.
       // Ordered by priority: gross > amount > total > value > sale > charge > net.
-      // "payment" excluded — too broad, hits "Payment Method" before real amount cols.
+      // "payment" excluded â too broad, hits "Payment Method" before real amount cols.
       const AMOUNT_PRIORITY = ["gross","amount","total","value","sale","charge","net"];
       const amountCandidates = [];
       for (const hint of AMOUNT_PRIORITY) {
@@ -2676,7 +2676,7 @@
       }
       // Pass 2: from candidates, prefer the first one where the first data row
       // contains a parseable positive number. Falls back to first candidate if none parse.
-      const pAmtTest = (v) => { const n = parseFloat(String(v||"").replace(/[£$€,\s]/g,"")); return Number.isFinite(n) && n > 0; };
+      const pAmtTest = (v) => { const n = parseFloat(String(v||"").replace(/[Â£$â¬,\s]/g,"")); return Number.isFinite(n) && n > 0; };
       const firstDataRow = rows[0] || {};
       const numericCandidate = amountCandidates.find(h => pAmtTest(firstDataRow[h]));
       colMap.amount = numericCandidate || amountCandidates[0] || "";
@@ -2685,13 +2685,13 @@
         throw new Error("Could not find an amount column. Supported names: amount, gross, total, value, sale, charge, net");
       }
 
-      // Strip currency symbols — same as pAmt() in public quote builder
+      // Strip currency symbols â same as pAmt() in public quote builder
       const pAmt = (v) => {
-        const n = parseFloat(String(v || "").replace(/[£$€,\s]/g, ""));
+        const n = parseFloat(String(v || "").replace(/[Â£$â¬,\s]/g, ""));
         return isNaN(n) || n <= 0 ? null : n;
       };
 
-      // Card type classifier — identical to classCard() in public quote builder
+      // Card type classifier â identical to classCard() in public quote builder
       const classCard = (s) => {
         s = (s || "").toLowerCase();
         if (s.includes("amex") || s.includes("american express")) return "amex";
@@ -2706,7 +2706,7 @@
       };
       const isDebitCard = (k) => ["visa_debit","mc_debit","maestro"].includes(k);
 
-      // Processor detection — same keywords as public quote builder
+      // Processor detection â same keywords as public quote builder
       const PROCESSORS = {
         Stripe:       ["stripe","balance_transaction","charge_id","payout"],
         Worldpay:     ["worldpay","authcode","merchantnumber"],
@@ -2723,14 +2723,14 @@
         if (keywords.some(kw => haystack.includes(kw))) { processor = name; break; }
       }
 
-      // ── International detection mode ──────────────────────────────────────
+      // ââ International detection mode ââââââââââââââââââââââââââââââââââââââ
       // Only country column is reliable enough to derive intlFrac.
-      // Currency is NOT used — non-GBP currency ≠ international card origin
+      // Currency is NOT used â non-GBP currency â  international card origin
       // (e.g. a French tourist paying in GBP counts as non-GBP but non-UK card).
-      // If no country column → intlFrac = null. Do not guess.
+      // If no country column â intlFrac = null. Do not guess.
       const intlMode = colMap.country ? "country" : colMap.presentmentCurrency ? "presentmentCurrency" : "none";
 
-      // ── Main aggregation — identical to processCSV() in public quote builder ──
+      // ââ Main aggregation â identical to processCSV() in public quote builder ââ
       let vol = 0, cnt = 0, totalFees = 0, intlVol = 0, countryPopulated = 0;
       const cardData = {};
 
@@ -2752,7 +2752,7 @@
 
         cnt++; vol += a;
 
-        // Fee column — total fees paid to current processor
+        // Fee column â total fees paid to current processor
         const fv = colMap.fee ? (pAmt(r[colMap.fee]) || 0) : 0;
         if (fv) totalFees += fv;
 
@@ -2762,7 +2762,7 @@
         cardData[k].vol += a;
         cardData[k].cnt++;
 
-        // International volume tracking — country or presentmentCurrency mode
+        // International volume tracking â country or presentmentCurrency mode
         if (intlMode === "country") {
           const c = (r[colMap.country] || "").trim().toUpperCase();
           if (c !== "") {
@@ -2780,16 +2780,16 @@
       if (vol <= 0) throw new Error("No valid transaction amounts found in this CSV.");
       if (cnt < 2)  throw new Error("Not enough transactions found. Please upload a fuller statement or use Manual Entry.");
 
-      // Debit fraction from actual card mix — same as public quote builder
+      // Debit fraction from actual card mix â same as public quote builder
       let debitVol = 0;
       Object.entries(cardData).forEach(([k, v]) => { if (isDebitCard(k)) debitVol += v.vol; });
       const debitFrac = vol > 0 ? debitVol / vol : 0.70;
 
-      // Current effective rate — fees / volume * 100
+      // Current effective rate â fees / volume * 100
       const currentRate = (totalFees > 0 && vol > 0) ? (totalFees / vol) * 100 : 0;
 
-      // International fraction — requires country column AND ≥80% row coverage
-      // Below 80% coverage the country column is too sparse to trust — return null.
+      // International fraction â requires country column AND â¥80% row coverage
+      // Below 80% coverage the country column is too sparse to trust â return null.
       // Prefer null over a silently understated intlFrac.
       const countryCoverage = cnt > 0 ? countryPopulated / cnt : 0;
       const intlFrac = ((intlMode === "country" && countryCoverage >= 0.80) || intlMode === "presentmentCurrency")
@@ -2809,7 +2809,7 @@
           totalFees:    Number(totalFees.toFixed(2)),
           debitFrac:    Number(debitFrac.toFixed(4)),
           currentRate:  Number(currentRate.toFixed(4)),
-          csvIntlFrac,   // null when undetectable or coverage < 80%, 0–1 when reliably derived
+          csvIntlFrac,   // null when undetectable or coverage < 80%, 0â1 when reliably derived
           intlMode,      // "country" | "none"
           cardMix:       cardData,
           tierLabel,
@@ -2818,7 +2818,7 @@
       };
     }
 
-    // ── Apply Pricing Override ──────────────────────────────
+    // ââ Apply Pricing Override ââââââââââââââââââââââââââââââ
     _applyPricingOverride() {
       const rateEl  = document.getElementById("lf-override-rate");
       const fixedEl = document.getElementById("lf-override-fixed");
@@ -2827,10 +2827,10 @@
       let newRate  = parseFloat(rateEl.value);
       let newFixed = parseFloat(fixedEl.value);
 
-      const MIN_FIXED = 10;   // pence — hard floor
+      const MIN_FIXED = 10;   // pence â hard floor
       const MIN_RATE  = 0.76; // 0.46 cost + 0.30 min margin
 
-      // Hard-clamp — never let values below minimums save
+      // Hard-clamp â never let values below minimums save
       if (isNaN(newRate)  || newRate  < MIN_RATE)  newRate  = MIN_RATE;
       if (isNaN(newFixed) || newFixed < MIN_FIXED)  newFixed = MIN_FIXED;
 
@@ -2846,7 +2846,7 @@
       const fb = document.createElement("div");
       fb.id = "lf-override-feedback";
       fb.style.cssText = "font-size:11px;color:#00916e;font-weight:600;margin-top:6px;";
-      fb.textContent = `✓ Pricing updated — Rate: ${newRate}%  Fixed: ${newFixed}p`;
+      fb.textContent = `â Pricing updated â Rate: ${newRate}%  Fixed: ${newFixed}p`;
       document.getElementById("lf-apply-override")?.insertAdjacentElement("afterend", fb);
       setTimeout(() => fb?.remove(), 3000);
 
@@ -2858,12 +2858,12 @@
       this._render();
     }
 
-    // ── Determine which step to resume at ─────────────────
+    // ââ Determine which step to resume at âââââââââââââââââ
     _resumeStep() {
       return getLastStep(this.lead);
     }
 
-    // ── Navigation: back ──────────────────────────────────
+    // ââ Navigation: back ââââââââââââââââââââââââââââââââââ
     _prev() {
       if (this.currentStep > 1) {
         this._collectFields();
@@ -2872,7 +2872,7 @@
       }
     }
 
-    // ── Validation method for current step ────────────────────
+    // ââ Validation method for current step ââââââââââââââââââââ
     _validateStep() {
       const step = STEPS[this.currentStep - 1];
       if (!step) return true;
@@ -2887,7 +2887,7 @@
           this._fieldError("lf-country", "Country is required");
           return false;
         }
-        // Case-insensitive country match — also auto-corrects casing
+        // Case-insensitive country match â also auto-corrects casing
         const typedCountry = String(this.lead.country).trim();
         const matchedCountry = COUNTRIES.find(c => c.toLowerCase() === typedCountry.toLowerCase());
         if (!matchedCountry) {
@@ -2920,7 +2920,7 @@
       if (this.currentStep === 3) {
         const intlVal = this.lead.intlPercentage;
         if (intlVal === undefined || intlVal === null || String(intlVal).trim() === "") {
-          this._fieldError("lf-intlPercentage", "International transactions % is required — enter 0 if none");
+          this._fieldError("lf-intlPercentage", "International transactions % is required â enter 0 if none");
           return false;
         }
         const intlNum = parseFloat(intlVal);
@@ -2981,7 +2981,7 @@
       return true;
     }
 
-    // ── Navigation: next (with validation + qualification check)
+    // ââ Navigation: next (with validation + qualification check)
     async _next() {
       this._collectFields();
 
@@ -2990,7 +2990,7 @@
         return;
       }
 
-      // Step 1 → qualification gate (after validation passes)
+      // Step 1 â qualification gate (after validation passes)
       if (this.currentStep === 1) {
         const check = window.RiskEngine.checkQualification(this.lead.country, this.lead.industry, this.lead.industryDetail);
         if (!check.allowed) {
@@ -3002,7 +3002,7 @@
           return;
         }
         if (check.restricted) {
-          alert("⚠ï¸ " + check.reason);
+          alert("â Ã¯Â¸Â " + check.reason);
         }
       }
 
@@ -3013,7 +3013,7 @@
       if (this.currentStep === 7) this._calculateOutput();
     }
 
-    // ── Collect current step fields into this.lead ────────
+    // ââ Collect current step fields into this.lead ââââââââ
     _collectFields() {
       const step = STEPS[this.currentStep - 1];
       if (!step || step.isOutput) return;
@@ -3025,7 +3025,7 @@
       });
     }
 
-    // ── Field validation error ────────────────────────────
+    // ââ Field validation error ââââââââââââââââââââââââââââ
     _fieldError(id, msg) {
       const el = document.getElementById(id);
       if (!el) return;
@@ -3041,7 +3041,7 @@
       setTimeout(() => { el.style.borderColor = ""; errEl?.remove(); }, 3500);
     }
 
-    // ── Autosave: debounce 800ms ───────────────────────────
+    // ââ Autosave: debounce 800ms âââââââââââââââââââââââââââ
     _scheduleSave() {
       clearTimeout(this.saveTimeout);
       this._saveStatus("saving");
@@ -3072,7 +3072,7 @@
     _saveStatus(state) {
       const el = document.getElementById("lf-save-status");
       if (!el) return;
-      if      (state === "saving") el.innerHTML = '<span class="lf-save-dot pulsing"></span> Saving…';
+      if      (state === "saving") el.innerHTML = '<span class="lf-save-dot pulsing"></span> Savingâ¦';
       else if (state === "saved")  el.innerHTML = '<span class="lf-save-dot"></span> Saved';
       else if (state === "error")  el.innerHTML = '<span class="lf-save-dot err"></span> Save failed';
     }
@@ -3096,14 +3096,14 @@
       }
     }
 
-    // ── Step 10: call pricing API + risk engine ──────────
+    // ââ Step 10: call pricing API + risk engine ââââââââââ
     async _calculateOutput() {
       this.isCalculating = true;
       const body = document.getElementById("lf-body");
       if (body) body.innerHTML = `
         <div class="lf-step-wrap lf-output">
           <div class="lf-calculating"><div class="lf-spinner"></div>
-            <p>Calculating pricing &amp; risk assessment…</p></div>
+            <p>Calculating pricing &amp; risk assessmentâ¦</p></div>
         </div>`;
 
       const vol        = parseFloat(this.lead.monthlyVolume)       || 0;
@@ -3111,25 +3111,25 @@
       const txCnt      = avgTx > 0 ? Math.round(vol / avgTx) : Math.round(vol / 55);
       const curFees    = parseFloat(this.lead.currentMonthlyFees)  || 0;
 
-      // Debit fraction — priority: CSV card mix → intl% proxy → UK default 0.70
+      // Debit fraction â priority: CSV card mix â intl% proxy â UK default 0.70
       const csvDebitFrac = parseFloat(this.lead.csvDebitFrac);
-      // ── intlFrac: three-source priority chain ─────────────────────────────
-      // 1. Manual intlPercentage (Step 4 field) — explicit user input, highest trust
-      //    Convert % → decimal. Valid range 0–100 inclusive (0 is legitimate).
-      // 2. CSV-derived csvIntlFrac — statement-detected, already stored as 0–1
-      // 3. null — no real data available; API will suppress blended rate
+      // ââ intlFrac: three-source priority chain âââââââââââââââââââââââââââââ
+      // 1. Manual intlPercentage (Step 4 field) â explicit user input, highest trust
+      //    Convert % â decimal. Valid range 0â100 inclusive (0 is legitimate).
+      // 2. CSV-derived csvIntlFrac â statement-detected, already stored as 0â1
+      // 3. null â no real data available; API will suppress blended rate
       const manualIntlPct  = parseFloat(this.lead.intlPercentage);
       const csvIntlFracVal = (this.lead.csvIntlFrac !== null && this.lead.csvIntlFrac !== undefined)
         ? parseFloat(this.lead.csvIntlFrac) : null;
 
       let intlFrac;
-      // CSV-detected intlFrac takes priority over manual entry — CSV data is more accurate
+      // CSV-detected intlFrac takes priority over manual entry â CSV data is more accurate
       if (csvIntlFracVal !== null && Number.isFinite(csvIntlFracVal)) {
         intlFrac = csvIntlFracVal;                         // CSV wins
       } else if (Number.isFinite(manualIntlPct) && manualIntlPct >= 0 && manualIntlPct <= 100) {
         intlFrac = manualIntlPct / 100;                    // manual fallback
       }
-      // else: intlFrac remains null → API returns split_indicative, no blended rate
+      // else: intlFrac remains null â API returns split_indicative, no blended rate
 
       // intlPct as percentage for debitFrac proxy calculation (unchanged behaviour)
       const intlPct = intlFrac !== null ? intlFrac * 100 : 0;
@@ -3139,7 +3139,7 @@
                          : intlPct > 20 ? 0.60
                          : 0.70;
 
-      // Current fees — priority: manual entry → back-calculated from CSV effective rate
+      // Current fees â priority: manual entry â back-calculated from CSV effective rate
       const csvCurrentRate   = parseFloat(this.lead.csvCurrentRate) || 0;
       const effectiveCurFees = curFees > 0 ? curFees
                              : (csvCurrentRate > 0 && vol > 0) ? (csvCurrentRate / 100) * vol
@@ -3162,17 +3162,17 @@
             transaction_count:      txCnt,
             current_fees:           effectiveCurFees,
             debit_frac:             debitFrac,
-            // intl_frac: manual % → CSV-derived → null (priority order above)
+            // intl_frac: manual % â CSV-derived â null (priority order above)
             intl_frac:              intlFrac,
-            // intl_region: "eea" | "row" | "mixed" | null — from Step 4 dropdown
-            // Selects the right interchange rate. null → falls back to 1.50% conservative.
+            // intl_region: "eea" | "row" | "mixed" | null â from Step 4 dropdown
+            // Selects the right interchange rate. null â falls back to 1.50% conservative.
             intl_region: this.lead.intlRegion || null,
             // Tell the engine whether debitFrac came from real CSV card-mix detection
             csv_debit_frac_is_real: (csvDebitFrac > 0 && csvDebitFrac <= 1),
-            // Pricing profile — admin-selectable, defaults to standard
+            // Pricing profile â admin-selectable, defaults to standard
             pricing_profile: this.lead.pricingProfile || "acquisition_plus",
-            // Settings override — sends local admin edits to the engine.
-            // null when no changes applied — server uses getPricingSettings() defaults.
+            // Settings override â sends local admin edits to the engine.
+            // null when no changes applied â server uses getPricingSettings() defaults.
             settings_override: this._localPricingSettings || null,
           }),
         });
@@ -3188,7 +3188,7 @@
           this.lead.quote_id       = data.quote_id;
           this.lead.processingRate = data.rate;
           this.lead.fixedFee       = data.fixed_fee;
-          // ── Segmented sell rates ──────────────────────────────────────────────
+          // ââ Segmented sell rates ââââââââââââââââââââââââââââââââââââââââââââââ
           // Derive UK and Intl sell rates from blended rate using IC++ cost ratios.
           // IC++ costs: UK=0.53%, Intl=1.50% conservative default.
           const IC_UK_COST   = 0.53;
@@ -3245,7 +3245,7 @@
       this._render();
     }
 
-    // ── Action: Generate Quote ────────────────────────────
+    // ââ Action: Generate Quote ââââââââââââââââââââââââââââ
     async _generateQuote() {
       if (!this.pricingResult?.quote_id) {
         alert("No quote available. Please wait for the pricing calculation to complete.");
@@ -3267,7 +3267,7 @@
         this.lead.status = "quoted";
         this.lead.quoteGeneratedAt = this.lead.quoteGeneratedAt || new Date().toISOString();
 
-        // ── Capture optional fee toggle state from the quote preview panel ──
+        // ââ Capture optional fee toggle state from the quote preview panel ââ
         // These values are shown to the agent in Step 10 but never saved unless
         // we explicitly read them here and persist before opening quote.html.
         const q = id => document.getElementById(id);
@@ -3300,7 +3300,7 @@
             }
           } catch (zohoErr) {
             console.error("Zoho auto-push after quote failed:", zohoErr);
-            // Non-blocking — quote was still generated
+            // Non-blocking â quote was still generated
           }
         }
 
@@ -3310,7 +3310,7 @@
       }
     }
 
-    // ── Action: Push to Zoho ────────────────────────────────
+    // ââ Action: Push to Zoho ââââââââââââââââââââââââââââââââ
     async _pushZoho() {
       if (this.lead.zohoPushed) {
         alert("This lead has already been pushed to Zoho.");
@@ -3320,7 +3320,7 @@
       this.isSubmitting = true;
       const btn = document.getElementById("lf-push-zoho");
       if (!btn) { this.isSubmitting = false; return; }
-      btn.textContent = "Pushing…";
+      btn.textContent = "Pushingâ¦";
       btn.disabled    = true;
       try {
         const resp = await fetch(`/api/leads/${this.leadId}/push-zoho`, {
@@ -3331,17 +3331,17 @@
           this.lead.zohoPushed = true;
           await this._saveNow({ zohoPushed: true });
           this.onSaved();
-          btn.textContent = "✓ Pushed to Zoho";
+          btn.textContent = "â Pushed to Zoho";
           btn.classList.add("lf-act-done");
           btn.disabled = true;
         } else {
-          btn.textContent = "☁ï¸ Push to Zoho";
+          btn.textContent = "âÃ¯Â¸Â Push to Zoho";
           btn.disabled = false;
           alert("Failed to push to Zoho. Please try again.");
         }
       } catch (e) {
         console.error("Push to Zoho error:", e);
-        btn.textContent = "☁ï¸ Push to Zoho";
+        btn.textContent = "âÃ¯Â¸Â Push to Zoho";
         btn.disabled = false;
         alert("Error pushing to Zoho. Please try again.");
       } finally {
@@ -3349,27 +3349,27 @@
       }
     }
 
-    // ── Action: Mark KYB Ready ────────────────────────────
+    // ââ Action: Mark KYB Ready ââââââââââââââââââââââââââââ
     async _markKYB() {
       if (this.lead.status === "kyb_pending") return;
       const btn = document.getElementById("lf-mark-kyb");
-      if (btn) { btn.textContent = "Saving…"; btn.disabled = true; }
+      if (btn) { btn.textContent = "Savingâ¦"; btn.disabled = true; }
       try {
         await fetch(`/api/leads/${this.leadId}/kyb`, { method: "POST" });
         this.lead.status = "kyb_pending";
         this.onSaved();
         this._render();
       } catch (e) {
-        if (btn) { btn.textContent = "ð Mark as KYB Ready"; btn.disabled = false; }
+        if (btn) { btn.textContent = "Ã°ÂÂÂ Mark as KYB Ready"; btn.disabled = false; }
         alert("Error marking as KYB. Please try again.");
       }
     }
   }
 
-  // ── Export ───────────────────────────────────────────────
+  // ââ Export âââââââââââââââââââââââââââââââââââââââââââââââ
   window.LeadFlow = LeadFlow;
 
-  // ── Pipeline field save helper ───────────────────────────────────────────
+  // ââ Pipeline field save helper âââââââââââââââââââââââââââââââââââââââââââ
   window.ovSaveField = async function(leadId, field, value, el) {
     if (!leadId) return;
     try {
@@ -3390,14 +3390,14 @@
     }
   };
 
-  // ── Call log add helper ──────────────────────────────────────────────────
+  // ââ Call log add helper ââââââââââââââââââââââââââââââââââââââââââââââââââ
   window.ovAddCallLog = async function(leadId) {
     if (!leadId) return;
     const outcome = document.getElementById('ov-call-outcome')?.value;
     const note    = (document.getElementById('ov-call-note')?.value || '').trim();
     if (!outcome) { alert('Please select an outcome first.'); return; }
     const btn = document.querySelector('.ov-pipe-log-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Savingâ¦'; }
     try {
       const getResp = await fetch(`/api/leads/${leadId}`);
       if (!getResp.ok) throw new Error('Fetch failed');
