@@ -1100,8 +1100,15 @@ async function buildStep4() {
     _nc_advisory.className = "nc-advisory";
     _nc_container.appendChild(_nc_advisory);
     quoteShown = false;
-    var _pb = document.getElementById("step4PrimaryBtn");
-    if (_pb) _pb.textContent = "Submit my details →";
+    // Still show reveal overlay to capture contact details
+    document.getElementById("step4Loading").style.display = "none";
+    document.getElementById("step4Content").style.display = "block";
+    var _rt = document.querySelector(".rate-reveal-title");
+    var _rs = document.querySelector(".rate-reveal-sub");
+    var _rb = document.querySelector(".rate-reveal-overlay .btn-primary");
+    if (_rt) _rt.textContent = "Get a personalised quote";
+    if (_rs) _rs.textContent = "Leave your details and our team will put together a tailored proposal for you within one business day.";
+    if (_rb) _rb.textContent = "Request my rate →";
     return;
   }
 
@@ -1474,8 +1481,10 @@ function revealRate() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           name:                   document.getElementById('revealName').value.trim(),
+          contactName:            document.getElementById('revealName').value.trim(),
           email:                  document.getElementById('revealEmail').value.trim(),
           businessName:           document.getElementById('bizName').value.trim(),
+          country:                ({'uk':'United Kingdom','eea':'Europe / EEA','uk_eea':'UK and Europe','mixed':'UK and Worldwide','row':'International'})[document.getElementById('intlRegionInput')?.value||''] || 'United Kingdom',
           phone:                  document.getElementById('bizPhone').value.trim() || null,
           monthlyVolume:          vol,
           avgTransactionValue:    cnt > 0 ? parseFloat((vol/cnt).toFixed(2)) : null,
