@@ -1387,10 +1387,10 @@ function revealRate() {
 
   (async () => {
     try {
-      const _isCSV  = window.csvData !== null && document.getElementById('tabUpload')?.classList.contains('on');
-      const vol     = _isCSV && window.csvData ? window.csvData.vol : (parseFloat(document.getElementById('volInput')?.value) || 0);
-      const cnt     = _isCSV && window.csvData ? window.csvData.cnt : (parseFloat(document.getElementById('cntInput')?.value) || 0);
-      const _csvCur = _isCSV && window.csvData ? window.csvData.cur : 0;
+      const _isCSV  = csvData !== null && document.getElementById('tabUpload')?.classList.contains('on');
+      const vol     = _isCSV && csvData ? csvData.vol : (parseFloat(document.getElementById('volInput')?.value) || 0);
+      const cnt     = _isCSV && csvData ? csvData.cnt : (parseFloat(document.getElementById('cntInput')?.value) || 0);
+      const _csvCur = _isCSV && csvData ? csvData.cur : 0;
       const curRate = parseFloat(document.getElementById('curRateInput')?.value) || null;
       const selCard = document.querySelector('.merchant-type-card.selected');
       const selType = selCard ? (selCard.dataset.type || selCard.getAttribute('data-type') || 'online') : 'online';
