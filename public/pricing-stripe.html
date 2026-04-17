@@ -1647,7 +1647,7 @@ function parseCSV(text) {
     if(colMap.rowType){const t=(r[colMap.rowType]||"").toUpperCase().trim();if(t&&!["CHARGE","PAYMENT","SALE","TRANSACTION","DEBIT","SETTLED","CAPTURE",""].includes(t))return}
     if(colMap.outcome){const o=(r[colMap.outcome]||"").toUpperCase().trim();if(o&&!["AUTHORISED","AUTHORIZED","APPROVED","SUCCESS","SETTLED","CAPTURED","COMPLETE","COMPLETED","SUCCEEDED",""].includes(o))return}
     // Skip non-card payment methods (Klarna, iDEAL, PayPal, bank transfer etc)
-    if(colMap.paymentMethod){const pm=(r[colMap.paymentMethod]||"").toLowerCase().trim();if(pm&&!pm.includes("card")&&!pm.includes("credit")&&!pm.includes("debit")&&!pm.includes("visa")&&!pm.includes("master")&&!pm.includes("amex")&&!pm.includes("discover"))return;}
+    if(colMap.paymentMethod){const pm=(r[colMap.paymentMethod]||"").toLowerCase().trim();if(pm&&!pm.includes("card")&&!pm.includes("credit")&&!pm.includes("debit")&&!pm.includes("visa")&&!pm.includes("master")&&!pm.includes("amex")&&!pm.includes("discover")&&!pm.includes("contactless")&&!pm.includes("chip")&&!pm.includes("swipe")&&!pm.includes("keyed")&&!pm.includes("transaction"))return;}
     const a=pAmt(r[colMap.amount]);if(!a)return;
     cnt++;vol+=a;
     if(colMap.date&&r[colMap.date]){try{const _d2=new Date(r[colMap.date].substring(0,10));if(!isNaN(_d2.getTime())){if(!_minDate||_d2<_minDate)_minDate=_d2;if(!_maxDate||_d2>_maxDate)_maxDate=_d2;}}catch(e){}}
