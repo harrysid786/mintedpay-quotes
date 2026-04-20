@@ -596,6 +596,15 @@
                       <span class="ov-meta-label">Created</span>
                       <span class="ov-meta-val">${fmtDate(lead.createdAt)}</span>
                     </div>
+                  ${lead.createdAt ? `
+                  <div class="ov-meta-row">
+                    <span class="ov-meta-label">Days in Pipeline</span>
+                    <span class="ov-meta-val">${(() => {
+                      const days = Math.floor((Date.now() - new Date(lead.createdAt)) / 86400000);
+                      const color = days < 7 ? 'var(--green)' : days < 30 ? 'var(--amber)' : 'var(--red)';
+                      return '<strong style="color:' + color + '">' + days + 'd</strong>';
+                    })()}</span>
+                  </div>` : ''}
                   </div>
                 </div>
 
