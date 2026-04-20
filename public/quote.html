@@ -495,381 +495,134 @@ function renderQuote(data){
         </div>
       </div>` : ''}
 
-      ${!isManual ? `<div class="qp-snapshot">
-        <div class="qp-snap-card"><div class="qp-snap-l">Volume Analysed</div><div class="qp-snap-v">${fmtK(vol)}</div></div>
-        <div class="qp-snap-card"><div class="qp-snap-l">Transactions Analysed</div><div class="qp-snap-v">${n0(cnt)}</div></div>
-        <div class="qp-snap-card"><div class="qp-snap-l">Average Transaction</div><div class="qp-snap-v">${f2(avgTx)}</div></div>
-        <div class="qp-snap-card"><div class="qp-snap-l">Current Effective Rate</div><div class="qp-snap-v" style="color:${curRate!==null?(curRate<1?'var(--green)':curRate<2.2?'var(--amber)':'var(--red)'):'var(--g4)'}">${curRate!==null?curRate.toFixed(2)+'%':'&mdash;'}</div></div>
-      </div>` : ''}
- 
-      ${!isManual && cur > 0 ? `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div style="border:1.5px solid var(--red-bd);border-radius:8px;padding:16px 18px;background:var(--red-lt)">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--red);margin-bottom:10px">Current provider</div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div style="display:flex;justify-content:space-between;align-items:baseline">
-              <span style="font-size:12px;color:var(--g3)">Blended rate</span>
-              <span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--red)">${curRate !== null ? curRate.toFixed(2)+'%' : '&mdash;'}</span>
+
+      <!-- AMBER ADVISORY BANNER -->
+      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:10px 16px;margin-bottom:20px;display:flex;align-items:flex-start;gap:10px;font-size:12px;color:#92400e;line-height:1.5">
+        <span style="flex-shrink:0;font-size:14px">&#9888;</span>
+        <span><strong>Indicative pricing only.</strong> Final rates are confirmed in writing after a full review of your processing history and business profile.</span>
+      </div>
+
+      <!-- TWO-BOX COMPARISON -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+
+        ${curRate !== null ? `
+        <div style="background:#fef2f2;border:2px solid #fca5a5;border-radius:12px;padding:22px;text-align:center">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#dc2626;margin-bottom:10px">You Currently Pay</div>
+          <div style="font-family:'Syne',sans-serif;font-size:52px;font-weight:800;color:#dc2626;line-height:1">${curRate.toFixed(2)}<span style="font-size:22px">%</span></div>
+          <div style="font-size:12px;color:#9ca3af;margin-top:4px">effective rate &middot; all-in</div>
+          ${cur > 0 ? `
+          <div style="margin-top:14px;padding-top:14px;border-top:1px solid #fca5a5">
+            <div style="font-size:11px;color:#6b7280;margin-bottom:2px">Monthly cost</div>
+            <div style="font-size:22px;font-weight:700;color:#dc2626">${f2(cur)}</div>
+          </div>` : ''}
+        </div>` : `
+        <div style="background:#f9fafb;border:2px solid #e5e7eb;border-radius:12px;padding:22px;text-align:center;display:flex;align-items:center;justify-content:center">
+          <div style="color:#9ca3af;font-size:13px">No current rate data provided</div>
+        </div>`}
+
+        <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:22px;text-align:center">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#059669;margin-bottom:10px">${brand.name} Quoted Rate</div>
+          <div style="font-family:'Syne',sans-serif;font-size:52px;font-weight:800;color:#059669;line-height:1">${parseFloat(data.rate).toFixed(2)}<span style="font-size:22px">%</span></div>
+          <div style="font-size:12px;color:#9ca3af;margin-top:4px">+ ${ftx}p per transaction</div>
+          ${rev > 0 ? `
+          <div style="margin-top:14px;padding-top:14px;border-top:1px solid #86efac">
+            <div style="font-size:11px;color:#6b7280;margin-bottom:2px">Monthly cost</div>
+            <div style="font-size:22px;font-weight:700;color:#059669">${f2(rev)}</div>
+          </div>` : ''}
+          ${quoteIntlFrac !== null && quoteIntlFrac > 0 ? `
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #86efac;text-align:left">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:5px">
+              <span style="color:#6b7280">UK cards</span>
+              <span style="font-weight:600;color:#059669">${displayUkRate.toFixed(2)}% + ${ftx}p</span>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:baseline">
-              <span style="font-size:12px;color:var(--g3)">Monthly cost</span>
-              <span style="font-size:15px;font-weight:700;color:var(--red)">${f2(cur)}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
+              <span style="color:#6b7280">International cards</span>
+              <span style="font-weight:600;color:#059669">${displayIntlRate.toFixed(2)}% + ${ftx}p</span>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:baseline">
-              <span style="font-size:12px;color:var(--g3)">Annual cost</span>
-              <span style="font-size:13px;font-weight:600;color:var(--red)">${f2(cur*12)}</span>
-            </div>
-          </div>
-        </div>
-        <div style="border:2px solid var(--brand);border-radius:8px;padding:16px 18px;background:var(--brand-lt)">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--brand);margin-bottom:10px">${brand.name}</div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div style="display:flex;justify-content:space-between;align-items:baseline">
-              <span style="font-size:12px;color:var(--g3)">${'Quoted rate'}</span>
-              <span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--brand)">${parseFloat(data.rate).toFixed(2)}%</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:baseline">
-              <span style="font-size:12px;color:var(--g3)">Monthly cost</span>
-              <span style="font-size:15px;font-weight:700;color:var(--brand)">${f2(rev)}</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:baseline">
-              <span style="font-size:12px;color:var(--g3)">Annual cost</span>
-              <span style="font-size:13px;font-weight:600;color:var(--brand)">${f2(rev*12)}</span>
-            </div>
-          </div>
+          </div>` : ''}
         </div>
       </div>
+
+      <!-- ESTIMATED SAVING — once only -->
       ${mSave > 0 ? `
-      <div style="border:1.5px solid var(--green-bd);border-radius:6px;padding:10px 16px;background:var(--green-lt);display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-        <div style="font-size:13px;font-weight:600;color:var(--green)">Estimated monthly saving</div>
-        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--green)">+${f2(mSave)} / month</div>
-      </div>` : ''}` : ''}
-
-      <div class="qp-rate-compare">
-        ${curRate!==null ? `
-        <div class="qp-rate-block qp-rate-current">
-          <div class="qp-rate-block-lbl">Currently paying</div>
-          <div class="qp-rate-big qp-rate-big-red">${curRate.toFixed(2)}<span class="qp-rate-pct">%</span></div>
-          <div class="qp-rate-block-sub">effective rate based on<br>your submitted data</div>
-        </div>
-        <div class="qp-rate-arrow">&rarr;</div>` : ''}
-        <div class="qp-rate-block qp-rate-mp${curRate===null?' qp-rate-solo':''}">
-          <div class="qp-rate-block-lbl">${brand.name} &mdash; Pricing</div>
-          ${blendedRate !== null ? `
-          <div style="display:flex;flex-direction:column;gap:10px;margin:10px 0 6px">
-            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
-              <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3)">UK Cards</span>
-              <span style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--brand);letter-spacing:-1px;line-height:1">${displayUkRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> <span style="font-size:12px;font-weight:600;color:var(--g3)">+ ${ftx}p</span></span>
-            </div>
-            <div style="height:1px;background:var(--g6)"></div>
-            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
-              <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3)">International Cards</span>
-              <span style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--brand);letter-spacing:-1px;line-height:1">${displayIntlRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> <span style="font-size:12px;font-weight:600;color:var(--g3)">+ ${ftx}p</span></span>
-            </div>
-          </div>
-          <div style="font-size:10px;color:var(--g3);margin-top:2px;padding-top:6px;border-top:1px solid var(--g6)">&#226;&#137;&#136; ${blendedRate.toFixed(2)}% all-in on your card mix &#183; Based on ${Math.round((quoteIntlFrac||0)*100)}% international traffic</div>` : `
-          <div style="display:flex;flex-direction:column;gap:10px;margin:10px 0 6px">
-            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
-              <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3)">UK Cards</span>
-              <span style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--brand);letter-spacing:-1px;line-height:1">${displayUkRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> <span style="font-size:12px;font-weight:600;color:var(--g3)">+ ${ftx}p</span></span>
-            </div>
-            <div style="height:1px;background:var(--g6)"></div>
-            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
-              <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3)">International Cards</span>
-              <span style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--brand);letter-spacing:-1px;line-height:1">${displayIntlRate.toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> <span style="font-size:12px;font-weight:600;color:var(--g3)">+ ${ftx}p</span></span>
-            </div>
-          </div>`}
-          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--g6);font-size:10px;color:var(--g3);line-height:1.5">
-            ${isIndicative
-              ? 'Indicative pricing based on the data provided. Final rates subject to underwriting and business review.'
-              : 'Estimated pricing based on the data provided. Final rates subject to underwriting and business review.'}
-          </div>
-        </div>
-      </div>
- 
-      ${!isManual && cur > 0 && mSave > 0 ? `
-      <div class="qp-save-banner">
+      <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:18px 22px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div>
-          <div class="qp-save-l">Your estimated saving</div>
-          <div style="font-size:10px;color:var(--green);opacity:.8;margin-top:2px">Estimated savings based on current provider fees supplied</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#059669;margin-bottom:4px">Estimated Monthly Saving</div>
+          <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:#059669;line-height:1">+${f2(mSave)}<span style="font-size:14px;font-weight:400;color:#6b7280">/mo</span></div>
         </div>
-        <div style="display:flex;gap:20px;align-items:baseline;flex-wrap:wrap">
-          <div class="qp-save-v">+${fmtK(mSave * 12)}<span style="font-size:12px;font-weight:400;color:var(--green);margin-left:4px">/ year</span></div>
-          <div class="qp-save-v">+${fmtK(mSave)}<span style="font-size:12px;font-weight:400;color:var(--green);margin-left:4px">/ month</span></div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:#6b7280;margin-bottom:2px">Per year</div>
+          <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:700;color:#059669">+${f2(mSave*12)}</div>
         </div>
       </div>` : ''}
- 
-      
- 
-      <div class="qp-section">
-        <div class="qp-section-title">Your Pricing</div>
 
-        <!-- Current cost breakdown &mdash; uses real intlFrac when available, else indicative only -->
-        ${(cur > 0 && !isManual && curRate !== null) ? (() => {
-          // DATA SOURCE: quoteIntlFrac (stored at quote creation time).
-          // Priority: manual intlPercentage &rarr; CSV-detected csvIntlFrac &rarr; null.
-          // When real intlFrac exists, decompose curRate by IC++ interchange cost ratio.
-          // When absent, show only the blended average with "indicative" wording.
-          //
-          // IC++ interchange cost ratios (approximate, consistent with pricing engine):
-          //   UK blended interchange:  (0.70 &#195;&#151; 0.20%) + (0.30 &#195;&#151; 0.30%) = 0.23%
-          //   International interchange: ~1.50%
-          //   Scheme fees (both):        0.13%
-          //   Acquirer markup:           0.20% (&#226;&#137;&#164;&#163;50k tier &mdash; conservative)
-          // Weighted cost denominator = domFrac &#195;&#151; ukCost + intlFrac &#195;&#151; intlCost
-          // curUkRate   = curRate &#195;&#151; ukCost   / weightedCost
-          // curIntlRate = curRate &#195;&#151; intlCost / weightedCost
-          // This preserves the blended average exactly and uses no proxies.
-          const IC_UK   = 0.23 + 0.13 + 0.20;  // UK blended interchange + scheme + acquirer
-          const IC_INTL = 1.50 + 0.13 + 0.20;  // Intl interchange + scheme + acquirer
-
-          if (quoteIntlFrac !== null) {
-            // intlFrac === 0: merchant is 100% domestic &mdash; show current rate as UK domestic only
-            if (quoteIntlFrac === 0) {
-              return `
-        <div style="margin-bottom:16px;padding:14px 16px;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:6px">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--red);margin-bottom:10px">Your Current Effective Rate</div>
-          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-            <div style="text-align:center;padding:10px 20px;background:var(--white);border-radius:5px;border:1px solid var(--red-bd)">
-              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);margin-bottom:4px">UK Domestic</div>
-              <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--red);line-height:1">${curRate.toFixed(2)}<span style="font-size:13px">%</span></div>
-              <div style="font-size:9px;color:var(--g3);margin-top:3px">from your statement</div>
-            </div>
-            <div style="font-size:11px;color:var(--g3);line-height:1.6;flex:1;min-width:160px">No international transactions reported. All volume treated as UK domestic.</div>
-          </div>
-        </div>`;
-            }
-            // intlFrac === 1: merchant is 100% international &mdash; show current rate as international only
-            if (quoteIntlFrac === 1) {
-              return `
-        <div style="margin-bottom:16px;padding:14px 16px;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:6px">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--red);margin-bottom:10px">Your Current Effective Rate</div>
-          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-            <div style="text-align:center;padding:10px 20px;background:var(--white);border-radius:5px;border:1px solid var(--red-bd)">
-              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);margin-bottom:4px">International</div>
-              <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--red);line-height:1">${curRate.toFixed(2)}<span style="font-size:13px">%</span></div>
-              <div style="font-size:9px;color:var(--g3);margin-top:3px">from your statement</div>
-            </div>
-            <div style="font-size:11px;color:var(--g3);line-height:1.6;flex:1;min-width:160px">All transactions reported as international.</div>
-          </div>
-        </div>`;
-            }
-            // intlFrac between 0 and 1 &mdash; derive split using IC++ cost ratios
-            const domFrac      = 1 - quoteIntlFrac;
-            const weightedCost = (domFrac * IC_UK) + (quoteIntlFrac * IC_INTL);
-            const curUkRate    = weightedCost > 0 ? Math.round(curRate * IC_UK   / weightedCost * 100) / 100 : null;
-            const curIntlRate  = weightedCost > 0 ? Math.round(curRate * IC_INTL / weightedCost * 100) / 100 : null;
-            if (curUkRate !== null && curIntlRate !== null) {
-              return `
-        <div style="margin-bottom:16px;padding:14px 16px;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:6px">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--red);margin-bottom:10px">Your Current Effective Rate &mdash; Estimated by Card Type</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-            <div style="text-align:center;padding:10px;background:var(--white);border-radius:5px;border:1px solid var(--red-bd)">
-              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);margin-bottom:4px">UK Domestic</div>
-              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--red);line-height:1">${curUkRate.toFixed(2)}<span style="font-size:12px">%</span></div>
-              <div style="font-size:9px;color:var(--g3);margin-top:3px">${Math.round(domFrac*100)}% of your volume</div>
-            </div>
-            <div style="text-align:center;padding:10px;background:var(--white);border-radius:5px;border:1px solid var(--red-bd)">
-              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);margin-bottom:4px">International</div>
-              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--red);line-height:1">${curIntlRate.toFixed(2)}<span style="font-size:12px">%</span></div>
-              <div style="font-size:9px;color:var(--g3);margin-top:3px">${Math.round(quoteIntlFrac*100)}% of your volume</div>
-            </div>
-            <div style="text-align:center;padding:10px;background:var(--white);border-radius:5px;border:1px solid var(--red-bd)">
-              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);margin-bottom:4px">Blended</div>
-              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--red);line-height:1">${curRate.toFixed(2)}<span style="font-size:12px">%</span></div>
-              <div style="font-size:9px;color:var(--g3);margin-top:3px">from your statement</div>
-            </div>
-          </div>
-          <div style="margin-top:8px;font-size:10px;color:var(--g3)">Blended rate is from your statement. UK and international figures are derived estimates based on ${Math.round(quoteIntlFrac*100)}% international mix and IC++ interchange cost ratios &mdash; not direct statement line items.</div>
-        </div>`;
-            }
-          }
-          // No real intlFrac &mdash; show blended only, clearly labelled
-          return `
-        <div style="margin-bottom:16px;padding:14px 16px;background:var(--red-lt);border:1px solid var(--red-bd);border-radius:6px">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--red);margin-bottom:10px">Your Current Effective Rate</div>
-          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-            <div style="text-align:center;padding:10px 20px;background:var(--white);border-radius:5px;border:1px solid var(--red-bd)">
-              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);margin-bottom:4px">Blended Rate</div>
-              <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--red);line-height:1">${curRate.toFixed(2)}<span style="font-size:13px">%</span></div>
-              <div style="font-size:9px;color:var(--g3);margin-top:3px">from your statement</div>
-            </div>
-            <div style="font-size:11px;color:var(--g3);line-height:1.6;flex:1;min-width:160px">No international transaction data was provided at quote time. UK domestic and international cost breakdown will be shown once international % is confirmed.</div>
-          </div>
-        </div>`;
-        })() : ''}
-
-        <ul class="qp-bullets">
-          <li>No monthly minimum volumes &mdash; you only pay when you process</li>
-          <li>No fixed monthly fees or platform charges</li>
-          <li>No gateway fees</li>
-          <li>No PCI compliance fees</li>
-          <li>Full integration and technical support</li>
-        </ul>
-          <div style="margin:16px 0 12px;padding:14px 18px;background:var(--brand-lt);border:1.5px solid var(--brand-bd);border-radius:var(--r)">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--brand);margin-bottom:4px">${'YOUR QUOTED RATE'}</div>
-          <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--brand);letter-spacing:-0.5px;line-height:1">${parseFloat(data.rate).toFixed(2)}<span style="font-size:14px;font-weight:600">%</span> + ${ftx}<span style="font-size:14px;font-weight:600">p</span> <span style="font-size:12px;font-weight:400;color:var(--g3)">per transaction</span></div>
-          ${blendedRate !== null ? `<div style="font-size:10px;color:var(--g3);margin-top:4px">International cards: ${displayIntlRate.toFixed(2)}% + ${ftx}p &#183; &#226;&#137;&#136; ${blendedRate.toFixed(2)}% all-in on your card mix</div>` : ''}
-        </div>
-        <table class="pricing-breakdown">
-          <thead><tr><th>Transaction Type</th><th>Rate</th><th>Notes</th></tr></thead>
-          <tbody>
-            <tr>
-              <td>UK Cards${isIndicative ? ' <span style="font-size:11px;color:var(--g3);font-weight:400">(indicative)</span>' : ''}</td>
-              <td class="pb-rate">${displayUkRate.toFixed(2)}% + ${ftx}p per transaction</td>
-              <td class="pb-note">UK-issued Visa &amp; Mastercard debit and credit</td>
-            </tr>
-            <tr>
-              <td>International Cards${isIndicative ? ' <span style="font-size:11px;color:var(--g3);font-weight:400">(indicative)</span>' : ''}</td>
-              <td class="pb-rate">${displayIntlRate.toFixed(2)}% + ${ftx}p per transaction</td>
-              <td class="pb-note">Non-UK issued cards &mdash; includes EEA and Rest of World</td>
-            </tr>
-            ${!isIndicative && blendedRate !== null ? `
-            <tr style="background:var(--g7)">
-              <td style="color:var(--g3);font-size:13px">Estimated Blended Rate</td>
-              <td class="pb-rate" style="color:var(--g3);font-size:13px">${blendedRate.toFixed(2)}% + ${ftx}p</td>
-              <td class="pb-note">Weighted estimate based on your card mix data</td>
-            </tr>` : ''}
-            ${a.addAmex ? `<tr>
-              <td>American Express</td>
-              <td class="pb-rate" style="color:var(--red)">${(a.amexPct||3.5).toFixed(2)}% + ${a.amexFixed||20}p per transaction</td>
-              <td class="pb-note">Applied to all Amex card transactions</td>
-            </tr>` : ''}
-            ${a.addFX && quoteIntlFrac !== 0 ? `<tr>
-              <td>International / FX Transactions</td>
-              <td class="pb-rate">${(a.fxPct||1.5).toFixed(2)}%</td>
-              <td class="pb-note">Applied when card currency differs from settlement currency</td>
-            </tr>` : ''}
-            ${a.addChargeback ? `<tr>
-              <td>Chargebacks</td>
-              <td class="pb-rate" style="color:var(--red)">&#163;${(a.cbAmt||15).toFixed(2)} per chargeback</td>
-              <td class="pb-note">Fee applied when a dispute is received</td>
-            </tr>` : ''}
-            ${a.addRefund ? `<tr>
-              <td>Refunds</td>
-              <td class="pb-rate">&#163;${(a.refAmt||1).toFixed(2)} per refund</td>
-              <td class="pb-note">Fee applied when processing refunds</td>
-            </tr>` : ''}
-          </tbody>
-        </table>
-        <div style="margin-top:10px;font-size:11px;color:var(--g3);line-height:1.5">International cards include non-UK issued cards and are typically more expensive due to bank and card network fees.</div>
-        ${quoteIntlFrac !== null ? `<div style="margin-top:6px;font-size:11px;color:var(--g3)">Based on ${Math.round(quoteIntlFrac * 100)}% international transactions.</div>` : ''}
-        <div style="margin-top:10px;font-size:11px;color:var(--g3);letter-spacing:.3px">&#10003; No hidden fees. Your rate includes all interchange, scheme, and processing costs in one transparent number.</div>
+      <!-- ACCEPT CTA -->
+      <div style="text-align:center;margin-bottom:28px">
+        <button id="acceptQuoteBtn" onclick="openAcceptance()" style="background:#4b2afd;color:white;border:none;border-radius:10px;padding:14px 40px;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;letter-spacing:-.2px">
+          &#10003; Accept this Quote
+        </button>
+        <div style="font-size:11px;color:#9ca3af;margin-top:8px">No commitment required &mdash; our team will be in touch to confirm</div>
       </div>
- 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+      <!-- PRICING TABLE -->
+      <div style="margin-bottom:20px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:10px">Full Pricing Breakdown</div>
+        <div style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead>
+              <tr style="background:#f9fafb">
+                <th style="padding:10px 16px;text-align:left;font-weight:600;color:#374151;border-bottom:1px solid #e5e7eb">Transaction Type</th>
+                <th style="padding:10px 16px;text-align:right;font-weight:600;color:#374151;border-bottom:1px solid #e5e7eb">Rate</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${quoteIntlFrac !== null && quoteIntlFrac > 0 ? `
+              <tr style="border-bottom:1px solid #f3f4f6">
+                <td style="padding:10px 16px;color:#374151">UK Cards (Visa / Mastercard)</td>
+                <td style="padding:10px 16px;text-align:right;font-weight:600;color:#4b2afd">${displayUkRate.toFixed(2)}% + ${ftx}p</td>
+              </tr>
+              <tr style="border-bottom:1px solid #f3f4f6">
+                <td style="padding:10px 16px;color:#374151">International Cards</td>
+                <td style="padding:10px 16px;text-align:right;font-weight:600;color:#4b2afd">${displayIntlRate.toFixed(2)}% + ${ftx}p</td>
+              </tr>` : `
+              <tr style="border-bottom:1px solid #f3f4f6">
+                <td style="padding:10px 16px;color:#374151">All Cards (Visa / Mastercard)</td>
+                <td style="padding:10px 16px;text-align:right;font-weight:600;color:#4b2afd">${parseFloat(data.rate).toFixed(2)}% + ${ftx}p</td>
+              </tr>`}
+              ${a.addAmex ? `
+              <tr style="border-bottom:1px solid #f3f4f6">
+                <td style="padding:10px 16px;color:#374151">American Express</td>
+                <td style="padding:10px 16px;text-align:right;font-weight:600;color:#374151">${(a.amexPct||3.5).toFixed(2)}% + ${a.amexFixed||20}p</td>
+              </tr>` : ''}
+              ${a.addFX && quoteIntlFrac !== 0 ? `
+              <tr style="border-bottom:1px solid #f3f4f6">
+                <td style="padding:10px 16px;color:#374151">International / FX</td>
+                <td style="padding:10px 16px;text-align:right;font-weight:600;color:#374151">${(a.fxPct||1.5).toFixed(2)}%</td>
+              </tr>` : ''}
+              ${a.addChargeback ? `
+              <tr style="border-bottom:1px solid #f3f4f6">
+                <td style="padding:10px 16px;color:#374151">Chargebacks</td>
+                <td style="padding:10px 16px;text-align:right;font-weight:600;color:#374151">&#163;${(a.cbAmt||15).toFixed(2)}</td>
+              </tr>` : ''}
+              ${a.addRefund ? `
+              <tr>
+                <td style="padding:10px 16px;color:#374151">Refunds</td>
+                <td style="padding:10px 16px;text-align:right;font-weight:600;color:#374151">&#163;${(a.refAmt||1).toFixed(2)}</td>
+              </tr>` : ''}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- WHAT'S INCLUDED -->
+      <div style="margin-bottom:24px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:16px 20px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:12px">What's Included</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+          ${['No monthly minimum volumes','No fixed monthly fees','No gateway fees','No PCI compliance fees','Full integration support','UK-based support team'].map(item =>
+            '<div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151"><span style="color:#059669;font-weight:700;flex-shrink:0">&#10003;</span>' + item + '</div>'
+          ).join('')}
+        </div>
+      </div>
 
 
       <div class="qp-footer">
@@ -879,9 +632,6 @@ function renderQuote(data){
           This document does not constitute a binding offer.
         </div>
         ${brand.legal||''}
-      <div style="text-align:center;margin:28px 0 8px">
-        <button id="acceptQuoteBtn" onclick="openAcceptance()" style="display:none;background:#16a34a;color:#fff;border:none;border-radius:8px;padding:14px 44px;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;letter-spacing:.2px" onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">&#10003; Accept this Quote</button>
-      </div>
       </div>
     </div>`;
 }
