@@ -1,5 +1,5 @@
 /**
- * MintedPay  Lead Flow Wizard
+ * MintedPay — Lead Flow Wizard
  * Fullscreen step-by-step sales lead creation with Lead Overview.
  * Exposed as window.LeadFlow (class).
  *
@@ -11,7 +11,7 @@
 (function () {
   "use strict";
 
-  //  Comprehensive Countries List (~195 countries) 
+  // — Comprehensive Countries List (~195 countries) ———————————
   const COUNTRIES = [
     "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda",
     "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain",
@@ -47,7 +47,7 @@
     "Zambia", "Zimbabwe",
   ];
 
-  //  Step definitions 
+  // — Step definitions ————————————————————————————————————
   const STEPS = [
     {
       id: 1,
@@ -56,7 +56,7 @@
       fields: [
         { name: "businessName", label: "Business Name", type: "text", required: true, placeholder: "Acme Ltd" },
         { name: "country",      label: "Country of Operation", type: "datalist", required: true, options: COUNTRIES, placeholder: "Start typing a country..." },
-        { name: "industry",     label: "Industry / Business Type", type: "industry-autocomplete", required: true, placeholder: "Type to search, e.g. E-commerce, SaaS, Retail¦" },
+        { name: "industry",     label: "Industry / Business Type", type: "industry-autocomplete", required: true, placeholder: "Type to search, e.g. E-commerce, SaaS, Retail…" },
       ,
         { name: "website",       label: "Website URL", type: "url", placeholder: "https://example.com" },
         { name: "salesChannels", label: "Sales Channels", type: "select", options: [
@@ -94,16 +94,16 @@
       fields: [
         { name: "intlPercentage",  label: "International Transactions (%)", type: "number", required: true, placeholder: "0", min: 0, max: 100 },
         { name: "intlRegion", label: "International Card Region", type: "select", options: [
-          { value: "",      label: " Unknown / Not sure " },
+          { value: "",      label: "— Unknown / Not sure —" },
           { value: "eea",   label: "Mostly EEA / Europe (0.80% interchange)" },
           { value: "mixed", label: "Mixed EEA + Rest of World (1.15% blended)" },
           { value: "row",   label: "Mostly Rest of World (1.50% interchange)" },
-        ], hint: "Used to price international transactions more accurately. Leave unknown if unsure  defaults to conservative 1.50%." },
-        { name: "refundRate",      label: "Refund Rate (%)  optional",     type: "number", placeholder: "e.g. 2.5", min: 0 },
-        { name: "chargebackRate",  label: "Chargeback Rate (%)  optional", type: "number", placeholder: "e.g. 0.5", min: 0 },
+        ], hint: "Used to price international transactions more accurately. Leave unknown if unsure — defaults to conservative 1.50%." },
+        { name: "refundRate",      label: "Refund Rate (%) — optional",     type: "number", placeholder: "e.g. 2.5", min: 0 },
+        { name: "chargebackRate",  label: "Chargeback Rate (%) — optional", type: "number", placeholder: "e.g. 0.5", min: 0 },
         { name: "holdsFunds",      label: "Does the business hold customer funds?", type: "select", options: [
           { value: "no",  label: "No" },
-          { value: "yes", label: "Yes  we hold funds before disbursing" },
+          { value: "yes", label: "Yes — we hold funds before disbursing" },
         ]},
         { name: "businessAge",     label: "Business Age", type: "select", required: false, options: [
           { value: "less_than_6",  label: "Less than 6 months" },
@@ -123,7 +123,7 @@
       subtitle: "Who do they process with today?",
       fields: [
         { name: "currentProvider", label: "Current Payment Provider", type: "select", options: [
-          { value: "",             label: " Select provider " },
+          { value: "",             label: "— Select provider —" },
           { value: "stripe",       label: "Stripe" },
           { value: "shopify",      label: "Shopify Payments" },
           { value: "square",       label: "Square" },
@@ -139,7 +139,7 @@
           { value: "other",        label: "Other" },
           { value: "none",         label: "None / processing directly" },
         ]},
-        { name: "currentMonthlyFees",  label: "Current Monthly Processing Fees (£)  optional", type: "number", placeholder: "e.g. 850", min: 0,
+        { name: "currentMonthlyFees",  label: "Current Monthly Processing Fees (£) — optional", type: "number", placeholder: "e.g. 850", min: 0,
           hint: "If known, enter what the merchant pays per month. Used to calculate savings." },
       ,
         { name: "monthlyVolume",       label: "Monthly Processing Volume (£)", type: "number", required: true, placeholder: "e.g. 50000", min: 0 },
@@ -176,7 +176,7 @@
     },
   ];
 
-  //  Resume step helper 
+  // — Resume step helper ———————————————————————————————————
   // Returns the first step that hasn't been filled yet.
   function getLastStep(lead) {
     if (!lead.businessName)                                           return 1;
@@ -212,13 +212,13 @@
       this.overlay       = document.getElementById("lead-flow");
       this.quoteGenerated = false;
       this.isSubmitting   = false;
-      // Local pricing settings  null means use server defaults.
+      // Local pricing settings — null means use server defaults.
       // Populated when admin edits values in the Pricing Engine Settings panel.
       // Temporary: not persisted to DB yet.
       this._localPricingSettings = null;
     }
 
-    //  Public: open (new or resume or show overview) 
+    // — Public: open (new or resume or show overview) ————————
     async open(existingLead) {
       this.isRejected    = false;
       this._rejectReason = "";
@@ -255,7 +255,7 @@
       this._render();
     }
 
-    //  Public: close 
+    // — Public: close —————————————————————————————————————
     close() {
       clearTimeout(this.saveTimeout);
       this.overlay.classList.add("hidden");
@@ -263,7 +263,7 @@
       this.onClose();
     }
 
-    //  Render entire flow 
+    // — Render entire flow ————————————————————————————————
     _render() {
       if (this.showingOverview) {
         this.overlay.innerHTML = this._buildOverview();
@@ -277,11 +277,11 @@
       }
     }
 
-    //  Build Lead Overview Page 
+    // — Build Lead Overview Page ——————————————————————————
     _buildOverview() {
       const lead = this.lead;
 
-      //  Helpers 
+      // — Helpers —————————————————————————————————————————
       const empty = (v) => v === undefined || v === null || v === "";
       const muted = `<span class="ov-empty">Not provided</span>`;
       const val   = (v, suffix = "") => empty(v) ? muted : `${String(v)}${suffix}`;
@@ -294,7 +294,7 @@
         return `<span class="lf-badge ${cls}">${text}</span>`;
       };
 
-      //  Enum label formatters 
+      // — Enum label formatters ————————————————————————————
       const fmtBusinessAge = (v) => ({
         less_than_6: "Less than 6 months",
         "6_to_12":   "612 months",
@@ -352,7 +352,7 @@
         return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
       };
 
-      //  Computed values 
+      // — Computed values ——————————————————————————————————
       const vol    = parseFloat(lead.monthlyVolume) || 0;
       const avgTx  = parseFloat(lead.avgTransactionValue) || 0;
       const txCnt  = vol > 0 && avgTx > 0 ? Math.round(vol / avgTx) : 0;
@@ -403,7 +403,7 @@
 
       const notes = Array.isArray(lead.notes) ? lead.notes : [];
 
-      //  Field row helper 
+      // — Field row helper —————————————————————————————————
       const row = (label, value, opts = {}) => {
         if (opts.hideEmpty && (value === null || value === undefined || value === "")) return "";
         const display = (value === null || value === undefined || value === "")
@@ -416,7 +416,7 @@
           </div>`;
       };
 
-      //  BUILD HTML 
+      // — BUILD HTML ———————————————————————————————————————
       return `
         <div class="ov-page">
 
@@ -535,7 +535,7 @@
                         !empty(lead.chargebackRate) ? lead.chargebackRate + "%" : "")}
                     ${row("Holds Customer Funds",
                         lead.holdsFunds === "yes"
-                          ? badge("YES  holds funds", "amber")
+                          ? badge("YES — holds funds", "amber")
                           : "No", { html: true })}
                     ${row("Business Age",    fmtBusinessAge(lead.businessAge))}
                     ${row("Delivery Time",   fmtDelivery(lead.deliveryTime))}
@@ -690,7 +690,7 @@
                     <label class="ov-pipe-label">Rejection Reason</label>
                     <select class="ov-pipe-select" id="ov-rejection-reason"
                       onchange="window.ovSaveField('${lead.id}', 'rejectionReason', this.value, this)">
-                      <option value="">Select reason¦</option>
+                      <option value="">Select reason…</option>
                       <option value="price_too_high" ${lead.rejectionReason==='price_too_high'?'selected':''}>Price too high</option>
                       <option value="uncontactable" ${lead.rejectionReason==='uncontactable'?'selected':''}>Uncontactable</option>
                       <option value="went_elsewhere" ${lead.rejectionReason==='went_elsewhere'?'selected':''}>Went elsewhere</option>
@@ -705,7 +705,7 @@
                     <label class="ov-pipe-label">Log Contact</label>
                     <div class="ov-pipe-log-wrap">
                       <select id="ov-call-outcome" class="ov-pipe-select">
-                        <option value="">Outcome¦</option>
+                        <option value="">Outcome…</option>
                         <option value="no_answer">No answer</option>
                         <option value="left_voicemail">Left voicemail</option>
                         <option value="spoke_to_merchant">Spoke to merchant</option>
@@ -777,7 +777,7 @@
                             <div class="ov-note-time">${fmtTs(n.timestamp)}</div>
                           </div>`).join("")}
                     <div class="ov-note-add">
-                      <textarea class="ov-note-input" id="lf-ov-note-input" placeholder="Add a note¦" rows="2"></textarea>
+                      <textarea class="ov-note-input" id="lf-ov-note-input" placeholder="Add a note…" rows="2"></textarea>
                       <button class="ov-note-btn" id="lf-ov-add-note">Add Note</button>
                     </div>
                   </div>
@@ -791,7 +791,7 @@
     }
 
 
-    //  Main layout skeleton 
+    // — Main layout skeleton ——————————————————————————————
     _buildLayout() {
       const progress = Math.round((this.currentStep / (this.totalSteps - 1)) * 100);
       const stepDef  = STEPS[this.currentStep - 1];
@@ -816,7 +816,7 @@
             <div class="lf-progress-bar">
               <div class="lf-progress-fill" style="width:${progress}%"></div>
             </div>
-            <div class="lf-step-label">Step ${Math.min(this.currentStep, this.totalSteps - 1)} of ${this.totalSteps - 1}  <em>${stepDef.title}</em></div>
+            <div class="lf-step-label">Step ${Math.min(this.currentStep, this.totalSteps - 1)} of ${this.totalSteps - 1} — <em>${stepDef.title}</em></div>
           </div>
           <div class="lf-save-status" id="lf-save-status">
             <span class="lf-save-dot"></span> Saved
@@ -831,7 +831,7 @@
       `;
     }
 
-    //  Step body content 
+    // — Step body content —————————————————————————————————
     _buildStep() {
       const s = STEPS[this.currentStep - 1];
       if (s.isOutput) return this._buildOutput();
@@ -888,7 +888,7 @@
       `;
     }
 
-    //  CSV Upload Tab for Step 7 
+    // — CSV Upload Tab for Step 7 ——————————————————————————
     _buildCSVUploadTab() {
       const hasError   = this.lead.csvParseError || false;
       const isLoading  = this.lead.csvLoading    || false;
@@ -901,7 +901,7 @@
           ${isLoading ? `
           <div class="lf-csv-loading">
             <div class="lf-spinner"></div>
-            <p style="margin-top:10px;font-size:13px;color:var(--g3)">Parsing CSV file¦</p>
+            <p style="margin-top:10px;font-size:13px;color:var(--g3)">Parsing CSV file…</p>
           </div>` : `
 
           ${hasError ? `
@@ -959,7 +959,7 @@
       `;
     }
 
-    //  Individual field renderer 
+    // — Individual field renderer —————————————————————————
     _buildField(f) {
       if (f.showIf && !f.showIf(this.lead)) {
         return `<div class="lf-field hidden" data-field="${f.name}"></div>`;
@@ -973,13 +973,13 @@
                           placeholder="${f.placeholder || ""}" rows="3">${val}</textarea>`;
       } else if (f.type === "select") {
         ctrl = `<select class="lf-ctrl" id="lf-${f.name}" name="${f.name}">
-                  <option value=""> Select </option>
+                  <option value="">— Select —</option>
                   ${(f.options || []).map(o =>
                     `<option value="${o.value}" ${val === o.value ? "selected" : ""}>${o.label}</option>`
                   ).join("")}
                 </select>`;
       } else if (f.type === "industry-autocomplete") {
-        // Industry typeahead  text input with filtered suggestions
+        // Industry typeahead — text input with filtered suggestions
         const cats = (window.RiskEngine?.INDUSTRY_CATEGORIES || []).map(c => c.label);
         const restricted = (window.RiskEngine?.RESTRICTED_INDUSTRIES || []);
         const prohibited = (window.RiskEngine?.PROHIBITED_INDUSTRIES || []);
@@ -992,8 +992,8 @@
             <input class="lf-ctrl lf-industry-input ${warnClass}" id="lf-${f.name}" name="${f.name}"
                    type="text" value="${val}" placeholder="${f.placeholder || ""}"
                    autocomplete="off">
-            ${isProhibited ? `<div class="lf-industry-status lf-industry-status-red"> Prohibited industry  this lead cannot proceed</div>` :
-              isRestricted ? `<div class="lf-industry-status lf-industry-status-amber">⚠ Restricted industry  additional review required</div>` : ""}
+            ${isProhibited ? `<div class="lf-industry-status lf-industry-status-red"> Prohibited industry — this lead cannot proceed</div>` :
+              isRestricted ? `<div class="lf-industry-status lf-industry-status-amber">⚠ Restricted industry — additional review required</div>` : ""}
             <div class="lf-industry-dropdown" id="lf-industry-dropdown" style="display:none">
               ${cats.map(c => {
                 const cLower = c.toLowerCase();
@@ -1007,7 +1007,7 @@
             </div>
           </div>`;
       } else if (f.type === "datalist") {
-        // Country typeahead  custom dropdown for reliable cross-browser filtering
+        // Country typeahead — custom dropdown for reliable cross-browser filtering
         const prohibited = window.RiskEngine?.PROHIBITED_COUNTRIES || [];
         const restricted = window.RiskEngine?.RESTRICTED_COUNTRIES || [];
         const valLower   = val.toLowerCase();
@@ -1020,7 +1020,7 @@
                    type="text" value="${val}" placeholder="${f.placeholder || ""}"
                    autocomplete="off" aria-autocomplete="list">
             ${isProhibited ? `<div class="lf-industry-status lf-industry-status-red"> We do not accept merchants from this country</div>` :
-              isRestricted ? `<div class="lf-industry-status lf-industry-status-amber">⚠ Higher-risk jurisdiction  additional review required</div>` : ""}
+              isRestricted ? `<div class="lf-industry-status lf-industry-status-amber">⚠ Higher-risk jurisdiction — additional review required</div>` : ""}
             <div class="lf-industry-dropdown" id="lf-country-dropdown" style="display:none">
               ${(f.options || []).map(country => {
                 const cl = country.toLowerCase();
@@ -1040,7 +1040,7 @@
           const fixedPct = ((0.143 / avg) * 100).toFixed(1);
           return `
             <div class="lf-avg-ticket-warning" id="lf-avg-ticket-warning">
-              ⚠ <strong>Low average ticket (£${avg.toFixed(2)})</strong>  our fixed costs (~£0.14/tx) represent
+              ⚠ <strong>Low average ticket (£${avg.toFixed(2)})</strong> — our fixed costs (~£0.14/tx) represent
               <strong>${fixedPct}%</strong> of this transaction value.
               Competitive pricing is difficult below £15 avg ticket.
               Consider the <strong>Acquisition</strong> profile and review margin carefully.
@@ -1064,7 +1064,7 @@
       `;
     }
 
-    //  Get risk reason explanation 
+    // — Get risk reason explanation ———————————————————————
     _getRiskReasonText(riskLevel, lead) {
       const factors = [];
       const intl      = parseFloat(lead.intlPercentage) || 0;
@@ -1088,7 +1088,7 @@
       // Holds funds
       if (lead.holdsFunds === "yes") factors.push("Holds customer funds before disbursing");
 
-      // Business age  use enum string labels, never parseFloat
+      // Business age — use enum string labels, never parseFloat
       if      (ageEnum === "less_than_6") factors.push("Business is less than 6 months old");
       else if (ageEnum === "6_to_12")     factors.push("Business is 612 months old (early stage)");
       // "1_to_2" and "2_plus" &#8594; no risk factor added
@@ -1112,14 +1112,14 @@
       return factors.slice(0, 4).join(" · ");
     }
 
-    //  Output step (Step 10) 
+    // — Output step (Step 10) ——————————————————————————————
     _buildOutput() {
       if (this.isCalculating || !this.pricingResult) {
         return `
           <div class="lf-step-wrap lf-output">
             <div class="lf-calculating">
               <div class="lf-spinner"></div>
-              <p>Calculating pricing &amp; risk assessment¦</p>
+              <p>Calculating pricing &amp; risk assessment…</p>
             </div>
           </div>`;
       }
@@ -1134,7 +1134,7 @@
       // Enforce fixed fee floor
       if (p.fixed_fee < 10) p.fixed_fee = 10;
 
-      //  Current fee data  all sources 
+      // — Current fee data — all sources ——————————————————————————————————
       const rawFeeManual   = parseFloat(this.lead.currentMonthlyFees)           || 0;
       const rawFeePricing  = parseFloat(this.lead.pricing?.currentMonthlyFees)  || 0;
       const csvCurRate     = parseFloat(this.lead.csvCurrentRate)               || 0;
@@ -1217,7 +1217,7 @@
           <!--  RESTRICTED INDUSTRY BANNER  -->
           ${this.lead.industryStatus === "restricted" ? `
           <div style="background:#fef3c7;border:1px solid #fcd34d;border-left:3px solid #d97706;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:#92400e;line-height:1.5">
-            ⚠ <strong>Restricted industry  manual review required.</strong>
+            ⚠ <strong>Restricted industry — manual review required.</strong>
             This merchant selected <strong>${this.lead.industry ? this.lead.industry.split("|")[0].replace(/^\w/,c=>c.toUpperCase()) : "a restricted industry"}</strong>. Verify business documentation and obtain approval before generating a quote.
           </div>` : ""}
 
@@ -1235,20 +1235,20 @@
             <div class="lf-op-metrics">
               <div class="lf-op-metric">
                 <div class="lf-op-metric-lbl">Monthly Volume</div>
-                <div class="lf-op-metric-val">${vol > 0 ? fmtK(vol) : ""}</div>
+                <div class="lf-op-metric-val">${vol > 0 ? fmtK(vol) : "—"}</div>
               </div>
               <div class="lf-op-metric">
                 <div class="lf-op-metric-lbl">Transactions / mo</div>
-                <div class="lf-op-metric-val">${txCnt > 0 ? txCnt.toLocaleString("en-GB") : ""}</div>
+                <div class="lf-op-metric-val">${txCnt > 0 ? txCnt.toLocaleString("en-GB") : "—"}</div>
               </div>
               <div class="lf-op-metric">
                 <div class="lf-op-metric-lbl">Avg Transaction</div>
-                <div class="lf-op-metric-val">${avgTx > 0 ? fmt2(avgTx) : ""}</div>
+                <div class="lf-op-metric-val">${avgTx > 0 ? fmt2(avgTx) : "—"}</div>
               </div>
               <div class="lf-op-metric">
                 <div class="lf-op-metric-lbl">Current Effective Rate</div>
                 <div class="lf-op-metric-val" style="color:${curRate !== null ? (curRate < 1 ? "var(--green)" : curRate < 2.2 ? "var(--amber)" : "var(--red)") : "var(--g4)"}">
-                  ${curRate !== null ? curRate.toFixed(2) + "%" : ""}
+                  ${curRate !== null ? curRate.toFixed(2) + "%" : "—"}
                 </div>
               </div>
             </div>
@@ -1303,12 +1303,12 @@
             <div class="lf-op-analytics-grid">
               <div class="lf-op-analytic">
                 <div class="lf-op-analytic-lbl">Est. Monthly Processing Cost</div>
-                <div class="lf-op-analytic-val">${simRev > 0 ? fmt2(simRev) : ""}</div>
+                <div class="lf-op-analytic-val">${simRev > 0 ? fmt2(simRev) : "—"}</div>
                 <div class="lf-op-analytic-sub">at ${simRate}% + ${simFixed}p/tx</div>
               </div>
               <div class="lf-op-analytic">
                 <div class="lf-op-analytic-lbl">Effective Rate</div>
-                <div class="lf-op-analytic-val">${effectiveRate !== null ? effectiveRate + "%" : ""}</div>
+                <div class="lf-op-analytic-val">${effectiveRate !== null ? effectiveRate + "%" : "—"}</div>
                 <div class="lf-op-analytic-sub">all-in blended rate</div>
               </div>
               <div class="lf-op-analytic">
@@ -1318,13 +1318,13 @@
               </div>
               <div class="lf-op-analytic">
                 <div class="lf-op-analytic-lbl">Intl Transactions</div>
-                <div class="lf-op-analytic-val">${this.lead.intlPercentage !== undefined && this.lead.intlPercentage !== "" ? this.lead.intlPercentage + "%" : ""}</div>
+                <div class="lf-op-analytic-val">${this.lead.intlPercentage !== undefined && this.lead.intlPercentage !== "" ? this.lead.intlPercentage + "%" : "—"}</div>
                 <div class="lf-op-analytic-sub">${({eea:"EEA / Europe",mixed:"Mixed EEA + RoW",row:"Rest of World"}[this.lead.intlRegion]) || "region unknown"}</div>
               </div>
               <div class="lf-op-analytic">
                 <div class="lf-op-analytic-lbl">Chargeback Rate</div>
                 <div class="lf-op-analytic-val" style="color:${parseFloat(this.lead.chargebackRate) > 1 ? "var(--red)" : "var(--green)"}">
-                  ${this.lead.chargebackRate ? this.lead.chargebackRate + "%" : ""}
+                  ${this.lead.chargebackRate ? this.lead.chargebackRate + "%" : "—"}
                 </div>
                 <div class="lf-op-analytic-sub">${parseFloat(this.lead.chargebackRate) > 1 ? "⚠ elevated" : "within threshold"}</div>
               </div>
@@ -1410,11 +1410,11 @@
               <div class="lf-op-sim-strip">
                 <div class="lf-op-sim-cell">
                   <div class="lf-op-sim-cell-lbl">Monthly Cost</div>
-                  <div class="lf-op-sim-cell-val" id="lf-sim-out-cost">${vol > 0 ? fmt2(simRev) : ""}</div>
+                  <div class="lf-op-sim-cell-val" id="lf-sim-out-cost">${vol > 0 ? fmt2(simRev) : "—"}</div>
                 </div>
                 <div class="lf-op-sim-cell">
                   <div class="lf-op-sim-cell-lbl">Effective Rate</div>
-                  <div class="lf-op-sim-cell-val" id="lf-sim-out-eff">${effectiveRate !== null ? effectiveRate + "%" : ""}</div>
+                  <div class="lf-op-sim-cell-val" id="lf-sim-out-eff">${effectiveRate !== null ? effectiveRate + "%" : "—"}</div>
                 </div>
                 <div class="lf-op-sim-cell">
                   <div class="lf-op-sim-cell-lbl">Est. Margin</div>
@@ -1423,7 +1423,7 @@
                 <div class="lf-op-sim-cell">
                   <div class="lf-op-sim-cell-lbl">Monthly Saving</div>
                   <div class="lf-op-sim-cell-val" id="lf-sim-out-save" style="color:${mSave > 0 ? "var(--green)" : "var(--g3)"}">
-                    ${mSave > 0 ? fmt2(mSave) : ""}
+                    ${mSave > 0 ? fmt2(mSave) : "—"}
                   </div>
                 </div>
               </div>
@@ -1449,7 +1449,7 @@
                 <div style="font-size:10px;color:var(--g3)">Payment Processing Proposal</div>
               </div>
               <div style="text-align:right;font-size:11px;color:var(--g3)">
-                <strong style="color:var(--black)">${this.lead.businessName || this.lead.contactName || ""}</strong><br>
+                <strong style="color:var(--black)">${this.lead.businessName || this.lead.contactName || "—"}</strong><br>
                 ${new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"long",year:"numeric"})}<br>
                 Valid for 30 days
               </div>
@@ -1459,9 +1459,9 @@
             ${vol > 0 ? `
             <div class="lf-op-snapshot">
               <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Volume Analysed</div><div class="lf-op-snap-val">${fmtK(vol)}</div></div>
-              <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Transactions</div><div class="lf-op-snap-val">${txCnt > 0 ? txCnt.toLocaleString("en-GB") : ""}</div></div>
-              <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Avg Transaction</div><div class="lf-op-snap-val">${avgTx > 0 ? fmt2(avgTx) : ""}</div></div>
-              <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Current Rate</div><div class="lf-op-snap-val" style="color:${curRate !== null ? (curRate < 1 ? "var(--green)" : curRate < 2.2 ? "var(--amber)" : "var(--red)") : "var(--g4)"}">${curRate !== null ? curRate.toFixed(2) + "%" : ""}</div></div>
+              <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Transactions</div><div class="lf-op-snap-val">${txCnt > 0 ? txCnt.toLocaleString("en-GB") : "—"}</div></div>
+              <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Avg Transaction</div><div class="lf-op-snap-val">${avgTx > 0 ? fmt2(avgTx) : "—"}</div></div>
+              <div class="lf-op-snap-cell"><div class="lf-op-snap-lbl">Current Rate</div><div class="lf-op-snap-val" style="color:${curRate !== null ? (curRate < 1 ? "var(--green)" : curRate < 2.2 ? "var(--amber)" : "var(--red)") : "var(--g4)"}">${curRate !== null ? curRate.toFixed(2) + "%" : "—"}</div></div>
             </div>` : ""}
 
             <!-- Pricing table -->
@@ -1547,13 +1547,13 @@
     }
 
 
-    //  Pricing Engine Settings  editable, in-memory only 
+    // — Pricing Engine Settings — editable, in-memory only ———————
     // Values sourced from _localPricingSettings when set, otherwise from
     // the hardcoded defaults matching routes/pricing.js exactly.
-    // Changes are temporary  no DB persistence yet.
+    // Changes are temporary — no DB persistence yet.
     _buildPricingEnginePanel() {
 
-      //  Default constants (mirrors routes/pricing.js) 
+      // — Default constants (mirrors routes/pricing.js) ————————————————————
       const DEFAULTS = {
         baseCosts: { uk: 1.10, eea: 1.60, international: 2.60, wespell: 0.0435 },
         profiles: {
@@ -1574,7 +1574,7 @@
       const gr = s.globalRules;
       const isModified = this._localPricingSettings !== null;
 
-      //  Derived sell rates (same formula as server) 
+      // — Derived sell rates (same formula as server) ——————————————————————
       const sellRate = (base, wespell, margin, floor) =>
         Math.ceil(Math.max(base + wespell + margin, floor) * 100) / 100;
 
@@ -1586,14 +1586,14 @@
         };
       }
 
-      //  Input helper 
+      // — Input helper —————————————————————————————————————————————————————
       const inp = (id, val, step = "0.01", min = "0") =>
         `<input id="${id}" type="number" step="${step}" min="${min}" value="${val}"
           style="width:80px;padding:4px 7px;border:1.5px solid var(--g5);border-radius:var(--r);
                  font-size:12px;font-family:'Inter',sans-serif;text-align:right;outline:none"
           onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--g5)'">`;
 
-      //  Profile column builder 
+      // — Profile column builder ———————————————————————————————————————————
       const profileCol = (name, p, d) => {
         const isStd = name === "standard";
         return `
@@ -1760,14 +1760,14 @@
         </div>`;
     }
 
-    //  Apply Pricing Engine Settings 
+    // — Apply Pricing Engine Settings —————————————————————————
     // Reads all input values from the panel, validates them,
     // stores to this._localPricingSettings, and triggers recalculation.
     _applyPricingSettings() {
       const g = id => document.getElementById(id);
       const v = id => parseFloat(g(id)?.value);
 
-      // Validate all inputs  must be finite positive numbers
+      // Validate all inputs — must be finite positive numbers
       const ids = [
         "ps-base-uk","ps-base-intl","ps-base-wespell",
         "ps-rule-minmargin","ps-rule-undercut","ps-rule-floor",
@@ -1788,11 +1788,11 @@
         }
       }
 
-      // Build settings object  same structure as getPricingSettings()
+      // Build settings object — same structure as getPricingSettings()
       this._localPricingSettings = {
         baseCosts: {
           uk:            v("ps-base-uk"),
-          eea:           1.60,   // EEA not editable yet  keep default
+          eea:           1.60,   // EEA not editable yet — keep default
           international: v("ps-base-intl"),
           wespell:       v("ps-base-wespell"),
         },
@@ -1831,7 +1831,7 @@
             { maxVol: Infinity, fee: v("ps-ftier-2") },
           ],
           fixedFeeMinimum: v("ps-ftier-0"),  // minimum = smallest fee tier
-          gatewayFeeTiers: [                  // gateway costs unchanged  not editable yet
+          gatewayFeeTiers: [                  // gateway costs unchanged — not editable yet
             { maxVol: 100000,   fee: 0.10 },
             { maxVol: 200000,   fee: 0.08 },
             { maxVol: Infinity, fee: 0.05 },
@@ -1847,12 +1847,12 @@
         },
       };
 
-      // Invalidate cached result  next recalc will use new settings
+      // Invalidate cached result — next recalc will use new settings
       this.pricingResult = null;
 
-      //  Persist to DB via API 
+      // — Persist to DB via API ——————————————————————————————————
       const status = document.getElementById("ps-status");
-      if (status) status.textContent = "Saving¦";
+      if (status) status.textContent = "Saving…";
 
       fetch("/api/settings", {
         method:  "PUT",
@@ -1862,7 +1862,7 @@
         .then(r => r.json())
         .then(data => {
           if (data.success) {
-            // Server echoes back the live settings  update local copy to match DB
+            // Server echoes back the live settings — update local copy to match DB
             this._localPricingSettings = data.settings;
             this.pricingResult = null;
             this._render();
@@ -1875,13 +1875,13 @@
         })
         .catch(err => {
           const s = document.getElementById("ps-status");
-          if (s) s.textContent = "⚠ Network error  changes applied locally only";
+          if (s) s.textContent = "⚠ Network error — changes applied locally only";
           // Keep _localPricingSettings so the override still works in memory
           this._render();
         });
     }
 
-    //  Load pricing settings from API 
+    // — Load pricing settings from API ————————————————————————
     // Called once when Step 10 renders. Populates _localPricingSettings
     // with whatever the server currently has (DB or defaults).
     // This ensures the admin panel always shows live values.
@@ -1891,7 +1891,7 @@
         const data = await resp.json();
         if (data.success && data.settings) {
           this._localPricingSettings = data.settings;
-          // Re-render panel with loaded values  don't invalidate pricingResult
+          // Re-render panel with loaded values — don't invalidate pricingResult
           // (settings were just loaded, they haven't changed)
           const panel = document.querySelector(".lf-op-section[data-ps-panel]");
           if (panel) {
@@ -1900,11 +1900,11 @@
           }
         }
       } catch (e) {
-        // Silently fail  panel will show hardcoded DEFAULTS, which is correct behaviour
+        // Silently fail — panel will show hardcoded DEFAULTS, which is correct behaviour
       }
     }
 
-    //  Rejection screen 
+    // — Rejection screen ——————————————————————————————————
     _buildRejected() {
       return `
         <div class="lf-step-wrap lf-rejected">
@@ -1924,7 +1924,7 @@
         </div>`;
     }
 
-    //  Navigation footer 
+    // — Navigation footer —————————————————————————————————
     _buildFooter() {
       const isLast = this.currentStep === this.totalSteps - 1;
       return `
@@ -1939,7 +1939,7 @@
         </div>`;
     }
 
-    //  Bind all events after render 
+    // — Bind all events after render ——————————————————————
     _bindEvents() {
       const q = id => document.getElementById(id);
 
@@ -1978,7 +1978,7 @@
         }).catch(() => alert("Failed to copy. Please try again."));
       });
       q("lf-download-quote-pdf")?.addEventListener("click", () => {
-        // Open the admin PDF view  the quote.html page handles PDF export
+        // Open the admin PDF view — the quote.html page handles PDF export
         window.open(`/quote.html?quote=${this.lead.quote_id}&admin=1&autoprint=1`, "_blank");
       });
       q("lf-ov-add-note")?.addEventListener("click", async () => {
@@ -2019,7 +2019,7 @@
 
       q("lf-apply-override")?.addEventListener("click", () => this._applyPricingOverride());
 
-      //  Pricing Engine Settings buttons 
+      // — Pricing Engine Settings buttons ——————————————————————
       q("ps-apply")?.addEventListener("click", () => this._applyPricingSettings());
       q("ps-reset")?.addEventListener("click", () => {
         this._localPricingSettings = null;
@@ -2033,7 +2033,7 @@
         this._loadPricingSettings();
       }
 
-      //  Pricing profile selector 
+      // — Pricing profile selector ——————————————————————————
       q("lf-pricing-profile")?.addEventListener("change", (e) => {
         this.lead.pricingProfile = e.target.value;
         // Clear cached result so Step 10 recalculates with the new profile
@@ -2042,7 +2042,7 @@
         this._render();
       });
 
-      //  Rate Simulator live updates 
+      // — Rate Simulator live updates ———————————————————————
       const simRateEl  = q("lf-sim-rate");
       const simFixedEl = q("lf-sim-fixed");
       const simRange   = q("lf-sim-rate-range");
@@ -2054,7 +2054,7 @@
         const avgTx  = parseFloat(this.lead.avgTransactionValue) || 55;
         const txCnt  = avgTx > 0 ? Math.round(vol / avgTx) : 0;
         const rev    = vol > 0 ? ((vol * sr / 100) + (txCnt * sf / 100)) : 0;
-        const effR   = vol > 0 ? ((rev / vol) * 100).toFixed(2) + "%" : "";
+        const effR   = vol > 0 ? ((rev / vol) * 100).toFixed(2) + "%" : "—";
         const mrg    = Math.max(0, sr - 0.46).toFixed(2);
         const rawFeeManual  = parseFloat(this.lead.currentMonthlyFees)          || 0;
         const rawFeePricing = parseFloat(this.lead.pricing?.currentMonthlyFees) || 0;
@@ -2069,11 +2069,11 @@
 
         const fmt2 = (n) => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-        if (q("lf-sim-out-cost"))  q("lf-sim-out-cost").textContent  = vol > 0 ? fmt2(rev)  : "";
+        if (q("lf-sim-out-cost"))  q("lf-sim-out-cost").textContent  = vol > 0 ? fmt2(rev)  : "—";
         if (q("lf-sim-out-eff"))   q("lf-sim-out-eff").textContent   = effR;
         if (q("lf-sim-out-mrg"))   q("lf-sim-out-mrg").textContent   = "~" + mrg + "%";
         if (q("lf-sim-out-save")) {
-          q("lf-sim-out-save").textContent  = save > 0 ? fmt2(save) : "";
+          q("lf-sim-out-save").textContent  = save > 0 ? fmt2(save) : "—";
           q("lf-sim-out-save").style.color  = save > 0 ? "var(--green)" : "var(--g3)";
         }
         // Keep range in sync with number input
@@ -2131,7 +2131,7 @@
         updateSimOutputs();
       });
 
-      //  Fee toggles + optional fee row visibility 
+      // — Fee toggles + optional fee row visibility —————————
       const updateFeeRows = () => {
         const amexOn = q("lf-toggle-amex")?.checked;
         const fxOn   = q("lf-toggle-fx")?.checked;
@@ -2174,7 +2174,7 @@
         });
       });
 
-      //  Step 7: Live avg ticket warning 
+      // — Step 7: Live avg ticket warning ——————————————————————————
       const updateAvgTicketWarning = () => {
         if (this.currentStep !== 7) return;
         const vol = parseFloat(document.getElementById("lf-monthlyVolume")?.value) || 0;
@@ -2182,7 +2182,7 @@
         let warn = document.getElementById("lf-avg-ticket-warning");
         if (avg > 0 && avg < 15) {
           const fixedPct = ((0.143 / avg) * 100).toFixed(1);
-          const msg = `⚠ <strong>Low average ticket (£${avg.toFixed(2)})</strong>  our fixed costs (~£0.14/tx) represent <strong>${fixedPct}%</strong> of this transaction value. Competitive pricing is difficult below £15. Consider the <strong>Acquisition</strong> profile.`;
+          const msg = `⚠ <strong>Low average ticket (£${avg.toFixed(2)})</strong> — our fixed costs (~£0.14/tx) represent <strong>${fixedPct}%</strong> of this transaction value. Competitive pricing is difficult below £15. Consider the <strong>Acquisition</strong> profile.`;
           if (!warn) {
             warn = document.createElement("div");
             warn.id = "lf-avg-ticket-warning";
@@ -2267,13 +2267,13 @@
             industryInput.classList.add("lf-industry-prohibited");
             const div = document.createElement("div");
             div.className = "lf-industry-status lf-industry-status-red";
-            div.textContent = " Prohibited industry  this lead cannot proceed";
+            div.textContent = " Prohibited industry — this lead cannot proceed";
             industryInput.insertAdjacentElement("afterend", div);
           } else if (isR) {
             industryInput.classList.add("lf-industry-restricted");
             const div = document.createElement("div");
             div.className = "lf-industry-status lf-industry-status-amber";
-            div.textContent = "⚠ Restricted industry  additional review may be required";
+            div.textContent = "⚠ Restricted industry — additional review may be required";
             industryInput.insertAdjacentElement("afterend", div);
           }
         };
@@ -2305,7 +2305,7 @@
         }, { capture: true });
       }
 
-      //  Country typeahead wiring 
+      // — Country typeahead wiring ——————————————————————————
       const countryInput    = q("lf-country");
       const countryDropdown = q("lf-country-dropdown");
       if (countryInput && countryDropdown) {
@@ -2342,7 +2342,7 @@
             countryInput.classList.add("lf-industry-restricted");
             const div = document.createElement("div");
             div.className = "lf-industry-status lf-industry-status-amber";
-            div.textContent = "⚠ Higher-risk jurisdiction  additional review required";
+            div.textContent = "⚠ Higher-risk jurisdiction — additional review required";
             countryInput.insertAdjacentElement("afterend", div);
           }
         };
@@ -2399,13 +2399,13 @@
         });
       });
 
-      //  CSV Upload wiring 
+      // — CSV Upload wiring —————————————————————————————————
       const dropzone  = document.getElementById("lf-csv-dropzone");
       const fileInput = document.getElementById("lf-csv-file-input");
       const clearBtn  = document.getElementById("lf-csv-clear");
 
       if (fileInput) {
-        // fileInput change  primary upload path
+        // fileInput change — primary upload path
         fileInput.addEventListener("change", async (e) => {
           const file = e.target.files && e.target.files[0];
           if (!file) return;
@@ -2469,7 +2469,7 @@
       }
     }
 
-    //  Update qualification warning banners for Step 1 
+    // — Update qualification warning banners for Step 1 —————
     _updateQualificationWarning() {
       const oldWarning = this.overlay.querySelector(".lf-qual-warning");
       if (oldWarning) oldWarning.remove();
@@ -2517,7 +2517,7 @@
       }
     }
 
-    //  Show/hide subscriptionFrequency when paymentTypes changes
+    // — Show/hide subscriptionFrequency when paymentTypes changes
     _updateConditional() {
       const wrap = this.overlay.querySelector('[data-field="subscriptionFrequency"]');
       if (!wrap) return;
@@ -2536,9 +2536,9 @@
       }
     }
 
-    //  Handle CSV File Upload 
-    //  Handle CSV File Upload 
-    // Full statement analysis  same logic as the public quote builder.
+    // — Handle CSV File Upload —————————————————————————————
+    // — Handle CSV File Upload ————————————————————————————————————————————
+    // Full statement analysis — same logic as the public quote builder.
     // Extracts: volume, fees, current effective rate, card mix, debit fraction,
     // merchant tier, processor detection. All values persisted onto lead.
     async _handleCSVFile(file) {
@@ -2551,7 +2551,7 @@
         const result = this._analyseStatement(text, file.name);
         const s      = result.summary;
 
-        //  Persist ALL statement-derived fields 
+        // — Persist ALL statement-derived fields —————————————————————————
         this.lead.monthlyVolume       = s.vol;
         this.lead.avgTransactionValue = s.cnt > 0 ? Number((s.vol / s.cnt).toFixed(2)) : "";
         this.lead.transactionCount    = s.cnt || "";
@@ -2560,7 +2560,7 @@
         // csvDebitFrac &#8594; actual card mix, replaces hardcoded 0.70 in pricing call
         this.lead.csvDebitFrac        = s.debitFrac;
         // csvIntlFrac &#8594; statement-derived international fraction (null when undetectable)
-        // Manual intlPercentage always wins  only set csvIntlFrac, never overwrite intlPercentage
+        // Manual intlPercentage always wins — only set csvIntlFrac, never overwrite intlPercentage
         this.lead.csvIntlFrac         = s.csvIntlFrac;
         // csvCurrentRate &#8594; pre-calculated effective rate for Step 10 display fallback
         this.lead.csvCurrentRate      = s.currentRate > 0 ? Number(s.currentRate.toFixed(4)) : "";
@@ -2584,7 +2584,7 @@
       }
     }
 
-    //  Statement analyser  identical logic to processCSV() in public quote builder 
+    // — Statement analyser — identical logic to processCSV() in public quote builder —
     _analyseStatement(csvText, fileName) {
       if (!csvText || !String(csvText).trim()) {
         throw new Error("CSV file is empty");
@@ -2623,9 +2623,9 @@
 
       if (!rows.length) throw new Error("No data rows found in CSV");
 
-      //  Column detection  same HINTS as public quote builder 
+      // — Column detection — same HINTS as public quote builder ————————————
       const HINTS = {
-        // "payment" removed  matches "Payment Method" before real amount columns.
+        // "payment" removed — matches "Payment Method" before real amount columns.
         // amount detection handled separately below with two-pass priority logic.
         amount:   ["amount","gross","total","value","sale","charge","net"],
         fee:      ["fee","fees","processing","commission","cost","charge_amount","charge"],
@@ -2633,13 +2633,13 @@
         // rowType: "type" is exact-only to prevent matching "Card Type", "Payment Type" etc.
         // Multi-word phrases use includes() via the existing isMultiWord path.
         rowType:  ["transaction type","entry type","record type","transaction_type","entry_type","record_type","__exact__type"],
-        //  International detection columns 
+        // — International detection columns ————————————————————————————————
         // Priority 1: card/issuing country (Stripe: "Card Issue Country", Adyen: "Issued Country")
         country:  ["card issue country","issued country","card country","issuing country","card_country","card_issue_country"],
         currency: ["currency","converted currency","transaction currency"],
-        //  Payment method  used to skip non-card rows (Klarna, iDEAL etc)
+        // — Payment method — used to skip non-card rows (Klarna, iDEAL etc)
         paymentMethod: ["payment method name","payment method","payment_method","tender type","tender_type"],
-        //  Presentment currency  Shopify: non-GBP = international card
+        // — Presentment currency — Shopify: non-GBP = international card
         presentmentCurrency: ["presentment currency","presentment_currency","billing currency","original currency"],
       };
       const colMap = {};
@@ -2662,10 +2662,10 @@
         }
       }
 
-      //  Amount column  two-pass selection 
+      // — Amount column — two-pass selection ——————————————————————————————
       // Pass 1: collect all candidate headers that match any amount hint.
       // Ordered by priority: gross > amount > total > value > sale > charge > net.
-      // "payment" excluded  too broad, hits "Payment Method" before real amount cols.
+      // "payment" excluded — too broad, hits "Payment Method" before real amount cols.
       const AMOUNT_PRIORITY = ["gross","amount","total","value","sale","charge","net"];
       const amountCandidates = [];
       for (const hint of AMOUNT_PRIORITY) {
@@ -2685,13 +2685,13 @@
         throw new Error("Could not find an amount column. Supported names: amount, gross, total, value, sale, charge, net");
       }
 
-      // Strip currency symbols  same as pAmt() in public quote builder
+      // Strip currency symbols — same as pAmt() in public quote builder
       const pAmt = (v) => {
         const n = parseFloat(String(v || "").replace(/[£$¬,\s]/g, ""));
         return isNaN(n) || n <= 0 ? null : n;
       };
 
-      // Card type classifier  identical to classCard() in public quote builder
+      // Card type classifier — identical to classCard() in public quote builder
       const classCard = (s) => {
         s = (s || "").toLowerCase();
         if (s.includes("amex") || s.includes("american express")) return "amex";
@@ -2706,7 +2706,7 @@
       };
       const isDebitCard = (k) => ["visa_debit","mc_debit","maestro"].includes(k);
 
-      // Processor detection  same keywords as public quote builder
+      // Processor detection — same keywords as public quote builder
       const PROCESSORS = {
         Stripe:       ["stripe","balance_transaction","charge_id","payout"],
         Worldpay:     ["worldpay","authcode","merchantnumber"],
@@ -2723,14 +2723,14 @@
         if (keywords.some(kw => haystack.includes(kw))) { processor = name; break; }
       }
 
-      //  International detection mode 
+      // — International detection mode —————————————————————————————————————
       // Only country column is reliable enough to derive intlFrac.
-      // Currency is NOT used  non-GBP currency   international card origin
+      // Currency is NOT used — non-GBP currency   international card origin
       // (e.g. a French tourist paying in GBP counts as non-GBP but non-UK card).
       // If no country column &#8594; intlFrac = null. Do not guess.
       const intlMode = colMap.country ? "country" : colMap.presentmentCurrency ? "presentmentCurrency" : "none";
 
-      //  Main aggregation  identical to processCSV() in public quote builder 
+      // — Main aggregation — identical to processCSV() in public quote builder —
       let vol = 0, cnt = 0, totalFees = 0, intlVol = 0, countryPopulated = 0;
       const cardData = {};
 
@@ -2755,7 +2755,7 @@
 
         cnt++; vol += a;
 
-        // Fee column  total fees paid to current processor
+        // Fee column — total fees paid to current processor
         const fv = colMap.fee ? (pAmt(r[colMap.fee]) || 0) : 0;
         if (fv) totalFees += fv;
 
@@ -2765,7 +2765,7 @@
         cardData[k].vol += a;
         cardData[k].cnt++;
 
-        // International volume tracking  country or presentmentCurrency mode
+        // International volume tracking — country or presentmentCurrency mode
         if (intlMode === "country") {
           const c = (r[colMap.country] || "").trim().toUpperCase();
           if (c !== "") {
@@ -2783,16 +2783,16 @@
       if (vol <= 0) throw new Error("No valid transaction amounts found in this CSV.");
       if (cnt < 2)  throw new Error("Not enough transactions found. Please upload a fuller statement or use Manual Entry.");
 
-      // Debit fraction from actual card mix  same as public quote builder
+      // Debit fraction from actual card mix — same as public quote builder
       let debitVol = 0;
       Object.entries(cardData).forEach(([k, v]) => { if (isDebitCard(k)) debitVol += v.vol; });
       const debitFrac = vol > 0 ? debitVol / vol : 0.70;
 
-      // Current effective rate  fees / volume * 100
+      // Current effective rate — fees / volume * 100
       const currentRate = (totalFees > 0 && vol > 0) ? (totalFees / vol) * 100 : 0;
 
-      // International fraction  requires country column AND ¥80% row coverage
-      // Below 80% coverage the country column is too sparse to trust  return null.
+      // International fraction — requires country column AND ¥80% row coverage
+      // Below 80% coverage the country column is too sparse to trust — return null.
       // Prefer null over a silently understated intlFrac.
       const countryCoverage = cnt > 0 ? countryPopulated / cnt : 0;
       const intlFrac = ((intlMode === "country" && countryCoverage >= 0.80) || intlMode === "presentmentCurrency")
@@ -2821,7 +2821,7 @@
       };
     }
 
-    //  Apply Pricing Override 
+    // — Apply Pricing Override —————————————————————————————
     _applyPricingOverride() {
       const rateEl  = document.getElementById("lf-override-rate");
       const fixedEl = document.getElementById("lf-override-fixed");
@@ -2830,10 +2830,10 @@
       let newRate  = parseFloat(rateEl.value);
       let newFixed = parseFloat(fixedEl.value);
 
-      const MIN_FIXED = 10;   // pence  hard floor
+      const MIN_FIXED = 10;   // pence — hard floor
       const MIN_RATE  = 0.76; // 0.46 cost + 0.30 min margin
 
-      // Hard-clamp  never let values below minimums save
+      // Hard-clamp — never let values below minimums save
       if (isNaN(newRate)  || newRate  < MIN_RATE)  newRate  = MIN_RATE;
       if (isNaN(newFixed) || newFixed < MIN_FIXED)  newFixed = MIN_FIXED;
 
@@ -2849,7 +2849,7 @@
       const fb = document.createElement("div");
       fb.id = "lf-override-feedback";
       fb.style.cssText = "font-size:11px;color:#00916e;font-weight:600;margin-top:6px;";
-      fb.textContent = ` Pricing updated  Rate: ${newRate}%  Fixed: ${newFixed}p`;
+      fb.textContent = ` Pricing updated — Rate: ${newRate}%  Fixed: ${newFixed}p`;
       document.getElementById("lf-apply-override")?.insertAdjacentElement("afterend", fb);
       setTimeout(() => fb?.remove(), 3000);
 
@@ -2861,12 +2861,12 @@
       this._render();
     }
 
-    //  Determine which step to resume at 
+    // — Determine which step to resume at ————————————————
     _resumeStep() {
       return getLastStep(this.lead);
     }
 
-    //  Navigation: back 
+    // — Navigation: back —————————————————————————————————
     _prev() {
       if (this.currentStep > 1) {
         this._collectFields();
@@ -2875,7 +2875,7 @@
       }
     }
 
-    //  Validation method for current step 
+    // — Validation method for current step ———————————————————
     _validateStep() {
       const step = STEPS[this.currentStep - 1];
       if (!step) return true;
@@ -2890,7 +2890,7 @@
           this._fieldError("lf-country", "Country is required");
           return false;
         }
-        // Case-insensitive country match  also auto-corrects casing
+        // Case-insensitive country match — also auto-corrects casing
         const typedCountry = String(this.lead.country).trim();
         const matchedCountry = COUNTRIES.find(c => c.toLowerCase() === typedCountry.toLowerCase());
         if (!matchedCountry) {
@@ -2923,7 +2923,7 @@
       if (this.currentStep === 3) {
         const intlVal = this.lead.intlPercentage;
         if (intlVal === undefined || intlVal === null || String(intlVal).trim() === "") {
-          this._fieldError("lf-intlPercentage", "International transactions % is required  enter 0 if none");
+          this._fieldError("lf-intlPercentage", "International transactions % is required — enter 0 if none");
           return false;
         }
         const intlNum = parseFloat(intlVal);
@@ -2984,7 +2984,7 @@
       return true;
     }
 
-    //  Navigation: next (with validation + qualification check)
+    // — Navigation: next (with validation + qualification check)
     async _next() {
       this._collectFields();
 
@@ -3016,7 +3016,7 @@
       if (this.currentStep === 7) this._calculateOutput();
     }
 
-    //  Collect current step fields into this.lead 
+    // — Collect current step fields into this.lead ———————
     _collectFields() {
       const step = STEPS[this.currentStep - 1];
       if (!step || step.isOutput) return;
@@ -3032,7 +3032,7 @@
       });
     }
 
-    //  Field validation error 
+    // — Field validation error ———————————————————————————
     _fieldError(id, msg) {
       const el = document.getElementById(id);
       if (!el) return;
@@ -3048,7 +3048,7 @@
       setTimeout(() => { el.style.borderColor = ""; errEl?.remove(); }, 3500);
     }
 
-    //  Autosave: debounce 800ms 
+    // — Autosave: debounce 800ms ——————————————————————————
     _scheduleSave() {
       clearTimeout(this.saveTimeout);
       this._saveStatus("saving");
@@ -3079,7 +3079,7 @@
     _saveStatus(state) {
       const el = document.getElementById("lf-save-status");
       if (!el) return;
-      if      (state === "saving") el.innerHTML = '<span class="lf-save-dot pulsing"></span> Saving¦';
+      if      (state === "saving") el.innerHTML = '<span class="lf-save-dot pulsing"></span> Saving…';
       else if (state === "saved")  el.innerHTML = '<span class="lf-save-dot"></span> Saved';
       else if (state === "error")  el.innerHTML = '<span class="lf-save-dot err"></span> Save failed';
     }
@@ -3103,14 +3103,14 @@
       }
     }
 
-    //  Step 10: call pricing API + risk engine 
+    // — Step 10: call pricing API + risk engine —————————
     async _calculateOutput() {
       this.isCalculating = true;
       const body = document.getElementById("lf-body");
       if (body) body.innerHTML = `
         <div class="lf-step-wrap lf-output">
           <div class="lf-calculating"><div class="lf-spinner"></div>
-            <p>Calculating pricing &amp; risk assessment¦</p></div>
+            <p>Calculating pricing &amp; risk assessment…</p></div>
         </div>`;
 
       const vol        = parseFloat(this.lead.monthlyVolume)       || 0;
@@ -3118,19 +3118,19 @@
       const txCnt      = avgTx > 0 ? Math.round(vol / avgTx) : Math.round(vol / 55);
       const curFees    = parseFloat(this.lead.currentMonthlyFees)  || 0;
 
-      // Debit fraction  priority: CSV card mix &#8594; intl% proxy &#8594; UK default 0.70
+      // Debit fraction — priority: CSV card mix &#8594; intl% proxy &#8594; UK default 0.70
       const csvDebitFrac = parseFloat(this.lead.csvDebitFrac);
-      //  intlFrac: three-source priority chain 
-      // 1. Manual intlPercentage (Step 4 field)  explicit user input, highest trust
+      // — intlFrac: three-source priority chain ————————————————————————————
+      // 1. Manual intlPercentage (Step 4 field) — explicit user input, highest trust
       //    Convert % &#8594; decimal. Valid range 0100 inclusive (0 is legitimate).
-      // 2. CSV-derived csvIntlFrac  statement-detected, already stored as 01
-      // 3. null  no real data available; API will suppress blended rate
+      // 2. CSV-derived csvIntlFrac — statement-detected, already stored as 01
+      // 3. null — no real data available; API will suppress blended rate
       const manualIntlPct  = parseFloat(this.lead.intlPercentage);
       const csvIntlFracVal = (this.lead.csvIntlFrac !== null && this.lead.csvIntlFrac !== undefined)
         ? parseFloat(this.lead.csvIntlFrac) : null;
 
       let intlFrac;
-      // CSV-detected intlFrac takes priority over manual entry  CSV data is more accurate
+      // CSV-detected intlFrac takes priority over manual entry — CSV data is more accurate
       if (csvIntlFracVal !== null && Number.isFinite(csvIntlFracVal)) {
         intlFrac = csvIntlFracVal;                         // CSV wins
       } else if (Number.isFinite(manualIntlPct) && manualIntlPct >= 0 && manualIntlPct <= 100) {
@@ -3146,7 +3146,7 @@
                          : intlPct > 20 ? 0.60
                          : 0.70;
 
-      // Current fees  priority: manual entry &#8594; back-calculated from CSV effective rate
+      // Current fees — priority: manual entry &#8594; back-calculated from CSV effective rate
       const csvCurrentRate   = parseFloat(this.lead.csvCurrentRate) || 0;
       const effectiveCurFees = curFees > 0 ? curFees
                              : (csvCurrentRate > 0 && vol > 0) ? (csvCurrentRate / 100) * vol
@@ -3171,15 +3171,15 @@
             debit_frac:             debitFrac,
             // intl_frac: manual % &#8594; CSV-derived &#8594; null (priority order above)
             intl_frac:              intlFrac,
-            // intl_region: "eea" | "row" | "mixed" | null  from Step 4 dropdown
+            // intl_region: "eea" | "row" | "mixed" | null — from Step 4 dropdown
             // Selects the right interchange rate. null &#8594; falls back to 1.50% conservative.
             intl_region: this.lead.intlRegion || null,
             // Tell the engine whether debitFrac came from real CSV card-mix detection
             csv_debit_frac_is_real: (csvDebitFrac > 0 && csvDebitFrac <= 1),
-            // Pricing profile  admin-selectable, defaults to standard
+            // Pricing profile — admin-selectable, defaults to standard
             pricing_profile: this.lead.pricingProfile || "acquisition_plus",
-            // Settings override  sends local admin edits to the engine.
-            // null when no changes applied  server uses getPricingSettings() defaults.
+            // Settings override — sends local admin edits to the engine.
+            // null when no changes applied — server uses getPricingSettings() defaults.
             settings_override: this._localPricingSettings || null,
           }),
         });
@@ -3195,7 +3195,7 @@
           this.lead.quote_id       = data.quote_id;
           this.lead.processingRate = data.rate;
           this.lead.fixedFee       = data.fixed_fee;
-          //  Segmented sell rates 
+          // — Segmented sell rates —————————————————————————————————————————————
           // Derive UK and Intl sell rates from blended rate using IC++ cost ratios.
           // IC++ costs: UK=0.53%, Intl=1.50% conservative default.
           const IC_UK_COST   = 0.53;
@@ -3252,7 +3252,7 @@
       this._render();
     }
 
-    //  Action: Generate Quote 
+    // — Action: Generate Quote ———————————————————————————
     async _generateQuote() {
       if (!this.pricingResult?.quote_id) {
         alert("No quote available. Please wait for the pricing calculation to complete.");
@@ -3274,7 +3274,7 @@
         this.lead.status = "quoted";
         this.lead.quoteGeneratedAt = this.lead.quoteGeneratedAt || new Date().toISOString();
 
-        //  Capture optional fee toggle state from the quote preview panel 
+        // — Capture optional fee toggle state from the quote preview panel —
         // These values are shown to the agent in Step 10 but never saved unless
         // we explicitly read them here and persist before opening quote.html.
         const q = id => document.getElementById(id);
@@ -3307,7 +3307,7 @@
             }
           } catch (zohoErr) {
             console.error("Zoho auto-push after quote failed:", zohoErr);
-            // Non-blocking  quote was still generated
+            // Non-blocking — quote was still generated
           }
         }
 
@@ -3317,7 +3317,7 @@
       }
     }
 
-    //  Action: Push to Zoho 
+    // — Action: Push to Zoho ———————————————————————————————
     async _pushZoho() {
       if (this.lead.zohoPushed) {
         alert("This lead has already been pushed to Zoho.");
@@ -3327,7 +3327,7 @@
       this.isSubmitting = true;
       const btn = document.getElementById("lf-push-zoho");
       if (!btn) { this.isSubmitting = false; return; }
-      btn.textContent = "Pushing¦";
+      btn.textContent = "Pushing…";
       btn.disabled    = true;
       try {
         const resp = await fetch(`/api/leads/${this.leadId}/push-zoho`, {
@@ -3356,11 +3356,11 @@
       }
     }
 
-    //  Action: Mark KYB Ready 
+    // — Action: Mark KYB Ready ———————————————————————————
     async _markKYB() {
       if (this.lead.status === "kyb_pending") return;
       const btn = document.getElementById("lf-mark-kyb");
-      if (btn) { btn.textContent = "Saving¦"; btn.disabled = true; }
+      if (btn) { btn.textContent = "Saving…"; btn.disabled = true; }
       try {
         await fetch(`/api/leads/${this.leadId}/kyb`, { method: "POST" });
         this.lead.status = "kyb_pending";
@@ -3373,10 +3373,10 @@
     }
   }
 
-  //  Export 
+  // — Export ——————————————————————————————————————————————
   window.LeadFlow = LeadFlow;
 
-  //  Pipeline field save helper 
+  // — Pipeline field save helper ——————————————————————————————————————————
   window.ovSaveField = async function(leadId, field, value, el) {
     if (!leadId) return;
     try {
@@ -3397,14 +3397,14 @@
     }
   };
 
-  //  Call log add helper 
+  // — Call log add helper —————————————————————————————————————————————————
   window.ovAddCallLog = async function(leadId) {
     if (!leadId) return;
     const outcome = document.getElementById('ov-call-outcome')?.value;
     const note    = (document.getElementById('ov-call-note')?.value || '').trim();
     if (!outcome) { alert('Please select an outcome first.'); return; }
     const btn = document.querySelector('.ov-pipe-log-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Saving¦'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
     try {
       const getResp = await fetch(`/api/leads/${leadId}`);
       if (!getResp.ok) throw new Error('Fetch failed');
