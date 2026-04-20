@@ -51,26 +51,18 @@
   const STEPS = [
     {
       id: 1,
-      title: "Basic Qualification",
+      title: "Qualify",
       subtitle: "Tell us about the business",
       fields: [
         { name: "businessName", label: "Business Name", type: "text", required: true, placeholder: "Acme Ltd" },
         { name: "country",      label: "Country of Operation", type: "datalist", required: true, options: COUNTRIES, placeholder: "Start typing a country..." },
         { name: "industry",     label: "Industry / Business Type", type: "industry-autocomplete", required: true, placeholder: "Type to search, e.g. E-commerce, SaaS, Retail…" },
-      ,
         { name: "website",       label: "Website URL", type: "url", placeholder: "https://example.com" },
         { name: "salesChannels", label: "Sales Channels", type: "select", options: [
           { value: "online",  label: "Online only" },
           { value: "retail",  label: "Retail / In-person only" },
           { value: "both",    label: "Both online & retail" },
-        ]}],
-    },
-    
-    {
-      id: 2,
-      title: "Payment Types",
-      subtitle: "How do customers pay?",
-      fields: [
+        ]},
         { name: "paymentTypes", label: "Payment Types", type: "select", options: [
           { value: "one-off",      label: "One-off payments" },
           { value: "subscription", label: "Subscriptions / recurring billing" },
@@ -85,16 +77,9 @@
             { value: "annually",  label: "Annually / yearly" },
           ],
         },
-      ],
-    },
-    {
-      id: 3,
-      title: "Risk Signals",
-      subtitle: "Help us understand the risk profile",
-      fields: [
         { name: "intlPercentage",  label: "International Transactions (%)", type: "number", required: true, placeholder: "0", min: 0, max: 100 },
         { name: "intlRegion", label: "International Card Region", type: "select", options: [
-          { value: "",      label: "— Unknown / Not sure —" },
+          { value: "",      label: " Unknown / Not sure " },
           { value: "eea",   label: "Mostly EEA / Europe (0.80% interchange)" },
           { value: "mixed", label: "Mixed EEA + Rest of World (1.15% blended)" },
           { value: "row",   label: "Mostly Rest of World (1.50% interchange)" },
@@ -115,15 +100,18 @@
           { value: "instant",      label: "Instant / same-day" },
           { value: "delayed",      label: "Delayed (days/weeks)" },
         ]},
+        { name: "contactName", label: "Contact Name",    type: "text",  required: true, placeholder: "Jane Smith" },
+        { name: "email",       label: "Email Address",   type: "email", required: true, placeholder: "jane@company.com" },
+        { name: "phone",       label: "Phone Number",    type: "tel",   placeholder: "+44 7700 000000" },
       ],
     },
     {
-      id: 4,
+      id: 2,
       title: "Current Setup",
       subtitle: "Who do they process with today?",
       fields: [
         { name: "currentProvider", label: "Current Payment Provider", type: "select", options: [
-          { value: "",             label: "— Select provider —" },
+          { value: "",             label: " Select provider " },
           { value: "stripe",       label: "Stripe" },
           { value: "shopify",      label: "Shopify Payments" },
           { value: "square",       label: "Square" },
@@ -141,56 +129,24 @@
         ]},
         { name: "currentMonthlyFees",  label: "Current Monthly Processing Fees (£) — optional", type: "number", placeholder: "e.g. 850", min: 0,
           hint: "If known, enter what the merchant pays per month. Used to calculate savings." },
-      ,
         { name: "monthlyVolume",       label: "Monthly Processing Volume (£)", type: "number", required: true, placeholder: "e.g. 50000", min: 0 },
         { name: "avgTransactionValue", label: "Average Transaction Value (£)",  type: "number", required: true, placeholder: "e.g. 45",    min: 0 },
         { name: "_avgTicketWarning", label: "", type: "avg-ticket-warning" },
-        { name: "highestSingleTx",   label: "Highest Single Transaction (£)", type: "number", placeholder: "e.g. 500", min: 0 },],
-    },
-    {
-      id: 5,
-      title: "Contact Details",
-      subtitle: "Who should we be in touch with?",
-      fields: [
-        { name: "contactName", label: "Contact Name",    type: "text",  required: true, placeholder: "Jane Smith" },
-        { name: "email",       label: "Email Address",   type: "email", required: true, placeholder: "jane@company.com" },
-        { name: "phone",       label: "Phone Number",    type: "tel",   placeholder: "+44 7700 000000" },
+        { name: "highestSingleTx",   label: "Highest Single Transaction (£)", type: "number", placeholder: "e.g. 500", min: 0 },
       ],
     },
     {
-      id: 6,
+      id: 3,
       title: "Brand & Pricing",
-      subtitle: "Select brand and review pricing recommendation",
-      fields: [
-        { name: "brand", label: "Brand", type: "select", options: [
-          { value: "minted", label: "Minted Pay" },
-          { value: "ummah",  label: "Ummah Pay" },
-        ]},
-      ],
-    },
-    {
-      id: 7,
-      title: "Pricing & Output",
-      subtitle: "Review the pricing recommendation and risk assessment",
+      subtitle: "Review pricing and generate quote",
       isOutput: true,
     },
   ];
 
-  // — Resume step helper ———————————————————————————————————
-  // Returns the first step that hasn't been filled yet.
   function getLastStep(lead) {
-    if (!lead.businessName)                                           return 1;
-    if (!lead.salesChannels)                                          return 2;
-    if (!lead.paymentTypes)                                           return 3;
-    if (!lead.intlPercentage && lead.intlPercentage !== 0)            return 4;
-    if (!lead.businessAge)                                            return 4;
-    if (!lead.deliveryTime)                                           return 4;
-    if (!lead.currentProvider)                                        return 5;
-    if (!lead.platform)                                               return 6;
-    if (!lead.monthlyVolume)                                          return 7;
-    if (!lead.contactName)                                            return 8;
-    if (!lead.brand)                                                  return 9;
-    return 10;
+    if (!lead.businessName || !lead.contactName)  return 1;
+    if (!lead.monthlyVolume)                      return 2;
+    return 3;
   }
 
   // 
@@ -220,6 +176,7 @@
 
     // — Public: open (new or resume or show overview) ————————
     async open(existingLead) {
+      window._lfInstance = this;
       this.isRejected    = false;
       this._rejectReason = "";
       this.pricingResult = null;
@@ -272,7 +229,7 @@
       }
       this._injectStyles();
       this._bindEvents();
-      if (!this.showingOverview && this.currentStep === 7 && !this.pricingResult && !this.isRejected) {
+      if (!this.showingOverview && this.currentStep === 3 && !this.pricingResult && !this.isRejected) {
         this._calculateOutput();
       }
     }
@@ -837,7 +794,7 @@
       if (s.isOutput) return this._buildOutput();
 
       // Special handling for Step 7: Tab UI for CSV vs Manual
-      if (this.currentStep === 4) {
+      if (this.currentStep === 2) {
         const activeTab = this.lead.volumeTab || "manual";
         return `
           <div class="lf-step-wrap">
@@ -1200,6 +1157,14 @@
           <!--  HEADER  -->
           <div class="lf-op-head">
             <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);white-space:nowrap">Brand</label>
+                <select id="lf-brand-selector" style="border:1px solid var(--g5);border-radius:var(--r);padding:5px 10px;font-size:13px;font-family:'Inter',sans-serif;background:var(--white);color:var(--black);cursor:pointer;outline:none"
+                  onchange="(function(v){window._lfInstance&&(window._lfInstance.lead.brand=v,window._lfInstance._scheduleSave())})(this.value)">
+                  <option value="minted" ${(this.lead.brand||'minted')==='minted'?'selected':''}>MintedPay</option>
+                  <option value="ummah"  ${(this.lead.brand||'minted')==='ummah' ?'selected':''}>Ummah Pay</option>
+                </select>
+              </div>
               <h2 class="lf-op-title">${this.lead.businessName || "Pricing Output"}</h2>
               <div class="lf-op-sub">
                 ${this.lead.country ? `<span>${this.lead.country}</span>` : ""}
@@ -2176,7 +2141,7 @@
 
       // — Step 7: Live avg ticket warning ——————————————————————————
       const updateAvgTicketWarning = () => {
-        if (this.currentStep !== 7) return;
+        if (this.currentStep !== 2) return;
         const vol = parseFloat(document.getElementById("lf-monthlyVolume")?.value) || 0;
         const avg = parseFloat(document.getElementById("lf-avgTransactionValue")?.value) || 0;
         let warn = document.getElementById("lf-avg-ticket-warning");
@@ -2905,6 +2870,19 @@
           this._fieldError("lf-industry", "Industry is required");
           return false;
         }
+        if (!this.lead.contactName || !String(this.lead.contactName).trim()) {
+          this._fieldError("lf-contactName", "Contact Name is required");
+          return false;
+        }
+        if (!this.lead.email || !String(this.lead.email).trim()) {
+          this._fieldError("lf-email", "Email is required");
+          return false;
+        }
+        const _emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!_emailRegex.test(this.lead.email)) {
+          this._fieldError("lf-email", "Invalid email address format");
+          return false;
+        }
       }
 
       // Step 2: website URL format validation
@@ -2919,8 +2897,8 @@
         }
       }
 
-      // Step 4: intlPercentage required (must be a number 0-100), plus businessAge + deliveryTime
-      if (this.currentStep === 3) {
+      // Step 1c: intlPercentage + businessAge + deliveryTime (now in Step 1)
+      if (this.currentStep === 1) {
         const intlVal = this.lead.intlPercentage;
         if (intlVal === undefined || intlVal === null || String(intlVal).trim() === "") {
           this._fieldError("lf-intlPercentage", "International transactions % is required — enter 0 if none");
@@ -2941,8 +2919,8 @@
         }
       }
 
-      // Step 7: monthlyVolume, avgTransactionValue required
-      if (this.currentStep === 4) {
+      // Step 2: monthlyVolume, avgTransactionValue required
+      if (this.currentStep === 2) {
         if (!this.lead.monthlyVolume || parseFloat(this.lead.monthlyVolume) <= 0) {
           this._fieldError("lf-monthlyVolume", "Monthly Volume must be greater than 0");
           return false;
@@ -2953,8 +2931,8 @@
         }
       }
 
-      // Step 8: contactName, email required + format validation
-      if (this.currentStep === 5) {
+      // Contact fields validated in Step 1
+      if (false) {
         if (!this.lead.contactName || !String(this.lead.contactName).trim()) {
           this._fieldError("lf-contactName", "Contact Name is required");
           return false;
@@ -3013,7 +2991,7 @@
       await this._saveNow();
       this._render();
 
-      if (this.currentStep === 7) this._calculateOutput();
+      if (this.currentStep === 3) this._calculateOutput();
     }
 
     // — Collect current step fields into this.lead ———————
