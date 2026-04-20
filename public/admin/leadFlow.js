@@ -1497,7 +1497,7 @@
               <a href="/quote.html?quote=${this.lead.quote_id}&admin=1" target="_blank">View (Admin) &#8594;</a>
               &nbsp;·&nbsp;
               <a href="/quote.html?quote=${this.lead.quote_id}" target="_blank">View (Merchant) &#8594;</a>
-            </div>
+            </div>` : ""}
             ${this.lead.quote_id ? `
             <div class="lf-op-action-row" style="margin-top:6px;gap:6px">
               <button class="lf-op-act-btn lf-op-act-secondary" id="lf-copy-link" style="flex:1">
