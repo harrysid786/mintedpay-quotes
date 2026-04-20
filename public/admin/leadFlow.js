@@ -1497,6 +1497,15 @@
               <a href="/quote.html?quote=${this.lead.quote_id}&admin=1" target="_blank">View (Admin) &#8594;</a>
               &nbsp;·&nbsp;
               <a href="/quote.html?quote=${this.lead.quote_id}" target="_blank">View (Merchant) &#8594;</a>
+            </div>
+            ${this.lead.quote_id ? `
+            <div class="lf-op-action-row" style="margin-top:6px;gap:6px">
+              <button class="lf-op-act-btn lf-op-act-secondary" id="lf-copy-link" style="flex:1">
+                &#128279; Copy Link
+              </button>
+              <button class="lf-op-act-btn lf-op-act-primary" id="lf-send-quote" style="flex:1">
+                &#9993; Send Quote
+              </button>
             </div>` : ""}
             ${isKYB ? `
             <div class="lf-op-kyb-notice">
@@ -1972,6 +1981,10 @@
       q("lf-rej-back")?.addEventListener("click", () => {
         this.isRejected  = false;
         this.currentStep = 1;
+
+      // Send Quote + Copy Link handlers
+      q("lf-copy-link")?.addEventListener("click", () => this._copyQuoteLink());
+      q("lf-send-quote")?.addEventListener("click", () => this._sendQuote());
         this._render();
       });
 
@@ -3348,6 +3361,50 @@
         if (btn) { btn.textContent = " Mark as KYB Ready"; btn.disabled = false; }
         alert("Error marking as KYB. Please try again.");
       }
+    }
+
+    // Send Quote — opens email client with pre-filled quote link
+    _sendQuote() {
+      const qid = this.lead.quote_id;
+      const email = this.lead.email;
+      if (!qid) { alert('Generate a quote first before sending.'); return; }
+      if (!email) { alert('No email address on this lead.'); return; }
+
+      const url = window.location.origin + '/quote.html?quote=' + qid;
+      const name = this.lead.businessName || 'there';
+      const subject = encodeURIComponent('Your Payment Processing Quote');
+      const body = encodeURIComponent(
+        'Hi ' + name + ',\n\n' +
+        'Please find your payment processing quote at the link below:\n\n' +
+        url + '\n\n' +
+        'This quote is valid for 30 days. Click the link to review your pricing and accept the quote.\n\n' +
+        'If you have any questions, please don\'t hesitate to get in touch.\n\n' +
+        'Kind regards'
+      );
+      window.open('mailto:' + email + '?subject=' + subject + '&body=' + body);
+    }
+
+    // Copy Quote Link — copies quote URL to clipboard
+    _copyQuoteLink() {
+      const qid = this.lead.quote_id;
+      if (!qid) { alert('Generate a quote first.'); return; }
+      const url = window.location.origin + '/quote.html?quote=' + qid;
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById('lf-copy-link');
+        if (btn) { btn.textContent = '✓ Copied!'; btn.style.background = 'var(--green)'; btn.style.color = '#fff'; }
+        setTimeout(() => { if (btn) { btn.textContent = '🔗 Copy Link'; btn.style.background = ''; btn.style.color = ''; } }, 2000);
+      }).catch(() => {
+        // Fallback for older browsers
+        const el = document.createElement('textarea');
+        el.value = url;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        const btn = document.getElementById('lf-copy-link');
+        if (btn) { btn.textContent = '✓ Copied!'; }
+        setTimeout(() => { if (btn) { btn.textContent = '🔗 Copy Link'; } }, 2000);
+      });
     }
   }
 
