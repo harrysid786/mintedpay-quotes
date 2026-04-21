@@ -1152,7 +1152,7 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
     regional = calculateRegionalRates(
       finalCostEngine.wespellPctEffective, effectiveProfileName, syntheticSettings, vol, debitFrac
     );
-    sellUkRate            = regional.sellUkRate;
+    sellUkRate            = Math.max(regional.sellUkRate, ACQUISITION_PLUS_RULES.minDomestic);
     sellInternationalRate = (regional.sellInternationalRate != null) ? Math.max(regional.sellInternationalRate, ACQUISITION_PLUS_RULES.minInternational) : null;
   } else {
     // CASE B / C — UK domestic only or no reliable mix data.
@@ -1162,7 +1162,7 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
     regional = calculateRegionalRates(
       finalCostEngine.wespellPctEffective, effectiveProfileName, syntheticSettings, vol, debitFrac
     );
-    sellUkRate            = regional.sellUkRate;
+    sellUkRate            = Math.max(regional.sellUkRate, ACQUISITION_PLUS_RULES.minDomestic);
     // International rate is the fallback — NOT derived from cost engine assumptions.
     // It is a standard "from X%" display value, not a calculated merchant rate.
     sellInternationalRate = fallbackInternationalRate;
