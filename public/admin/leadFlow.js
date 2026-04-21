@@ -447,6 +447,7 @@
                       <div class="ov-pricing-label">Est. Monthly Cost</div>
                       <div class="ov-pricing-value ov-pricing-sm">${estCost}</div>
                     </div>` : ""}
+                    ${(estCost && lead.currentMonthlyFees && parseFloat(lead.currentMonthlyFees) > 0) ? (() => { const _c = (vol * rate / 100) + (txCnt * fee / 100); const _s = parseFloat(lead.currentMonthlyFees) - _c; return _s > 0 ? `<div class="ov-pricing-cell" style="background:var(--green-lt)"><div class="ov-pricing-label" style="color:var(--green)">Est. Monthly Saving</div><div class="ov-pricing-value ov-pricing-sm" style="color:var(--green)">+£${_s.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>` : ''; })() : ""}
                   </div>
                   ${hasQuote ? `<div class="ov-quote-ref">Quote ID: <strong>${lead.quote_id}</strong></div>` : ""}
                 </div>` : ""}
