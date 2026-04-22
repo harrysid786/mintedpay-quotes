@@ -372,6 +372,12 @@ const ACQUISITION_PLUS_RULES = {
   // Warning thresholds
   contributionMarginWarningPct:   0.08,
   highIntlMixWarningThreshold:    0.40,
+
+  // ── Dual-region engine constants (mixed merchants only) ──
+  // Used by calculateDualRegionQuote when 0 < intlFrac < 1.
+  undercutMultiplier: 0.75,                 // minimum 25% undercut target
+  minSavingPct:       0.10,                 // minimum 10% saving for fx selection
+  fixedFeeOptions:   [20, 15, 10, 5],       // pence, highest-first
 };
 
 
@@ -766,6 +772,259 @@ function computeWarningFlags(params) {
 
   return flags;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// computeSingleRegionForNoFees — helper for CASE B of dual-region
+// ═══════════════════════════════════════════════════════════════
+// Mirrors today's acquisition_plus no-fees calculation path (cur=0).
+// Produces the SAME headline rate today's engine would produce for
+// this merchant treated as a single-region lead. Used by Case B of
+// calculateDualRegionQuote to anchor the 1pp-gap derivation.
+function computeSingleRegionForNoFees(vol, cnt, debitFrac, intlFrac) {
+  if (!vol || vol <= 0 || !cnt || cnt <= 0) return null;
+  const avgTx = vol / cnt;
+  const eurGbpRate = getSetting("EUR_GBP_RATE", DEFAULT_EUR_GBP_RATE);
+
+  // Worst-case cost (matches Phase A overrides in calculateQuote)
+  const wespellGBP    = WESPELL_FLAT_FEE_EUR * eurGbpRate;
+  const wespellPct    = fixedCostToRatePct(wespellGBP, cnt, vol);
+  const gatewayPct    = fixedCostToRatePct(ADYEN_GATEWAY_FLAT_FEE_GBP, cnt, vol);
+  const wcTotalFixed  = ADYEN_GATEWAY_FLAT_FEE_GBP + wespellGBP;
+  const wcEffective   = INTERCHANGE.intl + SCHEME_FEE + ADYEN_MARKUP_FLAT_PCT
+                      + wespellPct + gatewayPct;
+
+  // Real cost (for floor check)
+  const df = (debitFrac !== null && debitFrac !== undefined && debitFrac > 0 && debitFrac <= 1)
+    ? debitFrac : 0.70;
+  const ukIC = df * INTERCHANGE.ukDebit + (1 - df) * INTERCHANGE.ukCredit;
+  let realIC;
+  if (intlFrac !== null && intlFrac > 0 && intlFrac < 1) {
+    realIC = (1 - intlFrac) * ukIC + intlFrac * INTERCHANGE.intl;
+  } else if (intlFrac === 1) {
+    realIC = INTERCHANGE.intl;
+  } else {
+    realIC = ukIC;
+  }
+  const realCostPct = realIC + SCHEME_FEE + ADYEN_MARKUP_FLAT_PCT + wespellPct + gatewayPct;
+
+  // Phase B: cost + volume margin tier
+  const marginTier = ACQUISITION_PLUS_RULES.acquisitionMarginTiers.find(t => vol <= t.maxVol)
+                  || ACQUISITION_PLUS_RULES.acquisitionMarginTiers[ACQUISITION_PLUS_RULES.acquisitionMarginTiers.length - 1];
+  let provisional = wcEffective + marginTier.margin;
+  provisional = Math.max(provisional, ACQUISITION_PLUS_RULES.rateFloor);
+
+  // Phase D: floor check + shortfall absorption at 10p
+  const minAllowed = realCostPct + ACQUISITION_PLUS_RULES.minMargin;
+  let quoteRate = Math.max(provisional, minAllowed, ACQUISITION_PLUS_RULES.rateFloor);
+  quoteRate = Math.ceil(quoteRate * 100) / 100;
+
+  const fx = 10;
+  const fxGBP = fx / 100;
+  if (wcTotalFixed > fxGBP && avgTx >= 1) {
+    const shortfallPct = ((wcTotalFixed - fxGBP) / avgTx) * 100;
+    quoteRate = Math.ceil((quoteRate + shortfallPct) * 100) / 100;
+    if (quoteRate < minAllowed) quoteRate = Math.ceil(minAllowed * 100) / 100;
+  }
+
+  return { rate: quoteRate, fixed_fee: fx };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// calculateDualRegionQuote — DUAL-REGION ENGINE (mixed merchants)
+// ═══════════════════════════════════════════════════════════════
+// Called ONLY for mixed merchants (0 < intlFrac < 1) on the
+// acquisition_plus (public) profile. Single-region merchants and
+// admin profiles are untouched.
+//
+// CASE A — current fees provided:
+//   Runs acquisition_plus undercut logic per region on its slice
+//   of vol/cnt/fees. Each region respects its own floor. One fixed
+//   fee chosen for both regions (prefer both-save-≥10%, fall back
+//   to both-competitive, fall back to either-competitive).
+//   not_competitive = true only when BOTH regions fail.
+//
+// CASE B — no current fees:
+//   Uses computeSingleRegionForNoFees to produce the SAME headline
+//   rate today's engine would produce. Derives UK/Intl split with a
+//   fixed 1.00pp gap so: ukFrac × uk + intlFrac × (uk + 1) = headline
+//     → uk = headline − intlFrac  (since 1 × intlFrac = intlFrac)
+//     → intl = uk + 1
+//
+function calculateDualRegionQuote(vol, cnt, cur, debitFrac, intlFrac, intlRegion, settingsOverride) {
+  if (intlFrac === null || intlFrac === undefined || intlFrac <= 0 || intlFrac >= 1) return null;
+  if (!vol || vol <= 0 || !cnt || cnt <= 0) return null;
+
+  const ukFrac   = 1 - intlFrac;
+  const ukVol    = vol * ukFrac;
+  const ukCnt    = Math.round(cnt * ukFrac);
+  const ukCur    = (cur && cur > 0) ? cur * ukFrac : 0;
+  const intlVol  = vol * intlFrac;
+  const intlCnt  = cnt - ukCnt;
+  const intlCur  = (cur && cur > 0) ? cur * intlFrac : 0;
+
+  // ═══════════════════════════════════════════════════════════
+  // CASE B — no current fees: single headline + 1pp gap derivation
+  // ═══════════════════════════════════════════════════════════
+  if (!cur || cur <= 0) {
+    const headline = computeSingleRegionForNoFees(vol, cnt, debitFrac, intlFrac);
+    if (!headline) return null;
+    const GAP = 1.00;
+    const ukRate   = Math.round((headline.rate - intlFrac * GAP) * 100) / 100;
+    const intlRate = Math.round((ukRate + GAP) * 100) / 100;
+    const blended  = Math.round((ukFrac * ukRate + intlFrac * intlRate) * 100) / 100;
+    return {
+      uk_rate:                    ukRate,
+      international_rate:         intlRate,
+      fixed_fee:                  headline.fixed_fee,
+      blended_rate:               blended,
+      not_competitive:            false,
+      uk_current_rate:            null,
+      international_current_rate: null,
+      uk_saving_pct:              null,
+      international_saving_pct:   null,
+      uk_competitive:             null,
+      international_competitive:  null,
+      derivation:                 "no_fees_1pp_gap",
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // CASE A — current fees: dual-region per-slice undercut logic
+  // ═══════════════════════════════════════════════════════════
+  const eurGbpRate = getSetting("EUR_GBP_RATE", DEFAULT_EUR_GBP_RATE);
+
+  function computeRegionRate(sliceVol, sliceCnt, sliceCur, region, fixedFeePence) {
+    if (sliceVol <= 0 || sliceCnt <= 0) return null;
+    const avgTx       = sliceVol / sliceCnt;
+    const fxGBP       = fixedFeePence / 100;
+    const regionFloor = region === 'uk'
+      ? ACQUISITION_PLUS_RULES.minDomestic
+      : ACQUISITION_PLUS_RULES.minInternational;
+
+    let interchangePct;
+    if (region === 'uk') {
+      const df = (debitFrac !== null && debitFrac !== undefined && debitFrac > 0 && debitFrac <= 1)
+        ? debitFrac : 0.70;
+      interchangePct = df * INTERCHANGE.ukDebit + (1 - df) * INTERCHANGE.ukCredit;
+    } else {
+      interchangePct = INTERCHANGE.intl;
+    }
+
+    const wespellGBP    = WESPELL_FLAT_FEE_EUR * eurGbpRate;
+    const wespellPct    = fixedCostToRatePct(wespellGBP, sliceCnt, sliceVol);
+    const gatewayPct    = fixedCostToRatePct(ADYEN_GATEWAY_FLAT_FEE_GBP, sliceCnt, sliceVol);
+    const totalFixedGBP = ADYEN_GATEWAY_FLAT_FEE_GBP + wespellGBP;
+    const realCostPct   = interchangePct + SCHEME_FEE + ADYEN_MARKUP_FLAT_PCT + wespellPct + gatewayPct;
+
+    let provisionalRate;
+    let currentRate = null;
+    if (sliceCur && sliceCur > 0) {
+      currentRate = (sliceCur / sliceVol) * 100;
+      const fixedAsPct     = fixedCostToRatePct(fxGBP, sliceCnt, sliceVol);
+      const targetAllIn    = currentRate * ACQUISITION_PLUS_RULES.undercutMultiplier;
+      const undercutTarget = targetAllIn - fixedAsPct;
+      const costFloor      = realCostPct + ACQUISITION_PLUS_RULES.minMargin + 0.10;
+      provisionalRate      = Math.max(undercutTarget, costFloor);
+    } else {
+      const marginTier = ACQUISITION_PLUS_RULES.acquisitionMarginTiers.find(t => sliceVol <= t.maxVol)
+                      || ACQUISITION_PLUS_RULES.acquisitionMarginTiers[ACQUISITION_PLUS_RULES.acquisitionMarginTiers.length - 1];
+      provisionalRate = realCostPct + marginTier.margin;
+    }
+    provisionalRate = Math.max(provisionalRate, ACQUISITION_PLUS_RULES.rateFloor);
+
+    const minAllowed = realCostPct + ACQUISITION_PLUS_RULES.minMargin;
+    let quoteRate = Math.max(provisionalRate, minAllowed, ACQUISITION_PLUS_RULES.rateFloor, regionFloor);
+
+    if (totalFixedGBP > fxGBP && avgTx >= 1) {
+      const shortfallPct = ((totalFixedGBP - fxGBP) / avgTx) * 100;
+      quoteRate = quoteRate + shortfallPct;
+      if (quoteRate < minAllowed) quoteRate = minAllowed;
+    }
+    quoteRate = Math.ceil(quoteRate * 100) / 100;
+
+    const allInRate = quoteRate + fixedCostToRatePct(fxGBP, sliceCnt, sliceVol);
+    let competitive = null;
+    let savingPct = null;
+    if (currentRate !== null) {
+      competitive = allInRate < currentRate;
+      savingPct = (currentRate - allInRate) / currentRate;
+    }
+
+    return {
+      rate: quoteRate,
+      currentRate,
+      allInRate: Math.round(allInRate * 100) / 100,
+      competitive,
+      savingPct: savingPct !== null ? Math.round(savingPct * 10000) / 10000 : null,
+    };
+  }
+
+  // Fixed fee selection: prefer both-save-≥10%, then both-competitive, then either-competitive
+  let selected = null;
+  let fallbackCompetitive = null;
+  let fallbackPartial = null;
+
+  for (const fx of ACQUISITION_PLUS_RULES.fixedFeeOptions) {
+    const ukResult   = computeRegionRate(ukVol,   ukCnt,   ukCur,   'uk',   fx);
+    const intlResult = computeRegionRate(intlVol, intlCnt, intlCur, 'intl', fx);
+    if (!ukResult || !intlResult) continue;
+
+    const bothCompetitive = ukResult.competitive && intlResult.competitive;
+    const anyCompetitive  = ukResult.competitive || intlResult.competitive;
+    const bothHit10pct    = (ukResult.savingPct   === null || ukResult.savingPct   >= ACQUISITION_PLUS_RULES.minSavingPct)
+                         && (intlResult.savingPct === null || intlResult.savingPct >= ACQUISITION_PLUS_RULES.minSavingPct);
+
+    if (bothCompetitive && bothHit10pct) {
+      selected = { fx, uk: ukResult, intl: intlResult };
+      break;
+    }
+    if (bothCompetitive && !fallbackCompetitive) fallbackCompetitive = { fx, uk: ukResult, intl: intlResult };
+    if (anyCompetitive  && !fallbackPartial)     fallbackPartial     = { fx, uk: ukResult, intl: intlResult };
+  }
+  if (!selected) selected = fallbackCompetitive || fallbackPartial;
+
+  if (!selected) {
+    const fx = 10;
+    const ukResult   = computeRegionRate(ukVol,   ukCnt,   ukCur,   'uk',   fx);
+    const intlResult = computeRegionRate(intlVol, intlCnt, intlCur, 'intl', fx);
+    const blendedRate = ukFrac * ukResult.rate + intlFrac * intlResult.rate;
+    return {
+      uk_rate:                    ukResult.rate,
+      international_rate:         intlResult.rate,
+      fixed_fee:                  fx,
+      blended_rate:               Math.round(blendedRate * 100) / 100,
+      not_competitive:            true,
+      uk_current_rate:            ukResult.currentRate   !== null ? Math.round(ukResult.currentRate   * 100) / 100 : null,
+      international_current_rate: intlResult.currentRate !== null ? Math.round(intlResult.currentRate * 100) / 100 : null,
+      uk_saving_pct:              ukResult.savingPct,
+      international_saving_pct:   intlResult.savingPct,
+      uk_competitive:             ukResult.competitive,
+      international_competitive:  intlResult.competitive,
+      derivation:                 "case_a_no_fit",
+    };
+  }
+
+  const { fx, uk, intl } = selected;
+  const blendedRate = ukFrac * uk.rate + intlFrac * intl.rate;
+  // not_competitive only when BOTH regions fail (lead still proceeds if one beats)
+  const notCompetitive = (uk.competitive === false) && (intl.competitive === false);
+
+  return {
+    uk_rate:                    uk.rate,
+    international_rate:         intl.rate,
+    fixed_fee:                  fx,
+    blended_rate:               Math.round(blendedRate * 100) / 100,
+    not_competitive:            notCompetitive,
+    uk_current_rate:            uk.currentRate   !== null ? Math.round(uk.currentRate   * 100) / 100 : null,
+    international_current_rate: intl.currentRate !== null ? Math.round(intl.currentRate * 100) / 100 : null,
+    uk_saving_pct:              uk.savingPct,
+    international_saving_pct:   intl.savingPct,
+    uk_competitive:             uk.competitive,
+    international_competitive:  intl.competitive,
+    derivation:                 "case_a_dual_undercut",
+  };
+}
+
 // intlFrac          — optional 0-1 proportion of international transactions
 //                     (from lead.intlPercentage / 100). null when not available.
 // csvDebitFracIsReal — true when debitFrac came from real CSV card-mix detection,
@@ -1230,10 +1489,29 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
     fixedFeeShortfallAbsorbed,
   });
 
+  // ════════════════════════════════════════════════════════════
+  // PHASE J — DUAL-REGION RATES (mixed merchants only)
+  //
+  // For mixed merchants on the acquisition_plus profile, run the
+  // dual-region engine to produce real per-region quote rates.
+  // Single-region merchants (intlFrac null/0/1) and admin profiles
+  // are completely unaffected.
+  //
+  // When dualRegion is populated, the return values for rate,
+  // fixed_fee, sell_uk_rate, sell_international_rate, blended_rate,
+  // and not_competitive are REPLACED with the dual-region outputs.
+  // ════════════════════════════════════════════════════════════
+  let dualRegion = null;
+  if (isPublicProfile && hasRealInternationalData && intlFrac > 0 && intlFrac < 1) {
+    dualRegion = calculateDualRegionQuote(
+      vol, cnt, curFees, debitFrac, intlFrac, intlRegion, settingsOverride
+    );
+  }
+
   return {
     // ── Existing fields — unchanged, backward compatible ──────
-    rate:                    quoteRate,
-    fixed_fee:               fixedFee,
+    rate:                    dualRegion ? dualRegion.blended_rate : quoteRate,
+    fixed_fee:               dualRegion ? dualRegion.fixed_fee    : fixedFee,
     avgTx:                   Math.round(avgTx * 100) / 100,
     current_rate:            currentRate !== null ? Math.round(currentRate * 100) / 100 : null,
     current_uk_rate:         currentUkRate,
@@ -1242,9 +1520,9 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
     yearly_saving:           yearlySaving  !== null ? Math.round(yearlySaving  * 100) / 100 : null,
     true_uk_cost:            regional.trueUkCost,
     true_international_cost: regional.trueInternationalCost,
-    sell_uk_rate:            sellUkRate,
-    sell_international_rate: sellInternationalRate,
-    blended_rate:            blendedRate,
+    sell_uk_rate:            dualRegion ? dualRegion.uk_rate            : sellUkRate,
+    sell_international_rate: dualRegion ? dualRegion.international_rate : sellInternationalRate,
+    blended_rate:            dualRegion ? dualRegion.blended_rate       : blendedRate,
     pricing_mode:            pricingDecision.mode,
     split_is_primary:        pricingDecision.splitIsPrimary,
     blended_is_valid:        pricingDecision.blendedIsValid,
@@ -1265,7 +1543,13 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
     // This correctly accounts for the fixed fee impact at low average ticket sizes.
     // null when no current fees were provided.
     is_cheaper_than_current:      currentRate !== null ? (quoteRate + (cnt * (fixedFee / 100) / vol * 100) < currentRate) : null,
-    not_competitive:              currentRate !== null ? (quoteRate + (cnt * (fixedFee / 100) / vol * 100) >= currentRate) : (vol > 0 && cnt > 0 && (vol / cnt) < 15) ? true : null,
+    not_competitive:              dualRegion ? dualRegion.not_competitive : (currentRate !== null ? (quoteRate + (cnt * (fixedFee / 100) / vol * 100) >= currentRate) : (vol > 0 && cnt > 0 && (vol / cnt) < 15) ? true : null),
+    // ── Dual region fields (mixed merchants only) ──
+    dual_region_mode:             dualRegion !== null,
+    uk_saving_pct:                dualRegion ? dualRegion.uk_saving_pct                : null,
+    international_saving_pct:     dualRegion ? dualRegion.international_saving_pct     : null,
+    uk_competitive:               dualRegion ? dualRegion.uk_competitive               : null,
+    international_competitive:    dualRegion ? dualRegion.international_competitive    : null,
     // ── International region ───────────────────────────────────
     // Echoed back for transparency. null when not supplied.
     // Note: acquisition_plus always uses worst-case 1.50% regardless of this value.
@@ -1684,6 +1968,12 @@ router.post("/", (req, res) => {
       // ── Competitive flags ─────────────────────────────────────────
       not_competitive:              result.not_competitive,
       is_cheaper_than_current:      result.is_cheaper_than_current,
+      // ── Dual-region (mixed merchants only) ─────────────────────
+      dual_region_mode:             result.dual_region_mode,
+      uk_saving_pct:                result.uk_saving_pct,
+      international_saving_pct:     result.international_saving_pct,
+      uk_competitive:               result.uk_competitive,
+      international_competitive:    result.international_competitive,
       // ── Per-segment quotes (when segment_data was provided) ──────
       segment_quotes:               segmentQuotes,
     });
