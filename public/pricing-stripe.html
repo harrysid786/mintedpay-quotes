@@ -613,7 +613,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
         </div>
         <div class="rate-breakdown-row seg-rate-row">
           <span class="rate-breakdown-key">Fixed fee per transaction</span>
-          <span class="rate-breakdown-val">10p</span>
+          <span class="rate-breakdown-val" id="bdFixedFee">10p</span>
         </div>
         <div class="rate-breakdown-row">
           <span class="rate-breakdown-key">Setup / onboarding fee</span>
@@ -1218,6 +1218,9 @@ async function buildStep4() {
   };
 
   document.getElementById("bdUk").textContent = ukRate ? fmtRate(ukRate) + " + " + fixed + "p/tx" : "—";
+  // Keep the standalone "Fixed fee per transaction" row in sync with the engine's chosen fixed fee.
+  const bdFixedFee = document.getElementById("bdFixedFee");
+  if (bdFixedFee) bdFixedFee.textContent = fixed + "p";
   const bdUkSub = document.getElementById("bdUkSub");
   if (bdUkSub) bdUkSub.textContent = hasIntl ? "(UK-issued cards only)" : "";
 
