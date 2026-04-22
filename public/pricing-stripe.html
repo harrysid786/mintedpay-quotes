@@ -1027,6 +1027,9 @@ async function buildStep4() {
   const hasIntl   = p && p.sell_international_rate && !!(p.has_real_international_data || parseFloat(p.intl_frac || 0) > 0);
   const sellIntl  = p ? parseFloat(p.sell_international_rate || 0) : null;
   const baseRate  = p ? parseFloat(p.rate) : null;
+  // ukRate: for mixed merchants use the real per-region UK sell rate.
+  // For single-region merchants (hasIntl false) fall back to baseRate — no change in behaviour.
+  const ukRate    = (hasIntl && p && p.sell_uk_rate) ? parseFloat(p.sell_uk_rate) : baseRate;
   const blended   = (hasIntl && baseRate && sellIntl)
     ? Math.ceil(((1 - parseFloat(p.intl_frac)) * baseRate + parseFloat(p.intl_frac) * sellIntl) * 100) / 100
     : null;
@@ -1165,7 +1168,7 @@ async function buildStep4() {
     document.getElementById("curRateBig").textContent = effRate.toFixed(2) + "%";
     document.getElementById("curRateSub").textContent = "effective rate (£" + cur.toFixed(0) + "/mo)";
 
-    const mpHeadlineRate = hasIntl ? baseRate : displayRate;
+    const mpHeadlineRate = hasIntl ? ukRate : displayRate;
     document.getElementById("mpRateBig").textContent  = fmtRate(mpHeadlineRate);
     document.getElementById("mpRateSub").textContent  = hasIntl
       ? "+ " + fixed + "p/tx  ·  UK cards"
@@ -1197,7 +1200,7 @@ async function buildStep4() {
       if (_sh2) _sh2.style.display = "none";
     }
   } else if (!hasCurFees && displayRate) {
-    document.getElementById("mpRateBigOnly").textContent = fmtRate(hasIntl ? baseRate : displayRate);
+    document.getElementById("mpRateBigOnly").textContent = fmtRate(hasIntl ? ukRate : displayRate);
     document.getElementById("mpRateSubOnly").textContent = hasIntl
       ? "+ " + fixed + "p/tx  ·  UK cards"
       : "+ " + fixed + "p per transaction";
@@ -1214,7 +1217,7 @@ async function buildStep4() {
     "":       "non-UK issued cards",
   };
 
-  document.getElementById("bdUk").textContent = baseRate ? fmtRate(baseRate) + " + " + fixed + "p/tx" : "—";
+  document.getElementById("bdUk").textContent = ukRate ? fmtRate(ukRate) + " + " + fixed + "p/tx" : "—";
   const bdUkSub = document.getElementById("bdUkSub");
   if (bdUkSub) bdUkSub.textContent = hasIntl ? "(UK-issued cards only)" : "";
 
