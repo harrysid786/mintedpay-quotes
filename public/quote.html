@@ -1118,10 +1118,12 @@ async function loadQuote(){
 
   // Update topbar with brand
   const brand = data.brand || {};
+  const logo = document.getElementById("tbLogo");
   if(brand.logoData){
-    const logo = document.getElementById("tbLogo");
     logo.src = brand.logoData;
     if(brand.key === 'ummah'){ logo.style.height='28px'; logo.style.width='auto'; logo.style.maxWidth='160px'; }
+  } else {
+    logo.style.display = 'none';
   }
   const wm = document.getElementById("wordmark");
   if(brand.key === 'ummah'){ wm.style.display = 'none'; }
