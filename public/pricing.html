@@ -840,6 +840,21 @@ async function step3Next() {
     const cnt = parseFloat(document.getElementById("cntInput").value);
     if (!vol || vol <= 0) { showError("Please enter your monthly card volume."); return; }
     if (!cnt || cnt <= 0) { showError("Please enter your number of transactions."); return; }
+    // Sanity check: catch typo'd current rate (e.g. "35" instead of "3.5").
+    // Only validates when a current rate is provided. Threshold 15% is well
+    // above realistic processing rates (max ~5% for high-risk merchants) and
+    // well below typical typo values. Protects both merchant and our brand
+    // from displaying nonsense quote rates (e.g. 328% from 439% input).
+    const rateInput  = parseFloat(document.getElementById("curRateInput")?.value) || 0;
+    const fixedInput = parseFloat(document.getElementById("curFixedInput")?.value) || 0;
+    if (rateInput > 0) {
+      const avgTxCheck = vol / cnt;
+      const effectiveCheck = rateInput + (fixedInput / avgTxCheck);
+      if (effectiveCheck > 15) {
+        showError("That rate looks unusually high — please double-check your current processing rate. Typical rates are between 1% and 5%.");
+        return;
+      }
+    }
   }
   // If international % entered, customer base is required
   const intlVal = parseFloat(document.getElementById("intlInput")?.value) || 0;
