@@ -1133,7 +1133,7 @@
       // Cost calculations using simulator values
       const simRev        = vol > 0 ? ((vol * simRate / 100) + (txCnt * simFixed / 100)) : 0;
       const effectiveRate = vol > 0 ? ((simRev / vol) * 100).toFixed(2) : null;
-      const estMrg        = Math.max(0, simRate - 0.46).toFixed(2);
+      const estMrg        = (simRate - 0.46).toFixed(2);
       const mSave         = curPaying !== null ? Math.max(0, curPaying - simRev) : 0;
 
       // Risk badges
@@ -2043,7 +2043,7 @@
         const txCnt  = avgTx > 0 ? Math.round(vol / avgTx) : 0;
         const rev    = vol > 0 ? ((vol * sr / 100) + (txCnt * sf / 100)) : 0;
         const effR   = vol > 0 ? ((rev / vol) * 100).toFixed(2) + "%" : "—";
-        const mrg    = Math.max(0, sr - 0.46).toFixed(2);
+        const mrg    = (sr - 0.46).toFixed(2);
         const rawFeeManual  = parseFloat(this.lead.currentMonthlyFees)          || 0;
         const rawFeePricing = parseFloat(this.lead.pricing?.currentMonthlyFees) || 0;
         const csvCurRateSim = parseFloat(this.lead.csvCurrentRate)              || 0;
