@@ -1,0 +1,276 @@
+/* ============================================================
+   MINTEDPAY / UMMAH PAYMENTS — DESIGN TOKENS
+   Generated from Figma Design System v1.0 by Matías Espinach
+   ------------------------------------------------------------
+   Structure:
+     1. Color tokens (light + dark mode)
+     2. Typography tokens (font family, size, weight, line-height)
+     3. Spacing tokens (4-based scale)
+     4. Radius tokens
+     5. Responsive overrides for mobile
+   ============================================================ */
+
+/* ---------- 1. COLOUR TOKENS — LIGHT MODE (default) ---------- */
+:root {
+  /* Background */
+  --bg-primary:              #FFFFFF;
+  --bg-elevation-1:          #F9FAFA;
+  --bg-elevation-2:          #F1F4F6;
+  --bg-elevation-3:          #E3EDF1;
+  --bg-accent:               #E86C2B;
+  --bg-accent-elevation-1:   #F8F5F0;
+  --bg-accent-elevation-2:   #F2E9E4;
+  --bg-accent-elevation-3:   #F2E4DD;
+
+  /* Text */
+  --text-primary:    #1F1F1F;
+  --text-secondary:  #455962;
+  --text-tertiary:   #718289;
+  --text-muted:      #A8B6BD;
+  --text-disabled:   #B7C7CD;
+  --text-inverse:    #FFFFFF;
+  --text-accent:     #E86C2B;
+
+  /* Border */
+  --border-subtle:   #E3EDF1;
+  --border-default:  #D8E8EE;
+  --border-strong:   #B7C7CD;
+  --border-accent:   #E86C2B;
+  --border-inverse:  #1F1F1F;
+
+  /* Divider */
+  --divider-default: #F9FAFA;
+  --divider-strong:  #E3EDF1;
+  --divider-accent:  #E86C2B;
+
+  /* Icons */
+  --icon-primary:            #1F1F1F;
+  --icon-secondary:          #455962;
+  --icon-tertiary:           #718289;
+  --icon-muted:              #A8B6BD;
+  --icon-disabled:           #B7C7CD;
+  --icon-inverse:            #FFFFFF;
+  --icon-accent:             #E86C2B;
+  --icon-accent-background:  #FCEDE3;
+
+  /* Action (buttons, interactive) */
+  --action-primary:         #E86C2B;
+  --action-primary-hover:   #C75B20;
+  --action-primary-soft:    #F29A63;
+  --action-secondary:       #1F1F1F;
+  --action-secondary-hover: #111111;
+  --action-disabled:        #F9FAFA;
+
+  /* Card */
+  --card-bg:        #FFFFFF;
+  --card-secondary: #F8F5F0;
+  --card-border:    #E3EDF1;
+  --card-accent:    #E86C2B;
+
+  /* Status — Success */
+  --status-success:            #16A34A;
+  --status-success-hover:      #2E7D32;
+  --status-success-background: #DCFCE7;
+
+  /* Status — Warning */
+  --status-warning:            #CA8A04;
+  --status-warning-hover:      #9F6D06;
+  --status-warning-background: #FEF9C3;
+  --status-warning-text:       #B84E1F;
+
+  /* Status — Error */
+  --status-error:            #DC2626;
+  --status-error-hover:      #C62828;
+  --status-error-background: #FEE2E2;
+}
+
+/* ---------- 1b. COLOUR TOKENS — DARK MODE ---------- */
+[data-theme="dark"] {
+  --bg-primary:              #111111;
+  --bg-elevation-1:          #1F1F1F;
+  --bg-elevation-2:          #455962;
+  --bg-elevation-3:          #455962;
+  --bg-accent:               #E86C2B;
+  --bg-accent-elevation-1:   #E86C2B;
+  --bg-accent-elevation-2:   #E86C2B;
+  --bg-accent-elevation-3:   #E86C2B;
+
+  --text-primary:    #FFFFFF;
+  --text-secondary:  #E3EDF1;
+  --text-tertiary:   #E3EDF1;
+  --text-muted:      #D8E8EE;
+  --text-disabled:   #B7C7CD;
+  --text-inverse:    #0E1A26;
+  --text-accent:     #E86C2B;
+
+  --border-subtle:   #455962;
+  --border-default:  #91A2AB;
+  --border-strong:   #A8B6BD;
+  --border-accent:   #E86C2B;
+  --border-inverse:  #FFFFFF;
+
+  --divider-default: #0E1A26;
+  --divider-strong:  #91A2AB;
+  --divider-accent:  #E86C2B;
+
+  --icon-primary:            #FFFFFF;
+  --icon-secondary:          #F2E9E4;
+  --icon-tertiary:           #F2E9E4;
+  --icon-muted:              #455962;
+  --icon-disabled:           #455962;
+  --icon-inverse:            #111111;
+  --icon-accent:             #E86C2B;
+  --icon-accent-background:  #FCEDE3;
+
+  --action-primary:         #E86C2B;
+  --action-primary-hover:   #C75B20;
+  --action-primary-soft:    #F29A63;
+  --action-secondary:       #F29A63;
+  --action-secondary-hover: #F29A63;
+  --action-disabled:        #0E1A26;
+
+  --card-bg:        #0E1A26;
+  --card-secondary: #455962;
+  --card-border:    #B7C7CD;
+  --card-accent:    #E86C2B;
+
+  --status-success:            #16A34A;
+  --status-success-hover:      #16A34A;
+  --status-success-background: #DCFCE7;
+
+  --status-warning:            #CA8A04;
+  --status-warning-hover:      #CA8A04;
+  --status-warning-background: #FEF9C3;
+  --status-warning-text:       #B84E1F;
+
+  --status-error:            #DC2626;
+  --status-error-hover:      #FEE2E2;
+  --status-error-background: #FEE2E2;
+}
+
+/* ---------- 2. TYPOGRAPHY TOKENS ---------- */
+:root {
+  /* Font families */
+  --font-titles: "Bricolage Grotesque", system-ui, -apple-system, sans-serif;
+  --font-body:   "Bricolage Grotesque", system-ui, -apple-system, sans-serif;
+
+  /* Font weights */
+  --fw-light:     300;
+  --fw-regular:   400;
+  --fw-medium:    500;
+  --fw-semibold:  600;
+  --fw-bold:      700;
+  --fw-extrabold: 800;
+
+  /* ---------- Headings (Desktop) ---------- */
+  --fs-display-l:  64px;
+  --lh-display-l:  110%;
+  --fw-display-l:  var(--fw-extrabold);
+
+  --fs-display:    56px;
+  --lh-display:    110%;
+  --fw-display:    var(--fw-extrabold);
+
+  --fs-h1:         40px;
+  --lh-h1:         110%;
+  --fw-h1:         var(--fw-bold);
+
+  --fs-h2:         32px;
+  --lh-h2:         120%;
+  --fw-h2:         var(--fw-semibold);
+
+  --fs-h3:         24px;
+  --lh-h3:         120%;
+  --fw-h3:         var(--fw-medium);
+
+  --fs-h4:         20px;
+  --lh-h4:         130%;
+  --fw-h4:         var(--fw-medium);
+
+  /* ---------- Body (Desktop — Bricolage Grotesque) ---------- */
+  --fs-body-large:    18px;
+  --lh-body-large:    130%;
+  --fs-body-default:  16px;
+  --lh-body-default:  140%;
+  --fs-body-small:    14px;
+  --lh-body-small:    140%;
+  --fs-body-caption:  12px;
+  --lh-body-caption:  150%;
+}
+
+/* ---------- 2b. MOBILE TYPOGRAPHY (responsive override) ---------- */
+@media (max-width: 768px) {
+  :root {
+    /* Body uses Inter on mobile */
+    --font-body: "Inter", system-ui, -apple-system, sans-serif;
+
+    /* Headings scale down on mobile */
+    --fs-display-l:  56px;
+    --fw-display-l:  var(--fw-extrabold);
+
+    --fs-display:    40px;
+    --fw-display:    var(--fw-semibold);
+
+    --fs-h1:         32px;
+    --fw-h1:         var(--fw-semibold);
+
+    --fs-h2:         28px;
+    --fw-h2:         var(--fw-medium);
+
+    --fs-h3:         22px;
+
+    --fs-h4:         18px;
+
+    /* Body scales down on mobile */
+    --fs-body-large:    16px;
+    --fs-body-default:  15px;
+    --fs-body-small:    13px;
+  }
+}
+
+/* ---------- 3. SPACING TOKENS (4-based scale) ---------- */
+:root {
+  --space-0:    0;
+  --space-4:    4px;
+  --space-8:    8px;
+  --space-12:   12px;
+  --space-16:   16px;
+  --space-20:   20px;
+  --space-24:   24px;
+  --space-32:   32px;
+  --space-40:   40px;
+  --space-60:   60px;
+  --space-80:   80px;
+  --space-100:  100px;
+}
+
+/* ---------- 4. RADIUS TOKENS ---------- */
+:root {
+  --radius-0:    0;
+  --radius-4:    4px;
+  --radius-8:    8px;
+  --radius-12:   12px;
+  --radius-16:   16px;
+  --radius-24:   24px;
+  --radius-32:   32px;
+  --radius-pill: 999px;  /* for fully rounded elements */
+}
+
+/* ---------- 5. BASE DEFAULTS ---------- */
+body {
+  font-family: var(--font-body);
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-body-default);
+  line-height: var(--lh-body-default);
+  color: var(--text-primary);
+  background: var(--bg-primary);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-titles);
+  margin: 0;
+}
+h1 { font-size: var(--fs-h1); line-height: var(--lh-h1); font-weight: var(--fw-h1); }
+h2 { font-size: var(--fs-h2); line-height: var(--lh-h2); font-weight: var(--fw-h2); }
+h3 { font-size: var(--fs-h3); line-height: var(--lh-h3); font-weight: var(--fw-h3); }
+h4 { font-size: var(--fs-h4); line-height: var(--lh-h4); font-weight: var(--fw-h4); }
