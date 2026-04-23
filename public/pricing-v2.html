@@ -37,51 +37,25 @@
       border-bottom: 1px solid var(--divider-strong);
     }
     .section:last-child { border-bottom: none; margin-bottom: 0; }
-    .section h2 {
-      margin-bottom: var(--space-16);
-      color: var(--text-primary);
-    }
-    .section h3 {
-      margin-top: var(--space-24);
-      margin-bottom: var(--space-12);
-      color: var(--text-secondary);
-    }
-    .muted {
-      color: var(--text-tertiary);
-      font-size: var(--fs-body-small);
-    }
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-12);
-      align-items: center;
-      margin-bottom: var(--space-12);
-    }
+    .section h2 { margin-bottom: var(--space-16); color: var(--text-primary); }
+    .section h3 { margin-top: var(--space-24); margin-bottom: var(--space-12); color: var(--text-secondary); }
+    .muted { color: var(--text-tertiary); font-size: var(--fs-body-small); }
+    .row { display: flex; flex-wrap: wrap; gap: var(--space-12); align-items: center; margin-bottom: var(--space-12); }
 
     /* ============================================================
-       BUTTON COMPONENT (from previous step)
+       BUTTON COMPONENT
        ============================================================ */
     .btn {
-      font-family: var(--font-body);
-      font-weight: var(--fw-semibold);
-      font-size: var(--fs-body-default);
-      line-height: 1;
-      padding: var(--space-16) var(--space-32);
-      border-radius: var(--radius-pill);
-      border: 1px solid transparent;
-      cursor: pointer;
+      font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-body-default); line-height: 1;
+      padding: var(--space-16) var(--space-32); border-radius: var(--radius-pill);
+      border: 1px solid transparent; cursor: pointer;
       transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-8);
-      white-space: nowrap;
+      display: inline-flex; align-items: center; gap: var(--space-8); white-space: nowrap;
     }
     .btn-icon {
-      width: 18px; height: 18px;
-      border-radius: var(--radius-pill);
+      width: 18px; height: 18px; border-radius: var(--radius-pill);
       border: 1.5px solid currentColor;
-      display: inline-flex; align-items: center; justify-content: center;
-      font-size: 10px; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0;
     }
     .btn-icon::before { content: "→"; font-size: 11px; line-height: 1; }
     .btn-sm { padding: var(--space-8) var(--space-20); font-size: var(--fs-body-small); }
@@ -91,166 +65,269 @@
     .btn-primary:disabled { background: var(--action-primary-soft); cursor: not-allowed; opacity: 0.6; }
     .btn-secondary { background: var(--action-secondary); color: var(--text-inverse); }
     .btn-secondary:hover:not(:disabled) { background: var(--action-secondary-hover); }
-    .btn-secondary:disabled { background: var(--text-muted); cursor: not-allowed; opacity: 0.6; }
     .btn-outline { background: transparent; color: var(--action-primary); border-color: var(--action-primary); }
     .btn-outline:hover:not(:disabled) { background: var(--bg-accent-elevation-1); }
-    .btn-outline:disabled { color: var(--action-primary-soft); border-color: var(--action-primary-soft); cursor: not-allowed; opacity: 0.6; }
     .btn-destructive { background: var(--status-error); color: var(--text-inverse); }
     .btn-destructive:hover:not(:disabled) { background: var(--status-error-hover); }
-    .btn-destructive:disabled { background: var(--status-error-background); color: var(--status-error); cursor: not-allowed; opacity: 0.6; }
 
     /* ============================================================
        FIELD COMPONENT
        ============================================================ */
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-4);
-      margin-bottom: var(--space-24);
-      max-width: 400px;
-    }
-
-    /* Label above input */
-    .field-label {
-      font-family: var(--font-body);
-      font-size: var(--fs-body-default);
-      font-weight: var(--fw-regular);
-      color: var(--text-tertiary);
-      transition: color 150ms ease;
-    }
-
-    /* Input itself — underline only, no box */
+    .field { display: flex; flex-direction: column; gap: var(--space-4); margin-bottom: var(--space-24); max-width: 400px; }
+    .field-label { font-family: var(--font-body); font-size: var(--fs-body-default); font-weight: var(--fw-regular); color: var(--text-tertiary); transition: color 150ms ease; }
     .field-input {
-      font-family: var(--font-body);
-      font-size: var(--fs-body-default);
-      font-weight: var(--fw-regular);
-      color: var(--text-primary);
-      background: transparent;
-      border: none;
+      font-family: var(--font-body); font-size: var(--fs-body-default); font-weight: var(--fw-regular);
+      color: var(--text-primary); background: transparent; border: none;
       border-bottom: 1px solid var(--border-default);
-      padding: var(--space-8) 0;
-      outline: none;
-      transition: border-color 150ms ease;
-      width: 100%;
+      padding: var(--space-8) 0; outline: none;
+      transition: border-color 150ms ease; width: 100%;
     }
-    .field-input::placeholder {
-      color: var(--text-muted);
-    }
-
-    /* Focus state — label and underline turn orange */
-    .field-input:focus {
-      border-bottom-color: var(--border-accent);
-    }
-    .field-input:focus + .field-helper,
-    .field:focus-within .field-label {
-      color: var(--text-accent);
-    }
-
-    /* Error state */
-    .field.has-error .field-label { color: var(--text-primary); }
+    .field-input::placeholder { color: var(--text-muted); }
+    .field-input:focus { border-bottom-color: var(--border-accent); }
+    .field:focus-within .field-label { color: var(--text-accent); }
     .field.has-error .field-input { border-bottom-color: var(--status-error); }
-    .field-error {
-      font-family: var(--font-body);
-      font-size: var(--fs-body-default);
+    .field-error { font-family: var(--font-body); font-size: var(--fs-body-default); color: var(--text-primary); margin-top: var(--space-4); }
+    .field-helper { font-size: var(--fs-body-small); color: var(--text-tertiary); }
+    .field.is-disabled .field-label { color: var(--text-disabled); }
+    .field.is-disabled .field-input { color: var(--text-disabled); border-bottom-color: var(--border-subtle); cursor: not-allowed; }
+
+    /* ============================================================
+       TOPBAR2 — header with logo + close
+       ============================================================ */
+    .topbar {
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      padding: var(--space-20) var(--space-24);
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .topbar-logo {
+      font-family: var(--font-titles);
+      font-weight: var(--fw-extrabold);
+      font-size: var(--fs-h3);
+      letter-spacing: 0.12em;
       color: var(--text-primary);
-      margin-top: var(--space-4);
+      display: flex; align-items: center; gap: var(--space-8);
+    }
+    /* Simple SVG placeholder for the Ummah flower logo */
+    .topbar-logo-mark {
+      width: 28px; height: 28px;
+      display: inline-block;
+    }
+    .topbar-close {
+      position: absolute;
+      right: var(--space-24);
+      top: 50%; transform: translateY(-50%);
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border: none; background: transparent; cursor: pointer;
+      color: var(--icon-primary);
+      border-radius: var(--radius-pill);
+      transition: background 150ms ease;
+    }
+    .topbar-close:hover { background: var(--bg-elevation-2); }
+    .topbar-close svg { width: 18px; height: 18px; }
+
+    /* Preview wrapper so topbar has a visible edge */
+    .preview-frame {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-12);
+      overflow: hidden;
+      background: var(--bg-primary);
+      margin-bottom: var(--space-16);
     }
 
-    /* Helper text below field (optional) */
-    .field-helper {
+    /* ============================================================
+       STEPFOOTER — continue button + contact line
+       ============================================================ */
+    .step-footer {
+      display: flex; flex-direction: column; align-items: center; gap: var(--space-12);
+      padding: var(--space-24);
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border-subtle);
+    }
+    .step-footer .btn { min-width: 280px; justify-content: center; }
+    .step-footer-contact {
       font-size: var(--fs-body-small);
       color: var(--text-tertiary);
     }
+    .step-footer-contact a {
+      color: var(--text-accent);
+      text-decoration: none;
+      font-weight: var(--fw-medium);
+    }
+    .step-footer-contact a:hover { text-decoration: underline; }
 
-    /* Disabled state */
-    .field.is-disabled .field-label { color: var(--text-disabled); }
-    .field.is-disabled .field-input {
-      color: var(--text-disabled);
-      border-bottom-color: var(--border-subtle);
-      cursor: not-allowed;
+    /* ============================================================
+       METHODSELECTOR — Upload CSV cards
+       ============================================================ */
+    .method-list {
+      display: flex; flex-direction: column; gap: var(--space-12);
+      max-width: 560px;
+    }
+    .method-card {
+      display: flex; align-items: center; gap: var(--space-16);
+      padding: var(--space-16) var(--space-20);
+      background: var(--bg-primary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-12);
+      cursor: pointer;
+      transition: border-color 150ms ease, background 150ms ease;
+    }
+    .method-card:hover {
+      border-color: var(--border-accent);
+      background: var(--bg-accent-elevation-1);
+    }
+    .method-card.is-selected {
+      border-color: var(--border-accent);
+      background: var(--bg-accent-elevation-1);
+    }
+    .method-card-icon {
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg-elevation-2);
+      border-radius: var(--radius-8);
+      flex-shrink: 0;
+    }
+    .method-card-icon svg { width: 20px; height: 20px; color: var(--icon-tertiary); }
+    .method-card-text { flex: 1; display: flex; flex-direction: column; gap: var(--space-4); }
+    .method-card-title {
+      font-family: var(--font-body);
+      font-size: var(--fs-body-default);
+      font-weight: var(--fw-semibold);
+      color: var(--text-primary);
+    }
+    .method-card-desc {
+      font-size: var(--fs-body-small);
+      color: var(--text-tertiary);
+    }
+    .method-card-action {
+      flex-shrink: 0;
     }
   </style>
 </head>
 <body>
   <div class="container">
 
-    <!-- Foundation test -->
+    <!-- Foundation summary -->
     <div class="section">
-      <p class="muted">Foundation test — fonts, colours, spacing all verified ✓</p>
-      <h1>Display L Heading</h1>
-      <h2>Heading 2 — section titles</h2>
-      <p>Body default text. 16px Bricolage Grotesque, 140% line height.</p>
+      <p class="muted">Foundation verified ✓ — fonts, colours, spacing all working.</p>
     </div>
 
-    <!-- Buttons (collapsed summary) -->
+    <!-- Previously built components (compressed) -->
     <div class="section">
-      <h2>Button component ✓</h2>
+      <h2>Button ✓ &nbsp; Field ✓</h2>
       <div class="row">
         <button class="btn btn-primary">Primary <span class="btn-icon"></span></button>
         <button class="btn btn-secondary">Secondary</button>
         <button class="btn btn-outline">Outline</button>
-        <button class="btn btn-destructive">Destructive</button>
+      </div>
+      <div class="field" style="margin-top: var(--space-20);">
+        <label class="field-label">Sample field</label>
+        <input type="text" class="field-input" placeholder="Click to see focus state" />
       </div>
     </div>
 
     <!-- ============================================================
-         FIELD SHOWCASE
+         TOPBAR2
          ============================================================ -->
     <div class="section">
-      <h2>Field component</h2>
-      <p class="muted">All states: default (empty), default (with placeholder), filled, focused (click into it), error, disabled.</p>
+      <h2>TopBar2 component</h2>
+      <p class="muted">Header bar with centred Ummah logo and close (X) button on the right.</p>
 
-      <!-- Default (empty) -->
-      <h3>Default — empty state</h3>
-      <div class="field">
-        <label class="field-label">Input Label</label>
-        <input type="text" class="field-input" />
+      <div class="preview-frame">
+        <div class="topbar">
+          <div class="topbar-logo">
+            <!-- Simple placeholder mark; swap for Ummah SVG when exported from Figma -->
+            <svg class="topbar-logo-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="20" cy="20" r="18" stroke="#E86C2B" stroke-width="2"/>
+              <path d="M20 4 L20 36 M4 20 L36 20 M8 8 L32 32 M32 8 L8 32" stroke="#E86C2B" stroke-width="1.5"/>
+            </svg>
+            UMMAH
+          </div>
+          <button class="topbar-close" aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 6 L18 18 M18 6 L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
-      <!-- Default with placeholder -->
-      <h3>Default — with placeholder</h3>
-      <div class="field">
-        <label class="field-label">Monthly card volume</label>
-        <input type="text" class="field-input" placeholder="e.g. £50,000" />
-      </div>
+      <p class="muted">💡 Logo mark is a placeholder — swap with exported Ummah SVG from Figma.</p>
+    </div>
 
-      <!-- Filled state -->
-      <h3>Filled — user has entered text</h3>
-      <div class="field">
-        <label class="field-label">Company name</label>
-        <input type="text" class="field-input" value="MintedPay Limited" />
-      </div>
+    <!-- ============================================================
+         STEPFOOTER
+         ============================================================ -->
+    <div class="section">
+      <h2>StepFooter component</h2>
+      <p class="muted">Continue button with contact line below.</p>
 
-      <!-- Focus state (instructions) -->
-      <h3>Focus state</h3>
-      <p class="muted">Click into the field below — label and underline should turn orange.</p>
-      <div class="field">
-        <label class="field-label">Email address</label>
-        <input type="email" class="field-input" placeholder="you@company.com" />
+      <div class="preview-frame">
+        <div class="step-footer">
+          <button class="btn btn-primary btn-lg">Continue</button>
+          <div class="step-footer-contact">
+            Questions? Contact us at <a href="mailto:sales@ummah.com">sales@ummah.com</a>
+          </div>
+        </div>
       </div>
+    </div>
 
-      <!-- Error state -->
-      <h3>Error state</h3>
-      <div class="field has-error">
-        <label class="field-label">Input Label</label>
-        <input type="text" class="field-input" value="invalid@" />
-        <div class="field-error">This is an error message.</div>
-      </div>
+    <!-- ============================================================
+         METHODSELECTOR
+         ============================================================ -->
+    <div class="section">
+      <h2>MethodSelector component</h2>
+      <p class="muted">Clickable cards for choosing how to provide data. Hover/select changes border to orange.</p>
 
-      <!-- Disabled state -->
-      <h3>Disabled state</h3>
-      <div class="field is-disabled">
-        <label class="field-label">Account type (locked)</label>
-        <input type="text" class="field-input" value="Merchant" disabled />
-      </div>
+      <div class="method-list">
+        <div class="method-card">
+          <div class="method-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 3 L12 15 M7 10 L12 15 L17 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M4 17 L4 19 Q4 21 6 21 L18 21 Q20 21 20 19 L20 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="method-card-text">
+            <div class="method-card-title">Upload CSV</div>
+            <div class="method-card-desc">Upload your processing statement (CSV format)</div>
+          </div>
+          <div class="method-card-action">
+            <button class="btn btn-outline btn-sm">Upload file</button>
+          </div>
+        </div>
 
-      <!-- Helper text variant -->
-      <h3>With helper text</h3>
-      <div class="field">
-        <label class="field-label">Average transaction value</label>
-        <input type="text" class="field-input" placeholder="£50" />
-        <div class="field-helper">We use this to calculate your blended rate.</div>
+        <div class="method-card is-selected">
+          <div class="method-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 3 L12 15 M7 10 L12 15 L17 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M4 17 L4 19 Q4 21 6 21 L18 21 Q20 21 20 19 L20 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="method-card-text">
+            <div class="method-card-title">Upload CSV (selected state)</div>
+            <div class="method-card-desc">Upload your processing statement (CSV format)</div>
+          </div>
+          <div class="method-card-action">
+            <button class="btn btn-outline btn-sm">Upload file</button>
+          </div>
+        </div>
+
+        <div class="method-card">
+          <div class="method-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M3 10 L21 10" stroke="currentColor" stroke-width="1.8"/>
+            </svg>
+          </div>
+          <div class="method-card-text">
+            <div class="method-card-title">Connect Stripe</div>
+            <div class="method-card-desc">Securely link your Stripe account for instant rate</div>
+          </div>
+          <div class="method-card-action">
+            <button class="btn btn-outline btn-sm">Connect</button>
+          </div>
+        </div>
       </div>
     </div>
 
