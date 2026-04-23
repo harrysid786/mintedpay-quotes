@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ummah Pricing — Step 1 Error States</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/design-tokens.css" />
+
+  <style>
+    /* Shell */
+    body { margin: 0; background: var(--bg-elevation-2); min-height: 100vh; font-family: var(--font-body); }
+    .screen { max-width: 1100px; margin: var(--space-40) auto; background: var(--bg-primary); border-radius: var(--radius-16); overflow: hidden; border: 1px solid var(--border-subtle); }
+
+    /* Promo banner */
+    .promo-banner { background: var(--bg-accent-elevation-1); color: var(--text-primary); padding: var(--space-12) var(--space-20); font-size: var(--fs-body-small); text-align: center; display: flex; align-items: center; justify-content: center; gap: var(--space-8); }
+    .promo-banner svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--icon-tertiary); }
+
+    /* Top bar */
+    .topbar { display: flex; align-items: center; justify-content: center; position: relative; padding: var(--space-20) var(--space-24); background: var(--bg-primary); }
+    .topbar-logo { font-family: var(--font-titles); font-weight: var(--fw-extrabold); font-size: var(--fs-h3); letter-spacing: 0.14em; color: var(--text-primary); display: flex; align-items: center; gap: var(--space-12); }
+    .topbar-logo-mark { width: 28px; height: 28px; }
+    .topbar-close { position: absolute; right: var(--space-24); top: 50%; transform: translateY(-50%); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: none; background: transparent; cursor: pointer; color: var(--icon-primary); border-radius: var(--radius-pill); transition: background 150ms ease; }
+    .topbar-close:hover { background: var(--bg-elevation-2); }
+    .topbar-close svg { width: 18px; height: 18px; }
+
+    /* Progress */
+    .progress-track { height: 4px; width: 100%; background: var(--bg-elevation-2); overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--bg-accent); }
+
+    /* Body */
+    .step-body { padding: var(--space-40) var(--space-60) var(--space-32); max-width: 720px; margin: 0 auto; }
+    .step-label { font-size: var(--fs-body-small); color: var(--text-primary); margin-bottom: var(--space-8); }
+    .step-heading { font-family: var(--font-titles); font-size: var(--fs-h2); font-weight: var(--fw-bold); line-height: 120%; color: var(--text-primary); margin: 0 0 var(--space-16); }
+    .step-description { font-size: var(--fs-body-default); color: var(--text-tertiary); line-height: 140%; margin: 0 0 var(--space-32); max-width: 560px; }
+
+    /* Stripe card */
+    .stripe-card { background: var(--bg-primary); border: 1px solid var(--border-default); border-radius: var(--radius-16); padding: var(--space-24); margin-bottom: var(--space-32); }
+    .stripe-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-16); }
+    .stripe-logo { font-family: var(--font-titles); font-weight: var(--fw-extrabold); font-size: 28px; color: #635BFF; letter-spacing: -0.01em; }
+    .stripe-card-title { font-family: var(--font-titles); font-size: var(--fs-h4); font-weight: var(--fw-bold); color: var(--text-primary); margin: 0 0 var(--space-8); }
+    .stripe-card-desc { font-size: var(--fs-body-default); color: var(--text-tertiary); line-height: 140%; margin: 0 0 var(--space-20); }
+    .trust-signals { background: var(--bg-accent-elevation-1); border-radius: var(--radius-12); padding: var(--space-16); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-16); margin-bottom: var(--space-16); }
+    .trust-signal { display: flex; align-items: flex-start; gap: var(--space-8); }
+    .trust-signal svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--icon-tertiary); margin-top: 2px; }
+    .trust-signal-text { font-size: var(--fs-body-small); color: var(--text-tertiary); line-height: 140%; }
+
+    /* Section divider */
+    .section-divider-label { font-size: var(--fs-body-default); color: var(--text-primary); margin: 0 0 var(--space-16); }
+
+    /* Method list */
+    .method-list { display: flex; flex-direction: column; gap: var(--space-12); margin-bottom: var(--space-32); }
+    .method-card { display: flex; align-items: center; gap: var(--space-16); padding: var(--space-16) var(--space-20); background: var(--bg-primary); border: 1px solid var(--border-default); border-radius: var(--radius-12); cursor: pointer; transition: border-color 150ms ease, background 150ms ease; }
+    .method-card:hover { border-color: var(--border-accent); background: var(--bg-accent-elevation-1); }
+    .method-card-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: var(--bg-elevation-2); border-radius: var(--radius-8); flex-shrink: 0; }
+    .method-card-icon svg { width: 20px; height: 20px; color: var(--icon-tertiary); }
+    .method-card-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .method-card-title { font-size: var(--fs-body-default); font-weight: var(--fw-semibold); color: var(--text-primary); }
+    .method-card-desc { font-size: var(--fs-body-small); color: var(--text-tertiary); }
+
+    /* Expanded method card */
+    .method-card.is-expanded { display: block; cursor: default; padding: var(--space-20); }
+    .method-card.is-expanded:hover { background: var(--bg-primary); border-color: var(--border-default); }
+    .method-card-header { display: flex; align-items: center; gap: var(--space-16); margin-bottom: var(--space-24); }
+    .form-section-heading { font-size: var(--fs-body-default); font-weight: var(--fw-semibold); color: var(--text-primary); margin: 0 0 var(--space-16); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--space-32); row-gap: var(--space-20); }
+    .form-grid .field-full { grid-column: 1 / -1; }
+
+    /* Field */
+    .field { display: flex; flex-direction: column; gap: var(--space-4); }
+    .field-label { font-size: var(--fs-body-small); color: var(--text-tertiary); transition: color 150ms ease; }
+    .field-input, .field-select-trigger { font-size: var(--fs-body-default); color: var(--text-primary); background: transparent; border: none; border-bottom: 1px solid var(--border-default); padding: var(--space-8) 0; outline: none; transition: border-color 150ms ease; width: 100%; text-align: left; }
+    .field-input::placeholder { color: var(--text-muted); }
+    .field-input:focus { border-bottom-color: var(--border-accent); }
+    .field:focus-within .field-label { color: var(--text-accent); }
+
+    /* Field error state */
+    .field.has-error .field-label { color: var(--status-error); }
+    .field.has-error .field-input { border-bottom-color: var(--status-error); }
+    .field-error-message {
+      display: flex; align-items: center; gap: var(--space-4);
+      font-size: var(--fs-body-small);
+      color: var(--status-error);
+      margin-top: var(--space-4);
+    }
+    .field-error-message svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* Select */
+    .field-select { position: relative; }
+    .field-select-trigger { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding-right: var(--space-24); }
+    .field-select-trigger svg { width: 12px; height: 12px; color: var(--icon-tertiary); flex-shrink: 0; transition: transform 150ms ease; }
+
+    /* Buttons */
+    .btn { font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-body-default); line-height: 1; padding: var(--space-16) var(--space-32); border-radius: var(--radius-pill); border: 1px solid transparent; cursor: pointer; transition: background 150ms ease, border-color 150ms ease, color 150ms ease; display: inline-flex; align-items: center; gap: var(--space-8); white-space: nowrap; }
+    .btn-sm { padding: var(--space-8) var(--space-20); font-size: var(--fs-body-small); }
+    .btn-primary { background: var(--action-primary); color: var(--text-inverse); }
+    .btn-primary:hover:not(:disabled) { background: var(--action-primary-hover); }
+    .btn-primary:disabled { background: var(--bg-elevation-2); color: var(--text-disabled); cursor: not-allowed; }
+    .btn-outline { background: transparent; color: var(--action-primary); border-color: var(--action-primary); }
+    .btn-outline:hover:not(:disabled) { background: var(--bg-accent-elevation-1); }
+
+    /* ============================================================
+       INLINE ERROR BANNER (reusable — lives inside a card)
+       ============================================================ */
+    .error-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-8);
+      padding: var(--space-12) var(--space-16);
+      background: var(--status-error-background);
+      border-radius: var(--radius-12);
+      margin-top: var(--space-16);
+    }
+    .error-banner svg {
+      width: 18px; height: 18px;
+      color: var(--status-error);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .error-banner-content {
+      flex: 1;
+    }
+    .error-banner-title {
+      font-size: var(--fs-body-default);
+      font-weight: var(--fw-semibold);
+      color: var(--status-error);
+      margin: 0;
+    }
+    .error-banner-desc {
+      font-size: var(--fs-body-small);
+      color: var(--status-error);
+      line-height: 140%;
+      margin: var(--space-4) 0 0;
+    }
+
+    /* Step footer */
+    .step-footer { border-top: 1px solid var(--border-subtle); padding: var(--space-32) var(--space-60); display: flex; flex-direction: column; align-items: center; gap: var(--space-16); }
+    .step-footer .btn-primary { min-width: 100%; max-width: 600px; justify-content: center; }
+    .step-footer-contact { font-size: var(--fs-body-small); color: var(--text-tertiary); }
+    .step-footer-contact a { color: var(--text-accent); text-decoration: none; font-weight: var(--fw-medium); }
+    .step-footer-contact a:hover { text-decoration: underline; }
+
+    /* Demo navigation header */
+    .demo-nav {
+      max-width: 1100px; margin: var(--space-40) auto var(--space-20); padding: var(--space-16) var(--space-24);
+      background: var(--bg-primary); border-radius: var(--radius-12); border: 1px solid var(--border-subtle);
+    }
+    .demo-nav h2 { margin: 0 0 var(--space-12); color: var(--text-primary); }
+    .demo-nav-links { display: flex; flex-wrap: wrap; gap: var(--space-12); }
+    .demo-nav-link {
+      padding: var(--space-8) var(--space-16);
+      background: var(--bg-elevation-2); color: var(--text-primary);
+      text-decoration: none; border-radius: var(--radius-pill);
+      font-size: var(--fs-body-small); font-weight: var(--fw-medium);
+      transition: background 150ms ease;
+    }
+    .demo-nav-link:hover { background: var(--bg-accent-elevation-1); color: var(--text-accent); }
+
+    @media (max-width: 640px) {
+      .screen { margin: 0; border-radius: 0; border: none; }
+      .step-body { padding: var(--space-24); }
+      .step-footer { padding: var(--space-24); }
+      .stripe-card-top { flex-direction: column; align-items: flex-start; gap: var(--space-12); }
+      .trust-signals { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="demo-nav">
+    <h2>Step 1 — Error States</h2>
+    <div class="demo-nav-links">
+      <a href="#csv-error" class="demo-nav-link">1. CSV upload error</a>
+      <a href="#stripe-error" class="demo-nav-link">2. Stripe connection error</a>
+      <a href="#field-error" class="demo-nav-link">3. Field validation error</a>
+    </div>
+  </div>
+
+  <!-- ================================================================
+       STATE 1: CSV UPLOAD ERROR
+       ================================================================ -->
+  <div class="screen" id="csv-error">
+    <div class="promo-banner">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/></svg>
+      Ummah Pricing Calculator — Discover how much you could save on payment processing fees
+    </div>
+    <div class="topbar">
+      <div class="topbar-logo">
+        <svg class="topbar-logo-mark" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="#00273A" stroke-width="2"/><path d="M20 4 L20 36 M4 20 L36 20 M8 8 L32 32 M32 8 L8 32" stroke="#00273A" stroke-width="1.2"/></svg>
+        UMMAH
+      </div>
+      <button class="topbar-close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6 L18 18 M18 6 L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width: 33.33%;"></div></div>
+
+    <div class="step-body">
+      <div class="step-label">Step 1 of 3</div>
+      <h1 class="step-heading">What's your monthly processing volume?</h1>
+      <p class="step-description">Upload your most recent processing statement or enter your figures manually — we'll calculate your rate.</p>
+
+      <!-- Stripe card (normal) -->
+      <div class="stripe-card">
+        <div class="stripe-card-top">
+          <div class="stripe-logo">stripe</div>
+          <button class="btn btn-primary btn-sm">Connect with Stripe</button>
+        </div>
+        <h3 class="stripe-card-title">Connect Stripe Account</h3>
+        <p class="stripe-card-desc">Get results in 30 seconds with automatic data import. We'll analyze your transaction patterns to provide segment-specific rates.</p>
+        <div class="trust-signals">
+          <div class="trust-signal"><svg viewBox="0 0 16 16" fill="none"><path d="M1 8 C3 4, 5.5 3, 8 3 C10.5 3, 13 4, 15 8 C13 12, 10.5 13, 8 13 C5.5 13, 3 12, 1 8 Z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/></svg><div class="trust-signal-text">We only read your transaction data</div></div>
+          <div class="trust-signal"><svg viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M5.5 7 V5 C5.5 3.5, 6.5 2.5, 8 2.5 C9.5 2.5, 10.5 3.5, 10.5 5 V7" stroke="currentColor" stroke-width="1.3"/></svg><div class="trust-signal-text">Your Stripe login is never shared</div></div>
+          <div class="trust-signal"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5 L13.5 4 V8.5 C13.5 11.5, 11 13.5, 8 14.5 C5 13.5, 2.5 11.5, 2.5 8.5 V4 Z" stroke="currentColor" stroke-width="1.3"/></svg><div class="trust-signal-text">You can disconnect at any time</div></div>
+        </div>
+      </div>
+
+      <div class="section-divider-label">Or choose another method</div>
+
+      <div class="method-list">
+        <!-- Upload CSV with ERROR BANNER inside -->
+        <div class="method-card" style="display: block; cursor: default; padding: var(--space-16) var(--space-20);">
+          <div style="display: flex; align-items: center; gap: var(--space-16);">
+            <div class="method-card-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3 L12 15 M7 10 L12 15 L17 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 17 L4 19 Q4 21 6 21 L18 21 Q20 21 20 19 L20 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+            <div class="method-card-text"><div class="method-card-title">Upload CSV</div><div class="method-card-desc">Upload your processing statement (CSV format)</div></div>
+            <div><button class="btn btn-outline btn-sm">Upload again</button></div>
+          </div>
+          <div class="error-banner">
+            <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/><path d="M10 6 V11 M10 13.5 V14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <div class="error-banner-content">
+              <div class="error-banner-title">We couldn't process your file</div>
+              <div class="error-banner-desc">Make sure your CSV includes Transaction Date, Amount, and Fees Paid.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enter Manually (collapsed) -->
+        <div class="method-card">
+          <div class="method-card-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20 L4 16 L16 4 L20 8 L8 20 Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 6 L18 10" stroke="currentColor" stroke-width="1.8"/></svg></div>
+          <div class="method-card-text"><div class="method-card-title">Enter Manually</div><div class="method-card-desc">Provide your processing details directly</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-footer">
+      <button class="btn btn-primary" disabled>Continue</button>
+      <div class="step-footer-contact">Questions? Contact us at <a href="mailto:sales@ummah.com">sales@ummah.com</a></div>
+    </div>
+  </div>
+
+  <!-- ================================================================
+       STATE 2: STRIPE CONNECTION ERROR
+       ================================================================ -->
+  <div class="screen" id="stripe-error">
+    <div class="promo-banner">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/></svg>
+      Ummah Pricing Calculator — Discover how much you could save on payment processing fees
+    </div>
+    <div class="topbar">
+      <div class="topbar-logo">
+        <svg class="topbar-logo-mark" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="#00273A" stroke-width="2"/><path d="M20 4 L20 36 M4 20 L36 20 M8 8 L32 32 M32 8 L8 32" stroke="#00273A" stroke-width="1.2"/></svg>
+        UMMAH
+      </div>
+      <button class="topbar-close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6 L18 18 M18 6 L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width: 33.33%;"></div></div>
+
+    <div class="step-body">
+      <div class="step-label">Step 1 of 3</div>
+      <h1 class="step-heading">What's your monthly processing volume?</h1>
+      <p class="step-description">Upload your most recent processing statement or enter your figures manually — we'll calculate your rate.</p>
+
+      <!-- Stripe card WITH ERROR BANNER -->
+      <div class="stripe-card">
+        <div class="stripe-card-top">
+          <div class="stripe-logo">stripe</div>
+          <button class="btn btn-primary btn-sm">Connect with Stripe</button>
+        </div>
+        <h3 class="stripe-card-title">Connect Stripe Account</h3>
+        <p class="stripe-card-desc">Get results in 30 seconds with automatic data import. We'll analyze your transaction patterns to provide segment-specific rates.</p>
+        <div class="trust-signals">
+          <div class="trust-signal"><svg viewBox="0 0 16 16" fill="none"><path d="M1 8 C3 4, 5.5 3, 8 3 C10.5 3, 13 4, 15 8 C13 12, 10.5 13, 8 13 C5.5 13, 3 12, 1 8 Z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/></svg><div class="trust-signal-text">We only read your transaction data</div></div>
+          <div class="trust-signal"><svg viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M5.5 7 V5 C5.5 3.5, 6.5 2.5, 8 2.5 C9.5 2.5, 10.5 3.5, 10.5 5 V7" stroke="currentColor" stroke-width="1.3"/></svg><div class="trust-signal-text">Your Stripe login is never shared</div></div>
+          <div class="trust-signal"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5 L13.5 4 V8.5 C13.5 11.5, 11 13.5, 8 14.5 C5 13.5, 2.5 11.5, 2.5 8.5 V4 Z" stroke="currentColor" stroke-width="1.3"/></svg><div class="trust-signal-text">You can disconnect at any time</div></div>
+        </div>
+        <div class="error-banner">
+          <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/><path d="M10 6 V11 M10 13.5 V14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <div class="error-banner-content">
+            <div class="error-banner-title">We couldn't connect your Stripe account. Please try again or choose another method.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider-label">Or choose another method</div>
+
+      <div class="method-list">
+        <div class="method-card">
+          <div class="method-card-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3 L12 15 M7 10 L12 15 L17 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 17 L4 19 Q4 21 6 21 L18 21 Q20 21 20 19 L20 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          <div class="method-card-text"><div class="method-card-title">Upload CSV</div><div class="method-card-desc">Upload your processing statement (CSV format)</div></div>
+          <div><button class="btn btn-outline btn-sm">Upload again</button></div>
+        </div>
+        <div class="method-card">
+          <div class="method-card-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20 L4 16 L16 4 L20 8 L8 20 Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 6 L18 10" stroke="currentColor" stroke-width="1.8"/></svg></div>
+          <div class="method-card-text"><div class="method-card-title">Enter Manually</div><div class="method-card-desc">Provide your processing details directly</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-footer">
+      <button class="btn btn-primary" disabled>Continue</button>
+      <div class="step-footer-contact">Questions? Contact us at <a href="mailto:sales@ummah.com">sales@ummah.com</a></div>
+    </div>
+  </div>
+
+  <!-- ================================================================
+       STATE 3: FIELD VALIDATION ERROR (Enter Manually form with invalid field)
+       ================================================================ -->
+  <div class="screen" id="field-error">
+    <div class="promo-banner">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/></svg>
+      Ummah Pricing Calculator — Discover how much you could save on payment processing fees
+    </div>
+    <div class="topbar">
+      <div class="topbar-logo">
+        <svg class="topbar-logo-mark" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="#00273A" stroke-width="2"/><path d="M20 4 L20 36 M4 20 L36 20 M8 8 L32 32 M32 8 L8 32" stroke="#00273A" stroke-width="1.2"/></svg>
+        UMMAH
+      </div>
+      <button class="topbar-close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6 L18 18 M18 6 L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width: 33.33%;"></div></div>
+
+    <div class="step-body">
+      <div class="step-label">Step 1 of 3</div>
+      <h1 class="step-heading">What's your monthly processing volume?</h1>
+      <p class="step-description">Upload your most recent processing statement or enter your figures manually — we'll calculate your rate.</p>
+
+      <div class="stripe-card">
+        <div class="stripe-card-top">
+          <div class="stripe-logo">stripe</div>
+          <button class="btn btn-primary btn-sm">Connect with Stripe</button>
+        </div>
+        <h3 class="stripe-card-title">Connect Stripe Account</h3>
+        <p class="stripe-card-desc">Get results in 30 seconds with automatic data import. We'll analyze your transaction patterns to provide segment-specific rates.</p>
+        <div class="trust-signals">
+          <div class="trust-signal"><svg viewBox="0 0 16 16" fill="none"><path d="M1 8 C3 4, 5.5 3, 8 3 C10.5 3, 13 4, 15 8 C13 12, 10.5 13, 8 13 C5.5 13, 3 12, 1 8 Z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/></svg><div class="trust-signal-text">We only read your transaction data</div></div>
+          <div class="trust-signal"><svg viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M5.5 7 V5 C5.5 3.5, 6.5 2.5, 8 2.5 C9.5 2.5, 10.5 3.5, 10.5 5 V7" stroke="currentColor" stroke-width="1.3"/></svg><div class="trust-signal-text">Your Stripe login is never shared</div></div>
+          <div class="trust-signal"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5 L13.5 4 V8.5 C13.5 11.5, 11 13.5, 8 14.5 C5 13.5, 2.5 11.5, 2.5 8.5 V4 Z" stroke="currentColor" stroke-width="1.3"/></svg><div class="trust-signal-text">You can disconnect at any time</div></div>
+        </div>
+      </div>
+
+      <div class="section-divider-label">Or choose another method</div>
+
+      <div class="method-list">
+        <div class="method-card">
+          <div class="method-card-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3 L12 15 M7 10 L12 15 L17 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 17 L4 19 Q4 21 6 21 L18 21 Q20 21 20 19 L20 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          <div class="method-card-text"><div class="method-card-title">Upload CSV</div><div class="method-card-desc">Upload your processing statement (CSV format)</div></div>
+          <div><button class="btn btn-outline btn-sm">Upload file</button></div>
+        </div>
+
+        <!-- Enter Manually EXPANDED with field-level validation error -->
+        <div class="method-card is-expanded">
+          <div class="method-card-header">
+            <div class="method-card-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20 L4 16 L16 4 L20 8 L8 20 Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 6 L18 10" stroke="currentColor" stroke-width="1.8"/></svg></div>
+            <div class="method-card-text"><div class="method-card-title">Enter Manually</div><div class="method-card-desc">Provide your processing details directly</div></div>
+          </div>
+
+          <div class="form-section-heading">Enter Your Processing Details</div>
+
+          <div class="form-grid">
+            <!-- Field with error -->
+            <div class="field has-error">
+              <label class="field-label">Monthly card volume (£)</label>
+              <input type="text" class="field-input" value="x" />
+              <div class="field-error-message">
+                <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M8 5 V8.5 M8 10.5 V11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                Please provide a valid monthly card volume
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label">Number of transactions per month</label>
+              <input type="text" class="field-input" value="1,200" />
+            </div>
+            <div class="field">
+              <label class="field-label">Current processing rate (%)</label>
+              <input type="text" class="field-input" value="2.9%" />
+            </div>
+            <div class="field">
+              <label class="field-label">Fixed fee per transaction (p)</label>
+              <input type="text" class="field-input" value="20p" />
+            </div>
+            <div class="field">
+              <label class="field-label">Current provider</label>
+              <div class="field-select">
+                <button type="button" class="field-select-trigger">
+                  <span>(e.g. Stripe, Square, PayPal, Other)</span>
+                  <svg viewBox="0 0 12 12" fill="none"><path d="M3 4.5 L6 7.5 L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label">International customers (%)</label>
+              <input type="text" class="field-input" value="15%" />
+            </div>
+            <div class="field field-full">
+              <label class="field-label">Customer base</label>
+              <div class="field-select">
+                <button type="button" class="field-select-trigger">
+                  <span>Primarily United Kingdom</span>
+                  <svg viewBox="0 0 12 12" fill="none"><path d="M3 4.5 L6 7.5 L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-footer">
+      <button class="btn btn-primary" disabled>Continue</button>
+      <div class="step-footer-contact">Questions? Contact us at <a href="mailto:sales@ummah.com">sales@ummah.com</a></div>
+    </div>
+  </div>
+
+</body>
+</html>
