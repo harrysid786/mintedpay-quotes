@@ -27,8 +27,9 @@
   --bg-accent-elev-2: #FDEEE3;      /* lighter peach — Step 1 */
   --border-default: #F2E9E4;
   --border-strong: #1F1F1F;
+  --border-subtle: #E3EDF1;         /* cooler blue-grey — used on selected dropdown trigger */
   --icons-primary: #1F1F1F;
-  --divider-strong: #1F1F1F;
+  --divider-strong: #F1F4F6;        /* light grey — footer border-top per Figma */
   --status-error-bg: #FEE2E2;
   --status-error-text: #DC2626;
   --disabled-bg: #F1F4F6;
@@ -256,7 +257,7 @@ button { font-family: inherit; cursor: pointer; background: none; border: none; 
   width: 100%;
   padding: 16px 0 40px;
   gap: 12px;
-  border-top: 1px solid var(--border-default);
+  border-top: 1px solid var(--divider-strong);
   background: var(--bg-primary);
   margin-top: 40px;
 }
@@ -294,6 +295,69 @@ button { font-family: inherit; cursor: pointer; background: none; border: none; 
   text-decoration: none;
 }
 .footer-help a:hover { text-decoration: underline; }
+
+/* ===== Selected dropdown trigger (value chosen, dropdown closed) ===== */
+/* Column layout: small label on top, value below, chevron right-aligned */
+.dropdown-selected {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  align-self: stretch;
+  padding: 8px 0 20px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-top: 16px;
+  position: relative;
+  cursor: pointer;
+}
+.dropdown-selected .dropdown-label {
+  /* inherits caption 12/300/150 text-secundary */
+}
+.dropdown-selected .dropdown-value {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 140%;
+  color: var(--text-primary);
+}
+.dropdown-selected .dropdown-chevron {
+  position: absolute;
+  right: 0;
+  bottom: 20px;
+}
+
+/* ===== Eligibility checkbox row ===== */
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  align-self: stretch;
+  margin-top: 24px;
+}
+.checkbox {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.checkbox-unchecked {
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
+  background: transparent;
+}
+.checkbox-checked {
+  /* SVG provides its own rendering — no additional box styles */
+}
+.eligibility-text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 140%;
+  color: var(--text-primary);
+}
 
 </style>
 </head>
