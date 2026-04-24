@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ummah — Step 2 (prohibited industry)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Ummah Pricing v2 — Shared styles for Step 2 screens
+   Built from Figma design tokens (Matías Espinach)
+   https://www.figma.com/design/hNWCBWUUvt5kFtYHn1uMAk/
+   ============================================================ */
+
+/* Design tokens — semantic */
+:root {
+  --action-primary: #E86C2B;
+  --action-primary-hover: #D55F22;
+  --text-primary: #1F1F1F;
+  --text-heading: #0A0A0A;         /* H2 uses darker value */
+  --text-secundary: #455962;
+  --text-accent: #E86C2B;
+  --bg-primary: #FFFFFF;
+  --bg-accent-elev-1: #F8F5F0;      /* cream — dropdown hover */
+  --bg-accent-elev-2: #FDEEE3;      /* lighter peach — Step 1 */
+  --border-default: #F2E9E4;
+  --border-strong: #1F1F1F;
+  --border-subtle: #E3EDF1;         /* cooler blue-grey — used on selected dropdown trigger */
+  --icons-primary: #1F1F1F;
+  --divider-strong: #F1F4F6;        /* light grey — footer border-top per Figma */
+  --status-error-bg: #FEE2E2;
+  --status-error-text: #DC2626;
+  --disabled-bg: #F1F4F6;
+  --disabled-text: #B7C7CD;
+
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-10: 10px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-40: 40px;
+
+  --font-heading: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-body: "Bricolage Grotesque", system-ui, sans-serif;
+
+  --grid-max: 618px;
+}
+
+/* Reset */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; }
+body {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+button { font-family: inherit; cursor: pointer; background: none; border: none; }
+
+/* ===== Top announcement bar (cream) ===== */
+.announce {
+  background: var(--bg-accent-elev-1);
+  padding: 12px 24px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+/* ===== Topbar (logo + close) ===== */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  width: 100%;
+}
+.topbar-back,
+.topbar-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--icons-primary);
+}
+.topbar-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+.topbar-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ===== Progress bar ===== */
+.progress-track {
+  width: 100%;
+  height: 6px;
+  background: var(--border-default);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--action-primary);
+  transition: width 200ms ease;
+}
+
+/* ===== Step body (centered column) ===== */
+.step-body {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 48px 24px 24px;
+}
+.step-grid {
+  width: 100%;
+  max-width: var(--grid-max);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ===== Heading block ===== */
+.step-eyebrow {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+.step-heading {
+  font-family: var(--font-heading);
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 120%;
+  color: var(--text-heading);
+  margin-top: 4px;
+}
+.step-subtitle {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 140%;
+  color: var(--text-secundary);
+  margin-top: 8px;
+}
+
+/* ===== Section label ===== */
+.section-label {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 140%;
+  color: var(--text-primary);
+  margin-top: 8px;
+}
+
+/* ===== Pills (business type) ===== */
+.pill-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border-default);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  white-space: nowrap;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.pill:hover { border-color: var(--action-primary); }
+.pill.is-selected {
+  background: var(--action-primary);
+  color: #FFFFFF;
+  border-color: var(--action-primary);
+}
+
+/* ===== Dropdown trigger (closed or open, same chrome) ===== */
+.dropdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-default);
+  cursor: pointer;
+  margin-top: 16px;
+}
+.dropdown-label {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 150%;
+  color: var(--text-secundary);
+}
+.dropdown-chevron {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--icons-primary);
+  flex-shrink: 0;
+}
+
+/* ===== Dropdown list (open) ===== */
+.industry-list {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  /* no border, no background, no radius — rows flow directly */
+}
+.industry-row {
+  display: flex;
+  padding: 8px 16px;
+  align-items: flex-end;
+  gap: 10px;
+  align-self: stretch;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 140%;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 100ms ease, color 100ms ease;
+}
+.industry-row:hover,
+.industry-row.is-hovered {
+  background: var(--bg-accent-elev-1);
+  color: var(--text-accent);
+}
+
+/* ===== Footer ===== */
+.step-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 16px 0 40px;
+  gap: 12px;
+  border-top: 1px solid var(--divider-strong);
+  background: var(--bg-primary);
+  margin-top: 40px;
+}
+.btn {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 999px;
+  padding: 16px 24px;
+  min-width: 320px;
+  max-width: 100%;
+  transition: background 120ms ease, color 120ms ease, opacity 120ms ease;
+}
+.btn-primary {
+  background: var(--action-primary);
+  color: #FFFFFF;
+}
+.btn-primary:hover { background: var(--action-primary-hover); }
+.btn:disabled,
+.btn.is-disabled {
+  background: var(--disabled-bg);
+  color: var(--disabled-text);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.footer-help {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secundary);
+}
+.footer-help a {
+  color: var(--action-primary);
+  text-decoration: none;
+}
+.footer-help a:hover { text-decoration: underline; }
+
+/* ===== Selected dropdown trigger (value chosen, dropdown closed) ===== */
+/* Column layout: small label on top, value below, chevron right-aligned */
+.dropdown-selected {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  align-self: stretch;
+  padding: 8px 0 20px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-top: 16px;
+  position: relative;
+  cursor: pointer;
+}
+.dropdown-selected .dropdown-label {
+  /* inherits caption 12/300/150 text-secundary */
+}
+.dropdown-selected .dropdown-value {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 140%;
+  color: var(--text-primary);
+}
+.dropdown-selected .dropdown-chevron {
+  position: absolute;
+  right: 0;
+  bottom: 20px;
+}
+
+/* ===== Eligibility checkbox row ===== */
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  align-self: stretch;
+  margin-top: 24px;
+}
+.checkbox {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.checkbox-unchecked {
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
+  background: transparent;
+}
+.checkbox-checked {
+  /* SVG provides its own rendering — no additional box styles */
+}
+.eligibility-text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 140%;
+  color: var(--text-primary);
+}
+
+/* ===== Advisory banner (amber alert icon + text, no container styling) ===== */
+.advisory-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  align-self: stretch;
+  margin-top: 24px;
+}
+.advisory-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.advisory-text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 140%;
+  color: var(--text-primary);
+}
+
+/* When advisory appears, the checkbox row below should have a smaller top margin
+   since the parent grid gap already handles spacing */
+.advisory-row + .checkbox-row {
+  margin-top: 16px;
+}
+
+/* ===== Error banner (prohibited industry) ===== */
+.error-banner {
+  display: flex;
+  padding: 8px 12px;
+  align-items: flex-start;
+  gap: 8px;
+  align-self: stretch;
+  border-radius: 8px;
+  background: var(--status-error-bg);
+  margin-top: 16px;
+}
+.error-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-top: 2px; /* optical align with title */
+  display: inline-flex;
+}
+.error-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 0 0;
+}
+.error-title {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 140%;
+  color: var(--status-error-text);
+}
+.error-subtitle {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 150%;
+  color: var(--status-error-text);
+}
+
+/* ===== Disabled eligibility checkbox + text ===== */
+.checkbox-unchecked-disabled {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.eligibility-text-disabled {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 140%;
+  color: var(--disabled-text);
+}
+
+</style>
+</head>
+<body>
+
+<div class="announce">
+  Ummah Pricing Calculator — Discover how much you could save on payment processing fees
+</div>
+
+<header class="topbar">
+  <button class="topbar-back" aria-label="Back"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <div class="topbar-center">
+    <span class="topbar-logo"><svg width="120" height="32" viewBox="0 0 120 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g fill="#1a2b42">
+    <circle cx="16" cy="16" r="3"/>
+    <path d="M16 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0 18a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM4 16a3 3 0 1 0 6 0 3 3 0 0 0-6 0zm18 0a3 3 0 1 0 6 0 3 3 0 0 0-6 0zM7.5 7.5a3 3 0 1 0 4.24 4.24A3 3 0 0 0 7.5 7.5zm12.72 12.72a3 3 0 1 0 4.24 4.24 3 3 0 0 0-4.24-4.24zM7.5 24.5a3 3 0 1 0 4.24-4.24A3 3 0 0 0 7.5 24.5zm12.72-12.72a3 3 0 1 0 4.24-4.24 3 3 0 0 0-4.24 4.24z"/>
+  </g>
+  <text x="38" y="22" font-family="Bricolage Grotesque, system-ui, sans-serif" font-size="18" font-weight="600" letter-spacing="1" fill="#1a2b42">UMMAH</text>
+</svg></span>
+  </div>
+  <button class="topbar-close" aria-label="Close"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</header>
+
+<div class="progress-track">
+  <div class="progress-fill" style="width: 66%"></div>
+</div>
+
+<main class="step-body">
+  <div class="step-grid">
+    <div>
+      <div class="step-eyebrow">Step 2 of 3</div>
+      <h1 class="step-heading">Your industry</h1>
+      <p class="step-subtitle">Select your business type and industry to help us calculate your rate.</p>
+    </div>
+
+    <div class="section-label">Business type</div>
+    <div class="pill-group">
+      <button class="pill is-selected">Online</button>
+      <button class="pill">Retail</button>
+      <button class="pill">Hospitality</button>
+      <button class="pill">Professional services</button>
+      <button class="pill">Other</button>
+    </div>
+
+    <div class="dropdown-selected" aria-expanded="false">
+      <span class="dropdown-label">Select your industry</span>
+      <span class="dropdown-value">Adult Content</span>
+      <span class="dropdown-chevron"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </div>
+
+    <div class="error-banner" role="alert">
+      <span class="error-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M8.00016 14.6654C11.6821 14.6654 14.6668 11.6806 14.6668 7.9987C14.6668 4.3168 11.6821 1.33203 8.00016 1.33203C4.31826 1.33203 1.3335 4.3168 1.3335 7.9987C1.3335 11.6806 4.31826 14.6654 8.00016 14.6654Z" stroke="#DC2626" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M8 5.33203V7.9987" stroke="#DC2626" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M8 10.666H8.00667" stroke="#DC2626" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></span>
+      <div class="error-content">
+        <span class="error-title">This industry is not supported</span>
+        <span class="error-subtitle">Unfortunately, we're unable to provide pricing for this type of business.</span>
+      </div>
+    </div>
+
+    <label class="checkbox-row">
+      <span class="checkbox checkbox-unchecked-disabled" aria-checked="false" aria-disabled="true" role="checkbox">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+  <path d="M18.3848 4.5C18.7201 4.5 18.9751 4.60698 19.1846 4.81641C19.3938 5.02564 19.5005 5.28017 19.5 5.61523V18.3848C19.5 18.7204 19.3925 18.9752 19.1836 19.1846C18.9755 19.3931 18.7215 19.5005 18.3848 19.5H5.61621C5.27967 19.5 5.0248 19.393 4.81641 19.1846C4.63397 19.0021 4.52861 18.7839 4.50488 18.5059L4.5 18.3828V5.61621C4.5 5.28006 4.60755 5.02584 4.81641 4.81738C4.99969 4.63449 5.21757 4.52867 5.49414 4.50488L5.61719 4.5H18.3848Z" stroke="#B7C7CD"/>
+</svg>
+      </span>
+      <span class="eligibility-text-disabled">
+        I confirm that my business does not operate in any prohibited sectors, including adult content, firearms, controlled substances, counterfeit goods, or services that facilitate illegal activity.
+      </span>
+    </label>
+  </div>
+</main>
+
+<footer class="step-footer">
+  <button class="btn btn-primary is-disabled" disabled>Continue</button>
+  <p class="footer-help">Questions? Contact us at <a href="mailto:sales@ummah.com">sales@ummah.com</a></p>
+</footer>
+
+</body>
+</html>
