@@ -739,10 +739,13 @@ a { color: inherit; }
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: 4px;
   padding: 8px 0 20px;
   align-self: stretch;
   border-bottom: 1px solid var(--border-subtle);
+}
+.locked-field.is-error {
+  border-bottom: 1px solid var(--status-error);
 }
 .locked-field-label {
   font-family: var(--font-body);
@@ -751,12 +754,42 @@ a { color: inherit; }
   line-height: 150%;
   color: var(--text-secundary);
 }
-.locked-field-value {
+.locked-field.is-error .locked-field-label {
+  color: var(--status-error);
+}
+.locked-field-input {
   font-family: var(--font-body);
   font-size: 16px;
   font-weight: 400;
   line-height: 140%;
   color: var(--text-primary);
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  width: 100%;
+}
+.locked-field-input::placeholder {
+  color: var(--disabled-text);
+}
+.locked-field-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 150%;
+  color: var(--status-error);
+}
+.locked-field-error-icon {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
 }
 .locked-reveal-btn {
   display: flex;
@@ -949,20 +982,20 @@ a { color: inherit; }
     <p class="locked-modal-subtitle">Your personalised rate and full breakdown are ready.</p>
     <div class="locked-fields">
       <div class="locked-field">
-        <div class="locked-field-label">Name</div>
-        <div class="locked-field-value">John Smith</div>
+        <label class="locked-field-label" for="locked-name">Name</label>
+        <input class="locked-field-input" id="locked-name" type="text" value="John Smith">
       </div>
       <div class="locked-field">
-        <div class="locked-field-label">Email address</div>
-        <div class="locked-field-value">john@company.com</div>
+        <label class="locked-field-label" for="locked-email">Email address</label>
+        <input class="locked-field-input" id="locked-email" type="email" value="john@company.com">
       </div>
       <div class="locked-field">
-        <div class="locked-field-label">Business name</div>
-        <div class="locked-field-value">Your Company Ltd</div>
+        <label class="locked-field-label" for="locked-business">Business name</label>
+        <input class="locked-field-input" id="locked-business" type="text" value="Your Company Ltd">
       </div>
       <div class="locked-field">
-        <div class="locked-field-label">Phone (optional)</div>
-        <div class="locked-field-value">+44 7700 900000</div>
+        <label class="locked-field-label" for="locked-phone">Phone (optional)</label>
+        <input class="locked-field-input" id="locked-phone" type="tel" value="+44 7700 900000">
       </div>
     </div>
     <button class="locked-reveal-btn">Reveal my rate →</button>
