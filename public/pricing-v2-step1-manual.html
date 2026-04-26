@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/design-tokens.css" />
   <style>
-/* ──────────────────────────────────────────────────────────────
+/* 
    ROUND 1 FEEDBACK FIXES (Apr 23)
    - Full page width (no 1100px cap, no grey margins)
    - Grid container = 618px (Continue button + step body width)
@@ -23,9 +23,9 @@
    - Connected to Stripe = SAME button position as Connect with Stripe,
      transformed to disabled state (bg #F1F4F6, text #B7C7CD)
    - Sticky top/bottom: DEFERRED to master template phase
-   ────────────────────────────────────────────────────────────── */
+    */
 
-/* ── Shell (full width) ───────────────────────────────────────── */
+/*  Shell (full width)  */
 body {
   margin: 0;
   background: var(--bg-primary);
@@ -41,7 +41,7 @@ body {
   background: var(--bg-primary);
 }
 
-/* ── Promo banner (top) ───────────────────────────────────────── */
+/*  Promo banner (top)  */
 .promo-banner {
   background: var(--bg-accent-elevation-1);
   color: var(--text-primary);
@@ -56,7 +56,7 @@ body {
 }
 .promo-banner svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--icon-tertiary); }
 
-/* ── Top bar ──────────────────────────────────────────────────── */
+/*  Top bar  */
 .topbar {
   display: flex; align-items: center; justify-content: center;
   position: relative;
@@ -85,7 +85,7 @@ body {
 .topbar-close:hover { background: var(--bg-elevation-2); }
 .topbar-close svg { width: 18px; height: 18px; }
 
-/* ── Progress (6px) ───────────────────────────────────────────── */
+/*  Progress (6px)  */
 .progress-track {
   height: 6px;
   width: 100%;
@@ -94,7 +94,7 @@ body {
 }
 .progress-fill { height: 100%; background: var(--bg-accent); }
 
-/* ── Body (grid container 618px) ──────────────────────────────── */
+/*  Body (grid container 618px)  */
 .step-body {
   width: 618px;
   max-width: 100%;
@@ -129,7 +129,7 @@ body {
   margin: 0 0 var(--space-32);
 }
 
-/* ── Stripe card ──────────────────────────────────────────────── */
+/*  Stripe card  */
 .stripe-card {
   background: var(--bg-primary);
   border: 1px solid var(--border-default);
@@ -166,7 +166,7 @@ body {
   margin: 0 0 var(--space-20);
 }
 
-/* ── Trust signals inside Stripe card ─────────────────────────── */
+/*  Trust signals inside Stripe card  */
 .trust-signals {
   background: var(--bg-accent-elevation-1);
   border-radius: 12px;
@@ -185,7 +185,7 @@ body {
   color: var(--text-tertiary);
 }
 
-/* ── Section label ────────────────────────────────────────────── */
+/*  Section label  */
 .section-divider-label {
   font-family: 'Bricolage Grotesque', sans-serif;
   font-size: 16px;
@@ -194,7 +194,7 @@ body {
   margin: 0 0 var(--space-16);
 }
 
-/* ── Method list ──────────────────────────────────────────────── */
+/*  Method list  */
 .method-list {
   display: flex; flex-direction: column;
   gap: var(--space-12);
@@ -248,7 +248,7 @@ body {
   border-color: var(--border-default);
 }
 
-/* ── Processing summary grid (CSV success) ────────────────────── */
+/*  Processing summary grid (CSV success)  */
 .summary-heading {
   font-family: 'Bricolage Grotesque', sans-serif;
   font-size: 16px;
@@ -286,7 +286,7 @@ body {
   color: var(--action-primary);
 }
 
-/* ── Review list (Stripe connected) ───────────────────────────── */
+/*  Review list (Stripe connected)  */
 .review-list { display: flex; flex-direction: column; gap: var(--space-20); }
 .review-item {
   display: flex; flex-direction: column; gap: var(--space-4);
@@ -307,7 +307,7 @@ body {
   color: var(--text-primary);
 }
 
-/* ── Form fields (manual entry) ───────────────────────────────── */
+/*  Form fields (manual entry)  */
 .field { display: flex; flex-direction: column; gap: var(--space-4); }
 .field-label {
   font-family: 'Bricolage Grotesque', sans-serif;
@@ -358,7 +358,7 @@ body {
 }
 .form-full { grid-column: 1 / -1; }
 
-/* ── Error banner (CSV/Stripe error states) ───────────────────── */
+/*  Error banner (CSV/Stripe error states)  */
 .error-banner {
   display: flex;
   align-items: flex-start;
@@ -385,7 +385,7 @@ body {
   color: var(--status-error);
 }
 
-/* ── Buttons ──────────────────────────────────────────────────── */
+/*  Buttons  */
 .btn {
   font-family: 'Bricolage Grotesque', sans-serif;
   font-weight: 600;
@@ -414,7 +414,7 @@ body {
 .btn-outline { background: transparent; color: var(--action-primary); border-color: var(--action-primary); }
 .btn-outline:hover:not(:disabled) { background: var(--bg-accent-elevation-1); }
 
-/* ── Step footer ──────────────────────────────────────────────── */
+/*  Step footer  */
 .step-footer {
   border-top: 1px solid var(--border-subtle);
   padding: var(--space-16) 0 var(--space-40);
@@ -439,7 +439,7 @@ body {
 .step-footer-contact a { color: var(--text-accent); text-decoration: none; font-weight: 500; }
 .step-footer-contact a:hover { text-decoration: underline; }
 
-/* ── Responsive ───────────────────────────────────────────────── */
+/*  Responsive  */
 @media (max-width: 640px) {
   .step-body { padding: var(--space-24) var(--space-20); }
   .stripe-card-top { flex-direction: column; align-items: flex-start; gap: var(--space-12); }
@@ -495,8 +495,8 @@ body {
           <h4 class="form-heading">Enter Your Processing Details</h4>
           <div class="form-grid">
             <div class="field">
-              <label class="field-label">Monthly card volume (�)</label>
-              <input class="field-input" type="text" value="�25,000" />
+              <label class="field-label">Monthly card volume (£)</label>
+              <input class="field-input" type="text" value="£25,000" />
             </div>
             <div class="field">
               <label class="field-label">Number of transactions per month</label>
