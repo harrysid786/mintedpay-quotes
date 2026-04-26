@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ummah Pricing â Step 1 (Errors)</title>
+  <title>Ummah Pricing — Step 1 (Errors)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/design-tokens.css" />
   <style>
-/* ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+/* ──────────────────────────────────────────────────────────────
    ROUND 1 FEEDBACK FIXES (Apr 23)
    - Full page width (no 1100px cap, no grey margins)
    - Grid container = 618px (Continue button + step body width)
@@ -17,15 +17,15 @@
    - Subtitle weight 400 (not Light)
    - Buttons use Bricolage (not Inter)
    - Progress bar 6px (was 4px)
-   - 16px gap from Stripe card â "Or choose another method"
+   - 16px gap from Stripe card → "Or choose another method"
    - Upload icon: arrow points UP
    - Error text sizes: title 14/600, subtitle 12/300
    - Connected to Stripe = SAME button position as Connect with Stripe,
      transformed to disabled state (bg #F1F4F6, text #B7C7CD)
    - Sticky top/bottom: DEFERRED to master template phase
-   ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
+   ────────────────────────────────────────────────────────────── */
 
-/* ââ Shell (full width) âââââââââââââââââââââââââââââââââââââââââ */
+/* ── Shell (full width) ───────────────────────────────────────── */
 body {
   margin: 0;
   background: var(--bg-primary);
@@ -41,7 +41,7 @@ body {
   background: var(--bg-primary);
 }
 
-/* ââ Promo banner (top) âââââââââââââââââââââââââââââââââââââââââ */
+/* ── Promo banner (top) ───────────────────────────────────────── */
 .promo-banner {
   background: var(--bg-accent-elevation-1);
   color: var(--text-primary);
@@ -56,7 +56,7 @@ body {
 }
 .promo-banner svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--icon-tertiary); }
 
-/* ââ Top bar ââââââââââââââââââââââââââââââââââââââââââââââââââââ */
+/* ── Top bar ──────────────────────────────────────────────────── */
 .topbar {
   display: flex; align-items: center; justify-content: center;
   position: relative;
@@ -85,7 +85,7 @@ body {
 .topbar-close:hover { background: var(--bg-elevation-2); }
 .topbar-close svg { width: 18px; height: 18px; }
 
-/* ââ Progress (6px) âââââââââââââââââââââââââââââââââââââââââââââ */
+/* ── Progress (6px) ───────────────────────────────────────────── */
 .progress-track {
   height: 6px;
   width: 100%;
@@ -94,7 +94,7 @@ body {
 }
 .progress-fill { height: 100%; background: var(--bg-accent); }
 
-/* ââ Body (grid container 618px) ââââââââââââââââââââââââââââââââ */
+/* ── Body (grid container 618px) ──────────────────────────────── */
 .step-body {
   width: 618px;
   max-width: 100%;
@@ -110,7 +110,7 @@ body {
   color: var(--text-primary);
   margin-bottom: var(--space-8);
 }
-/* Heading â weight 500, NOT bold */
+/* Heading — weight 500, NOT bold */
 .step-heading {
   font-family: 'Bricolage Grotesque', sans-serif;
   font-size: 32px;
@@ -119,7 +119,7 @@ body {
   color: var(--text-primary);
   margin: 0 0 var(--space-16);
 }
-/* Subtitle â weight 400, NOT Light */
+/* Subtitle — weight 400, NOT Light */
 .step-description {
   font-family: 'Bricolage Grotesque', sans-serif;
   font-size: 16px;
@@ -129,13 +129,13 @@ body {
   margin: 0 0 var(--space-32);
 }
 
-/* ââ Stripe card ââââââââââââââââââââââââââââââââââââââââââââââââ */
+/* ── Stripe card ──────────────────────────────────────────────── */
 .stripe-card {
   background: var(--bg-primary);
   border: 1px solid var(--border-default);
   border-radius: 16px;
   padding: var(--space-24);
-  margin-bottom: var(--space-16); /* was 32 â fix #8 */
+  margin-bottom: var(--space-16); /* was 32 — fix #8 */
 }
 .stripe-card-top {
   display: flex; align-items: center; justify-content: space-between;
@@ -166,7 +166,7 @@ body {
   margin: 0 0 var(--space-20);
 }
 
-/* ââ Trust signals inside Stripe card âââââââââââââââââââââââââââ */
+/* ── Trust signals inside Stripe card ─────────────────────────── */
 .trust-signals {
   background: var(--bg-accent-elevation-1);
   border-radius: 12px;
@@ -185,7 +185,7 @@ body {
   color: var(--text-tertiary);
 }
 
-/* ââ Section label ââââââââââââââââââââââââââââââââââââââââââââââ */
+/* ── Section label ────────────────────────────────────────────── */
 .section-divider-label {
   font-family: 'Bricolage Grotesque', sans-serif;
   font-size: 16px;
@@ -194,7 +194,7 @@ body {
   margin: 0 0 var(--space-16);
 }
 
-/* ââ Method list ââââââââââââââââââââââââââââââââââââââââââââââââ */
+/* ── Method list ──────────────────────────────────────────────── */
 .method-list {
   display: flex; flex-direction: column;
   gap: var(--space-12);
@@ -248,7 +248,7 @@ body {
   border-color: var(--border-default);
 }
 
-/* ââ Processing summary grid (CSV success) ââââââââââââââââââââââ */
+/* ── Processing summary grid (CSV success) ────────────────────── */
 .summary-heading {
   font-family: 'Bricolage Grotesque', sans-serif;
   font-size: 16px;
@@ -286,7 +286,7 @@ body {
   color: var(--action-primary);
 }
 
-/* ââ Review list (Stripe connected) âââââââââââââââââââââââââââââ */
+/* ── Review list (Stripe connected) ───────────────────────────── */
 .review-list { display: flex; flex-direction: column; gap: var(--space-20); }
 .review-item {
   display: flex; flex-direction: column; gap: var(--space-4);
@@ -307,7 +307,7 @@ body {
   color: var(--text-primary);
 }
 
-/* ââ Form fields (manual entry) âââââââââââââââââââââââââââââââââ */
+/* ── Form fields (manual entry) ───────────────────────────────── */
 .field { display: flex; flex-direction: column; gap: var(--space-4); }
 .field-label {
   font-family: 'Bricolage Grotesque', sans-serif;
@@ -358,7 +358,7 @@ body {
 }
 .form-full { grid-column: 1 / -1; }
 
-/* ââ Error banner (CSV/Stripe error states) âââââââââââââââââââââ */
+/* ── Error banner (CSV/Stripe error states) ───────────────────── */
 .error-banner {
   display: flex;
   align-items: flex-start;
@@ -385,7 +385,7 @@ body {
   color: var(--status-error);
 }
 
-/* ââ Buttons ââââââââââââââââââââââââââââââââââââââââââââââââââââ */
+/* ── Buttons ──────────────────────────────────────────────────── */
 .btn {
   font-family: 'Bricolage Grotesque', sans-serif;
   font-weight: 600;
@@ -414,7 +414,7 @@ body {
 .btn-outline { background: transparent; color: var(--action-primary); border-color: var(--action-primary); }
 .btn-outline:hover:not(:disabled) { background: var(--bg-accent-elevation-1); }
 
-/* ââ Step footer ââââââââââââââââââââââââââââââââââââââââââââââââ */
+/* ── Step footer ──────────────────────────────────────────────── */
 .step-footer {
   border-top: 1px solid var(--border-subtle);
   padding: var(--space-16) 0 var(--space-40);
@@ -439,7 +439,7 @@ body {
 .step-footer-contact a { color: var(--text-accent); text-decoration: none; font-weight: 500; }
 .step-footer-contact a:hover { text-decoration: underline; }
 
-/* ââ Responsive âââââââââââââââââââââââââââââââââââââââââââââââââ */
+/* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .step-body { padding: var(--space-24) var(--space-20); }
   .stripe-card-top { flex-direction: column; align-items: flex-start; gap: var(--space-12); }
@@ -457,8 +457,8 @@ body {
     </div>    <div class="progress-track"><div class="progress-fill" style="width: 33.33%;"></div></div>    <div class="step-body">
       <div class="step-label">Step 1 of 3</div>
       <h1 class="step-heading">What's your monthly processing volume?</h1>
-      <p class="step-description">Upload your most recent processing statement or enter your figures manually â we'll calculate your rate.</p>      <div class="stripe-card" style="padding: 0; border: none; background: transparent; margin-bottom: var(--space-40);">
-        <h3 style="font-family: 'Bricolage Grotesque'; font-size: 18px; font-weight: 600; margin: 0 0 var(--space-16);">State 1 â CSV error</h3>
+      <p class="step-description">Upload your most recent processing statement or enter your figures manually — we'll calculate your rate.</p>      <div class="stripe-card" style="padding: 0; border: none; background: transparent; margin-bottom: var(--space-40);">
+        <h3 style="font-family: 'Bricolage Grotesque'; font-size: 18px; font-weight: 600; margin: 0 0 var(--space-16);">State 1 — CSV error</h3>
       </div>
 
             <div class="stripe-card">
@@ -504,7 +504,7 @@ body {
           </div>
         </div>
       </div>      <div class="stripe-card" style="padding: 0; border: none; background: transparent; margin-bottom: var(--space-40); margin-top: var(--space-40);">
-        <h3 style="font-family: 'Bricolage Grotesque'; font-size: 18px; font-weight: 600; margin: 0 0 var(--space-16);">State 2 â Stripe error</h3>
+        <h3 style="font-family: 'Bricolage Grotesque'; font-size: 18px; font-weight: 600; margin: 0 0 var(--space-16);">State 2 — Stripe error</h3>
       </div>
 
             <div class="stripe-card">
@@ -547,7 +547,7 @@ body {
           </div>
         </div>
       </div>      <div class="stripe-card" style="padding: 0; border: none; background: transparent; margin-bottom: var(--space-40); margin-top: var(--space-40);">
-        <h3 style="font-family: 'Bricolage Grotesque'; font-size: 18px; font-weight: 600; margin: 0 0 var(--space-16);">State 3 â Field validation error</h3>
+        <h3 style="font-family: 'Bricolage Grotesque'; font-size: 18px; font-weight: 600; margin: 0 0 var(--space-16);">State 3 — Field validation error</h3>
       </div>
 
             <div class="stripe-card">
@@ -587,7 +587,7 @@ body {
           <h4 class="form-heading">Enter Your Processing Details</h4>
           <div class="form-grid">
             <div class="field has-error">
-              <label class="field-label">Monthly card volume (£)</label>
+              <label class="field-label">Monthly card volume (�)</label>
               <input class="field-input" type="text" value="x" />
               <div class="field-error-message"><svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M7 4 L7 7.5 M7 9.5 L7 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Please provide a valid monthly card volume</div>
             </div>
