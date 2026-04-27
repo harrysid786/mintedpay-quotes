@@ -1627,7 +1627,8 @@ function pAmt(v){const n=parseFloat(String(v||"").replace(/[£$€,\s]/g,""));re
 function classCard(s){s=(s||"").toLowerCase();if(s.includes("amex")||s.includes("american express"))return"amex";if(s.includes("visa")&&(s.includes("debit")||s.includes(" db ")))return"visa_debit";if(s.includes("visa"))return"visa_credit";if((s.includes("master")||s.includes("mc"))&&s.includes("debit"))return"mc_debit";if(s.includes("maestro"))return"maestro";if(s.includes("master")||s.includes("mc"))return"mc_credit";if(s.includes("debit"))return"visa_debit";if(s.includes("credit"))return"visa_credit";return"mixed"}
 function isDebitCard(k){return["visa_debit","mc_debit","maestro"].includes(k)}
 
-function parseCSV(text) {
+function parseCSV(text, fileName) {
+  fileName = fileName || "";
   const splitLine = l => {
     const out=[]; let cur="",inQ=false;
     for(let i=0;i<l.length;i++){const ch=l[i],nx=l[i+1];if(ch==='"'){if(inQ&&nx==='"'){cur+='"';i++}else inQ=!inQ}else if(ch===","&&!inQ){out.push(cur);cur=""}else{cur+=ch}}
@@ -1652,7 +1653,7 @@ function parseCSV(text) {
   const first=rows[0]||{};colMap.amount=cands.find(h=>pAmt(first[h]))||cands[0]||"";
   if(!colMap.amount)throw new Error("Could not detect an amount column");
 
-  let vol=0,cnt=0,fees=0,intlVol=0,cpop=0;
+  let vol=0,cnt=0,fees=0,intlVol=0,cpop=0,minAmt=Infinity;
   const cardData={};
   // ── Segment accumulators ──────────────────────────────────────────
   const EEA_COUNTRIES = new Set(['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO']);
@@ -1670,6 +1671,7 @@ function parseCSV(text) {
     // Skip non-card payment methods (Klarna, iDEAL, PayPal, bank transfer etc)
     if(colMap.paymentMethod){const pm=(r[colMap.paymentMethod]||"").toLowerCase().trim();if(pm&&!pm.includes("card")&&!pm.includes("credit")&&!pm.includes("debit")&&!pm.includes("visa")&&!pm.includes("master")&&!pm.includes("amex")&&!pm.includes("discover")&&!pm.includes("contactless")&&!pm.includes("chip")&&!pm.includes("swipe")&&!pm.includes("keyed")&&!pm.includes("transaction"))return;}
     const a=pAmt(r[colMap.amount]);if(!a)return;
+    if(a<minAmt)minAmt=a;
     cnt++;vol+=a;
     if(colMap.date&&r[colMap.date]){try{const _d2=new Date(r[colMap.date].substring(0,10));if(!isNaN(_d2.getTime())){if(!_minDate||_d2<_minDate)_minDate=_d2;if(!_maxDate||_d2>_maxDate)_maxDate=_d2;}}catch(e){}}
     const fv=colMap.fee?(pAmt(r[colMap.fee])||0):0;if(fv)fees+=fv;
@@ -1705,7 +1707,7 @@ function parseCSV(text) {
   });
   // AUTO-DETECT PENCE: Stripe and some processors export amounts in minor units (pence)
   // If avg transaction > £500, divide all values by 100
-  if(cnt > 0 && (vol / cnt) > 500) {
+  if(cnt > 0 && (vol / cnt) > 500 && minAmt >= 50) {
     const _d = 100;
     vol   = vol   / _d;
     fees  = fees  / _d;
@@ -1751,17 +1753,17 @@ function parseCSV(text) {
   for(const [key,acc] of Object.entries(segAcc)){
     if(acc.cnt > 0) segmentData.push({key, label:SEG_LABELS[key], vol:Number(acc.vol.toFixed(2)), cnt:acc.cnt, theirFees:Number(acc.fees.toFixed(2))});
   }
-  return { vol: Number(vol.toFixed(2)), cnt, cur: Number(fees.toFixed(2)), debitFrac: Number(debitFrac.toFixed(4)), intlFrac, currentRate: Number(currentRate.toFixed(4)), cardData, processor: detectProcessor("", rawH), segmentData, spanMonths, annualVol, dateRangeLabel };
+  return { vol: Number(vol.toFixed(2)), cnt, cur: Number(fees.toFixed(2)), debitFrac: Number(debitFrac.toFixed(4)), intlFrac, currentRate: Number(currentRate.toFixed(4)), cardData, processor: detectProcessor(fileName, rawH), segmentData, spanMonths, annualVol, dateRangeLabel };
 }
 
 function readExcel(file) {
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      const wb = window.XLSX.read(e.target.result, { type: 'array' });
+      const wb = window.XLSX.read(e.target.result, { type: 'array', cellDates: true });
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const csv = window.XLSX.utils.sheet_to_csv(ws, {dateNF:'yyyy-mm-dd', raw:false});
-      const result = parseCSV(csv);
+      const csv = window.XLSX.utils.sheet_to_csv(ws);
+      const result = parseCSV(csv, file.name);
       csvData = result;
       const fmt2 = n => "£" + Math.abs(n).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2});
       const fmtK = n => {const a=Math.abs(n);if(a>=1e6)return"£"+(a/1e6).toFixed(2)+"m";if(a>=1e3)return"£"+(a/1e3).toFixed(1)+"k";return"£"+a.toFixed(2)};
@@ -1811,7 +1813,7 @@ function handleFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      const result = parseCSV(e.target.result);
+      const result = parseCSV(e.target.result, file.name);
       csvData = result;
       const fmt2 = n => "£" + Math.abs(n).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2});
       const fmtK = n => {const a=Math.abs(n);if(a>=1e6)return"£"+(a/1e6).toFixed(2)+"m";if(a>=1e3)return"£"+(a/1e3).toFixed(1)+"k";return"£"+a.toFixed(2)};
