@@ -3182,6 +3182,7 @@
             // Settings override — sends local admin edits to the engine.
             // null when no changes applied — server uses getPricingSettings() defaults.
             settings_override: this._localPricingSettings || null,
+            segment_data: (this.lead.csvSegmentData) ? JSON.parse(this.lead.csvSegmentData) : undefined,
           }),
         });
         const data = await resp.json();
