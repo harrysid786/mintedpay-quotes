@@ -1262,7 +1262,51 @@
               </div>
             </div>
 
-            ${mSave > 0 ? `
+            ${(p.segment_quotes && p.segment_quotes.segments && p.segment_quotes.segments.length > 0) ? (() => {
+            const segs = p.segment_quotes.segments;
+            const summ = p.segment_quotes.summary;
+            const fmtR = (r, fx) => fx ? r.toFixed(2) + '% + ' + fx + 'p' : r.toFixed(2) + '%';
+            const fmtM = (n) => n !== null && n !== undefined ? '£' + Math.abs(n).toFixed(0) : '—';
+            const totSav = summ && summ.totalSaving !== null ? summ.totalSaving : null;
+            const totStr = totSav !== null ? (totSav >= 0 ? 'Save £' + totSav.toFixed(0) + '/mo' : 'Costs £' + Math.abs(totSav).toFixed(0) + '/mo more') : '—';
+            const totClr = (totSav !== null && totSav < 0) ? 'var(--amber)' : 'var(--green)';
+            return `
+            <div style="background:var(--white);border:1px solid var(--g6);border-radius:var(--r);overflow:hidden;margin-bottom:14px">
+              <table style="width:100%;border-collapse:collapse">
+                <thead><tr style="background:var(--g7);border-bottom:1px solid var(--g6)">
+                  <th style="padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);text-align:left">Card type</th>
+                  <th style="padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);text-align:left">Their rate</th>
+                  <th style="padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);text-align:left">They pay/mo</th>
+                  <th style="padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);text-align:left">Our rate</th>
+                  <th style="padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);text-align:left">Saving</th>
+                </tr></thead>
+                <tbody>
+                  ${segs.map(s => {
+                    const theirStr = s.theirEffRate !== null ? s.theirEffRate.toFixed(2) + '%' : '—';
+                    const ourStr   = s.ourRate !== null ? (s.ourFixedFee ? fmtR(s.ourRate, s.ourFixedFee) : s.ourRate.toFixed(2) + '%') : '—';
+                    const sav      = s.saving !== null ? s.saving : null;
+                    const savStr   = sav !== null ? (sav >= 0 ? 'save £' + sav.toFixed(0) + '/mo' : '+£' + Math.abs(sav).toFixed(0) + '/mo') : '—';
+                    const savClr   = (sav !== null && sav < 0) ? 'var(--amber)' : 'var(--green)';
+                    return \`<tr style="border-bottom:1px solid var(--g7)">
+                      <td style="padding:8px 10px;font-size:12px;font-weight:600;color:var(--black)">\${s.label}</td>
+                      <td style="padding:8px 10px;font-size:12px;color:var(--g3)">\${theirStr}</td>
+                      <td style="padding:8px 10px;font-size:12px;color:var(--g3)">\${fmtM(s.theirFees)}/mo</td>
+                      <td style="padding:8px 10px;font-size:12px;font-weight:600;color:var(--brand)">\${ourStr}</td>
+                      <td style="padding:8px 10px;font-size:12px;font-weight:600;color:\${savClr}">\${savStr}</td>
+                    </tr>\`;
+                  }).join('')}
+                  ${summ ? \`<tr style="background:var(--g7);border-top:2px solid var(--g6)">
+                    <td style="padding:8px 10px;font-size:12px;font-weight:700;color:var(--black)">Total</td>
+                    <td></td>
+                    <td style="padding:8px 10px;font-size:12px;color:var(--g3)">\${fmtM(summ.totalTheirFees)}/mo</td>
+                    <td style="padding:8px 10px;font-size:12px;font-weight:700;color:var(--brand)">\${fmtM(summ.totalOurFees)}/mo</td>
+                    <td style="padding:8px 10px;font-size:13px;font-weight:700;color:\${totClr}">\${totStr}</td>
+                  </tr>\` : ''}
+                </tbody>
+              </table>
+            </div>`;
+          })() : ''}
+          ${mSave > 0 ? `
             <div class="lf-op-save-banner">
               <span class="lf-op-save-lbl">Estimated Monthly Saving</span>
               <div class="lf-op-save-vals">
