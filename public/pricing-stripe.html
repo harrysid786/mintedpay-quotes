@@ -1760,7 +1760,7 @@ function readExcel(file) {
     try {
       const wb = window.XLSX.read(e.target.result, { type: 'array' });
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const csv = window.XLSX.utils.sheet_to_csv(ws);
+      const csv = window.XLSX.utils.sheet_to_csv(ws, {dateNF:'yyyy-mm-dd', raw:false});
       const result = parseCSV(csv);
       csvData = result;
       const fmt2 = n => "£" + Math.abs(n).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2});
