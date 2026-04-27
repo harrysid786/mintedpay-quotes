@@ -1262,7 +1262,54 @@
               </div>
             </div>
 
-            ${mSave > 0 ? `
+            ${(function() {
+            var sq = p.segment_quotes;
+            if (!sq || !sq.segments || !sq.segments.length) return '';
+            var segs = sq.segments;
+            var summ = sq.summary;
+            var rows = '';
+            for (var i=0; i<segs.length; i++) {
+              var s = segs[i];
+              var theirStr = s.theirEffRate !== null ? s.theirEffRate.toFixed(2) + '%' : '—';
+              var ourStr = s.ourRate !== null ? (s.ourFixedFee ? s.ourRate.toFixed(2) + '% + ' + s.ourFixedFee + 'p' : s.ourRate.toFixed(2) + '%') : '—';
+              var sav = s.saving !== null ? s.saving : null;
+              var savStr = sav !== null ? (sav >= 0 ? 'save £' + sav.toFixed(0) + '/mo' : '+£' + Math.abs(sav).toFixed(0) + '/mo') : '—';
+              var savClr = (sav !== null && sav < 0) ? 'var(--amber)' : 'var(--green)';
+              rows += '<tr style="border-bottom:1px solid var(--g7)">' +
+                '<td style="padding:8px 10px;font-size:12px;font-weight:600;color:var(--black)">' + s.label + '</td>' +
+                '<td style="padding:8px 10px;font-size:12px;color:var(--g3)">' + theirStr + '</td>' +
+                '<td style="padding:8px 10px;font-size:12px;color:var(--g3)">£' + (s.theirFees !== null ? Math.abs(s.theirFees).toFixed(0) : '—') + '/mo</td>' +
+                '<td style="padding:8px 10px;font-size:12px;font-weight:600;color:var(--brand)">' + ourStr + '</td>' +
+                '<td style="padding:8px 10px;font-size:12px;font-weight:600;color:' + savClr + '">' + savStr + '</td>' +
+                '</tr>';
+            }
+            var totRow = '';
+            if (summ) {
+              var totSav = summ.totalSaving !== null ? summ.totalSaving : null;
+              var totStr = totSav !== null ? (totSav >= 0 ? 'Save £' + totSav.toFixed(0) + '/mo' : 'Costs £' + Math.abs(totSav).toFixed(0) + '/mo more') : '—';
+              var totClr = (totSav !== null && totSav < 0) ? 'var(--amber)' : 'var(--green)';
+              totRow = '<tr style="background:var(--g7);border-top:2px solid var(--g6)">' +
+                '<td style="padding:8px 10px;font-size:12px;font-weight:700;color:var(--black)">Total</td>' +
+                '<td></td>' +
+                '<td style="padding:8px 10px;font-size:12px;color:var(--g3)">£' + Math.abs(summ.totalTheirFees).toFixed(0) + '/mo</td>' +
+                '<td style="padding:8px 10px;font-size:12px;font-weight:700;color:var(--brand)">£' + Math.abs(summ.totalOurFees).toFixed(0) + '/mo</td>' +
+                '<td style="padding:8px 10px;font-size:13px;font-weight:700;color:' + totClr + '">' + totStr + '</td>' +
+                '</tr>';
+            }
+            return '<div style="background:var(--white);border:1px solid var(--g6);border-radius:var(--r);overflow:hidden;margin-bottom:14px">' +
+              '<table style="width:100%;border-collapse:collapse">' +
+              '<thead><tr style="background:var(--g7);border-bottom:1px solid var(--g6)">' +
+              '<th style="padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);text-align:left">Card type</th>' +
+              '<th style="padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);text-align:left">Their rate</th>' +
+              '<th style="padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);text-align:left">They pay/mo</th>' +
+              '<th style="padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);text-align:left">Our rate</th>' +
+              '<th style="padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);text-align:left">Saving</th>' +
+              '</tr></thead>' +
+              '<tbody>' + rows + totRow + '</tbody>' +
+              '</table></div>';
+          }())}
+          ${mSave > 0 ? `
+            <div class="lf-op-save-banner">          ${mSave > 0 ? `
             <div class="lf-op-save-banner">
               <span class="lf-op-save-lbl">Estimated Monthly Saving</span>
               <div class="lf-op-save-vals">
