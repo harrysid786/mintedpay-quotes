@@ -1347,7 +1347,7 @@ async function submitLead() {
     csvDebitFrac:     csvData?.debitFrac  || null,
     csvIntlFrac:      csvData?.intlFrac   || null,
     csvSegmentData:   (csvData?.segmentData && csvData.segmentData.length > 0) ? JSON.stringify(csvData.segmentData) : null,
-        segmentQuotes: (pricingResult && pricingResult.segment_quotes && pricingResult.segment_quotes.segments && pricingResult.segment_quotes.segments.length > 0) ? JSON.stringify(pricingResult.segment_quotes) : ((csvData && csvData.segmentData && csvData.segmentData.length > 0) ? JSON.stringify({segments: csvData.segmentData, hasSegmentData: true, summary: null}) : null),
+        segmentQuotes: (pricingResult && pricingResult.segment_quotes && pricingResult.segment_quotes.segments && pricingResult.segment_quotes.segments.length > 0) ? JSON.stringify(pricingResult.segment_quotes) : null,
     painPoints:       `Submitted via public pricing tool. Merchant type: ${selectedType}.${provider ? " Current provider: " + provider + "." : ""}${saving ? " Indicative saving: £" + saving.toFixed(0) + "/mo." : ""}${_industryLabel ? " Industry: " + _industryLabel + " (" + (_industryStatus || "allowed") + ")." : ""}${(parseFloat(document.getElementById("curRateInput")?.value)||0) > 0 ? " Current rate entered: " + document.getElementById("curRateInput").value + "% + " + (document.getElementById("curFixedInput")?.value||"0") + "p/tx." : ""}`,
   };
 
@@ -1621,7 +1621,7 @@ function parseCSV(text, fileName) {
         segAcc.international.vol+=a; segAcc.international.cnt+=1; segAcc.international.fees+=fv;
       } else if(isDebit){
         segAcc.uk_debit.vol+=a; segAcc.uk_debit.cnt+=1; segAcc.uk_debit.fees+=fv;
-      } else if(cardTypeRaw) {
+      } else {
         segAcc.uk_credit.vol+=a; segAcc.uk_credit.cnt+=1; segAcc.uk_credit.fees+=fv;
       }
     }
