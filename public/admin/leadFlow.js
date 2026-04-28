@@ -3216,6 +3216,7 @@
           this.pricingResult = data;
               this.lead.segmentQuotes = (data.segment_quotes && data.segment_quotes.segments && data.segment_quotes.segments.length > 0) ? JSON.stringify(data.segment_quotes) : null;
               this._autosave();
+              if (this.currentStep === 0) { const ob = document.getElementById("lf-overview-body"); if (ob) ob.innerHTML = this._buildOverview(); }
           // Prefer locally derived current_rate (more accurate) over API value
           // API calculates current_rate from current_fees/vol too, but we make sure
           // it's always set here for consistency
