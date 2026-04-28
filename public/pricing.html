@@ -1281,6 +1281,7 @@ async function submitLead() {
   btn.disabled = true;
   btn.textContent = "Submitting…";
 
+  const p = pricingResult;
   const { vol, cnt, cur, debitFrac, intlFrac, avgTx } = getVolumeData();
   const intlRegionRaw = document.getElementById("intlRegionInput").value || "";
   const intlRegionMap = { "uk": null, "eea": "eea", "uk_eea": "eea", "mixed": "mixed", "row": "row", "": null };
