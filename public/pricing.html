@@ -1347,6 +1347,7 @@ async function submitLead() {
     csvDebitFrac:     csvData?.debitFrac  || null,
     csvIntlFrac:      csvData?.intlFrac   || null,
     csvSegmentData:   (csvData?.segmentData && csvData.segmentData.length > 0) ? JSON.stringify(csvData.segmentData) : null,
+        segmentQuotes: (pricingResult && pricingResult.segment_quotes && pricingResult.segment_quotes.segments && pricingResult.segment_quotes.segments.length > 0) ? JSON.stringify(pricingResult.segment_quotes) : null,
     painPoints:       `Submitted via public pricing tool. Merchant type: ${selectedType}.${provider ? " Current provider: " + provider + "." : ""}${saving ? " Indicative saving: £" + saving.toFixed(0) + "/mo." : ""}${_industryLabel ? " Industry: " + _industryLabel + " (" + (_industryStatus || "allowed") + ")." : ""}${(parseFloat(document.getElementById("curRateInput")?.value)||0) > 0 ? " Current rate entered: " + document.getElementById("curRateInput").value + "% + " + (document.getElementById("curFixedInput")?.value||"0") + "p/tx." : ""}`,
   };
 
