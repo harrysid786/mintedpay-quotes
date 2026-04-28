@@ -1609,7 +1609,6 @@ function parseCSV(text, fileName) {
     {
       const cardTypeRaw = colMap.cardType ? (r[colMap.cardType]||"").toLowerCase().trim() : "";
       const countryRaw  = colMap.country  ? (r[colMap.country] ||"").trim().toUpperCase() : "";
-      if(colMap.cardType && !cardTypeRaw && !countryRaw) continue;
       const isAmex      = cardTypeRaw.includes("amex") || cardTypeRaw.includes("american express") || cardTypeRaw.includes("american_express");
       const isGb        = !countryRaw || countryRaw==="GB" || countryRaw==="GBR" || countryRaw==="UK";
       const isEea       = !isGb && EEA_COUNTRIES.has(countryRaw);
