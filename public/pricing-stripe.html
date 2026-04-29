@@ -1147,7 +1147,7 @@ async function buildStep4() {
   const _allInEffRate = _avgTx > 0
     ? displayRate + (_fixedFee / 100 / _avgTx * 100)
     : displayRate;
-  if (hasCurFees && displayRate && effRate && _allInEffRate >= effRate) {
+  if (hasCurFees && displayRate && effRate && _allInEffRate <= effRate) {
     document.getElementById("step4Loading").style.display = "none";
     document.getElementById("step4Content").style.display = "block";
     document.getElementById("step4Btns").style.display    = "none";
