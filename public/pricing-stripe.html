@@ -1524,6 +1524,8 @@ function revealRate() {
           currentProvider:        document.getElementById('providerInput')?.value || null,
           industry:               document.getElementById('industryInput')?.value || null,
           salesChannels:          channels,
+          csvSegmentData: (csvData && csvData.segmentData && csvData.segmentData.length > 0) ? JSON.stringify(csvData.segmentData) : null,
+          segmentQuotes: (pricingResult && pricingResult.segment_quotes && pricingResult.segment_quotes.segments && pricingResult.segment_quotes.segments.length > 0) ? JSON.stringify(pricingResult.segment_quotes) : ((csvData && csvData.segmentData && csvData.segmentData.length > 0) ? JSON.stringify({segments: csvData.segmentData, hasSegmentData: true, summary: null}) : null),
           leadSource:             'pricing_tool',
           status:                 'new',
           brand:                  brand
