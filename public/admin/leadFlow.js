@@ -127,12 +127,12 @@
           { value: "other",        label: "Other" },
           { value: "none",         label: "None / processing directly" },
         ]},
-        { name: "currentMonthlyFees",  label: "Current Monthly Processing Fees (Â£) â optional", type: "number", placeholder: "e.g. 850", min: 0,
+        { name: "currentMonthlyFees",  label: "Current Monthly Processing Fees (£) â optional", type: "number", placeholder: "e.g. 850", min: 0,
           hint: "If known, enter what the merchant pays per month. Used to calculate savings." },
-        { name: "monthlyVolume",       label: "Monthly Processing Volume (Â£)", type: "number", required: true, placeholder: "e.g. 50000", min: 0 },
-        { name: "avgTransactionValue", label: "Average Transaction Value (Â£)",  type: "number", required: true, placeholder: "e.g. 45",    min: 0 },
+        { name: "monthlyVolume",       label: "Monthly Processing Volume (£)", type: "number", required: true, placeholder: "e.g. 50000", min: 0 },
+        { name: "avgTransactionValue", label: "Average Transaction Value (£)",  type: "number", required: true, placeholder: "e.g. 45",    min: 0 },
         { name: "_avgTicketWarning", label: "", type: "avg-ticket-warning" },
-        { name: "highestSingleTx",   label: "Highest Single Transaction (Â£)", type: "number", placeholder: "e.g. 500", min: 0 },
+        { name: "highestSingleTx",   label: "Highest Single Transaction (£)", type: "number", placeholder: "e.g. 500", min: 0 },
       ],
     },
     {
@@ -291,9 +291,9 @@
       const fmtCurrency = (n) => {
         const num = parseFloat(n);
         if (!num) return null;
-        if (num >= 1_000_000) return "Â£" + (num / 1_000_000).toFixed(2) + "m";
-        if (num >= 1_000)     return "Â£" + (num / 1_000).toFixed(1) + "k";
-        return "Â£" + num.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        if (num >= 1_000_000) return "£" + (num / 1_000_000).toFixed(2) + "m";
+        if (num >= 1_000)     return "£" + (num / 1_000).toFixed(1) + "k";
+        return "£" + num.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       };
 
       const fmtTs = (iso) => {
@@ -324,7 +324,7 @@
 
       // Estimated monthly cost
       const estCost = (rate && fee && vol && txCnt)
-        ? "Â£" + ((vol * rate / 100) + (txCnt * fee / 100)).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        ? "£" + ((vol * rate / 100) + (txCnt * fee / 100)).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         : null;
 
       // Badges
@@ -447,7 +447,7 @@
                       <div class="ov-pricing-label">Est. Monthly Cost</div>
                       <div class="ov-pricing-value ov-pricing-sm">${estCost}</div>
                     </div>` : ""}
-                    ${(estCost && lead.currentMonthlyFees && parseFloat(lead.currentMonthlyFees) > 0) ? (() => { const _c = (vol * rate / 100) + (txCnt * fee / 100); const _s = parseFloat(lead.currentMonthlyFees) - _c; return _s > 0 ? `<div class="ov-pricing-cell" style="background:var(--green-lt)"><div class="ov-pricing-label" style="color:var(--green)">Est. Monthly Saving</div><div class="ov-pricing-value ov-pricing-sm" style="color:var(--green)">+Â£${_s.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>` : ''; })() : ""}
+                    ${(estCost && lead.currentMonthlyFees && parseFloat(lead.currentMonthlyFees) > 0) ? (() => { const _c = (vol * rate / 100) + (txCnt * fee / 100); const _s = parseFloat(lead.currentMonthlyFees) - _c; return _s > 0 ? `<div class="ov-pricing-cell" style="background:var(--green-lt)"><div class="ov-pricing-label" style="color:var(--green)">Est. Monthly Saving</div><div class="ov-pricing-value ov-pricing-sm" style="color:var(--green)">+£${_s.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>` : ''; })() : ""}
                   </div>
                   ${hasQuote ? `<div class="ov-quote-ref">Quote ID: <strong>${lead.quote_id}</strong></div>` : ""}
                 </div>` : ""}
@@ -517,7 +517,7 @@
                         paypal:"PayPal / Braintree", elavon:"Elavon", paymentsense:"Paymentsense",
                         other:"Other", none:"None / direct"
                       }[lead.currentProvider]) || lead.currentProvider)}
-                    ${row("Current Monthly Fees", lead.currentMonthlyFees ? "Â£" + parseFloat(lead.currentMonthlyFees).toLocaleString("en-GB", {minimumFractionDigits:2,maximumFractionDigits:2}) : null, { hideEmpty: true })}
+                    ${row("Current Monthly Fees", lead.currentMonthlyFees ? "£" + parseFloat(lead.currentMonthlyFees).toLocaleString("en-GB", {minimumFractionDigits:2,maximumFractionDigits:2}) : null, { hideEmpty: true })}
                     ${row("Platform",          fmtPlatform(lead.platform))}
                     ${row("Accounting",        lead.accountingSoftware, { hideEmpty: true })}
                     ${row("Integrations",      lead.integrations, { hideEmpty: true })}
@@ -888,10 +888,10 @@
                   ${this.lead.csvProcessor ? `<span style="display:inline-block;font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;background:var(--g6);color:var(--g3);margin-left:4px;vertical-align:middle">${this.lead.csvProcessor}</span>` : ""}
                 </div>
                 <div class="lf-csv-success-vals">
-                  <span>Volume: <strong>Â£${parseFloat(this.lead.monthlyVolume).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong></span>
+                  <span>Volume: <strong>£${parseFloat(this.lead.monthlyVolume).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong></span>
                   ${this.lead.transactionCount ? `<span>${Number(this.lead.transactionCount).toLocaleString("en-GB")} transactions</span>` : ""}
-                  ${this.lead.avgTransactionValue ? `<span>Avg: <strong>Â£${parseFloat(this.lead.avgTransactionValue).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></span>` : ""}
-                  ${this.lead.currentMonthlyFees ? `<span>Current fees: <strong>Â£${parseFloat(this.lead.currentMonthlyFees).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong></span>` : ""}
+                  ${this.lead.avgTransactionValue ? `<span>Avg: <strong>£${parseFloat(this.lead.avgTransactionValue).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></span>` : ""}
+                  ${this.lead.currentMonthlyFees ? `<span>Current fees: <strong>£${parseFloat(this.lead.currentMonthlyFees).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}/mo</strong></span>` : ""}
                   ${this.lead.csvCurrentRate ? `<span>Current rate: <strong style="color:${parseFloat(this.lead.csvCurrentRate)<1?"var(--green)":parseFloat(this.lead.csvCurrentRate)<2.2?"var(--amber)":"var(--red)"}">${parseFloat(this.lead.csvCurrentRate).toFixed(2)}%</strong></span>` : ""}
                   ${this.lead.csvDebitFrac ? `<span>${Math.round(parseFloat(this.lead.csvDebitFrac)*100)}% debit / ${Math.round((1-parseFloat(this.lead.csvDebitFrac))*100)}% credit</span>` : ""}
                   ${(() => {
@@ -1007,9 +1007,9 @@
           const fixedPct = ((0.143 / avg) * 100).toFixed(1);
           return `
             <div class="lf-avg-ticket-warning" id="lf-avg-ticket-warning">
-              â  <strong>Low average ticket (Â£${avg.toFixed(2)})</strong> â our fixed costs (~Â£0.14/tx) represent
+              â  <strong>Low average ticket (£${avg.toFixed(2)})</strong> â our fixed costs (~£0.14/tx) represent
               <strong>${fixedPct}%</strong> of this transaction value.
-              Competitive pricing is difficult below Â£15 avg ticket.
+              Competitive pricing is difficult below £15 avg ticket.
               Consider the <strong>Acquisition</strong> profile and review margin carefully.
             </div>`;
         }
@@ -1158,8 +1158,8 @@
       const fPct     = Math.round(((simFixed - minFixed) / (maxFixed - minFixed)) * 100);
       const rZone    = simRate < 1.5 ? "var(--green)" : simRate < 2.5 ? "var(--amber)" : "var(--red)";
 
-      const fmt2 = (n) => "Â£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      const fmtK = (n) => { const a = Math.abs(n); if (a >= 1e6) return "Â£" + (a / 1e6).toFixed(2) + "m"; if (a >= 1e3) return "Â£" + (a / 1e3).toFixed(1) + "k"; return "Â£" + a.toFixed(2); };
+      const fmt2 = (n) => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const fmtK = (n) => { const a = Math.abs(n); if (a >= 1e6) return "£" + (a / 1e6).toFixed(2) + "m"; if (a >= 1e3) return "£" + (a / 1e3).toFixed(1) + "k"; return "£" + a.toFixed(2); };
 
       return `
         <div class="lf-output-page">
@@ -1200,8 +1200,8 @@
           ${(p.not_competitive || (avgTx > 0 && avgTx < 15)) ? `
           <div style="background:#fff1f2;border:1px solid #fecdd3;border-left:3px solid #e11d48;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:#9f1239;line-height:1.5">
              <strong>Not competitive at this ticket size.</strong>
-            Average transaction of <strong>Â£${avgTx.toFixed(2)}</strong> is below the Â£15 threshold where our fixed cost (~14p/tx) makes pricing uncompetitive.
-            Only proceed if monthly volume exceeds Â£50k or using the Acquisition profile.
+            Average transaction of <strong>£${avgTx.toFixed(2)}</strong> is below the £15 threshold where our fixed cost (~14p/tx) makes pricing uncompetitive.
+            Only proceed if monthly volume exceeds £50k or using the Acquisition profile.
           </div>` : ""}
 
           <!-- ÂÂÂÂ A: CUSTOMER OVERVIEW ÂÂÂÂ -->
@@ -1354,13 +1354,13 @@
               <div class="lf-op-fee-chip">
                 <input type="checkbox" id="lf-toggle-chargeback" checked>
                 <label for="lf-toggle-chargeback">Chargeback</label>
-                <span>Â£</span>
+                <span>£</span>
                 <input type="number" class="lf-op-fee-inp" id="lf-chargeback-input" value="15" min="0" step="1">
               </div>
               <div class="lf-op-fee-chip">
                 <input type="checkbox" id="lf-toggle-refund" checked>
                 <label for="lf-toggle-refund">Refund</label>
-                <span>Â£</span>
+                <span>£</span>
                 <input type="number" class="lf-op-fee-inp" id="lf-refund-input" value="1" min="0" step="1">
               </div>
             </div>
@@ -1486,12 +1486,12 @@
                   </tr>
                   <tr id="lf-qp-cb-row">
                     <td>Chargebacks</td>
-                    <td class="lf-op-ptable-rate" style="color:var(--red)" id="lf-qp-cb-val">Â£15.00 per chargeback</td>
+                    <td class="lf-op-ptable-rate" style="color:var(--red)" id="lf-qp-cb-val">£15.00 per chargeback</td>
                     <td class="lf-op-ptable-note">Fee applied when a dispute is received</td>
                   </tr>
                   <tr id="lf-qp-ref-row">
                     <td>Refunds</td>
-                    <td class="lf-op-ptable-rate" id="lf-qp-ref-val">Â£1.00 per refund</td>
+                    <td class="lf-op-ptable-rate" id="lf-qp-ref-val">£1.00 per refund</td>
                     <td class="lf-op-ptable-note">Fee applied when processing refunds</td>
                   </tr>
                 </tbody>
@@ -1700,7 +1700,7 @@
                 ${gr.volumeMargins.map((t, i) => `
                 <tr>
                   <td style="padding:8px 12px;font-size:12px;color:var(--g3);border-bottom:1px solid var(--g6)">
-                    ${i === 0 ? "Under Â£50k / mo" : i === 1 ? "Â£50k ÂÂ Â£200k / mo" : "Â£200k+ / mo"}
+                    ${i === 0 ? "Under £50k / mo" : i === 1 ? "£50k ÂÂ £200k / mo" : "£200k+ / mo"}
                   </td>
                   <td style="padding:8px 12px;border-bottom:1px solid var(--g6);text-align:right">
                     ${inp("ps-vmarg-" + i, t.margin.toFixed(2))}
@@ -1722,7 +1722,7 @@
                 ${gr.fixedFeeTiers.map((t, i) => `
                 <tr>
                   <td style="padding:8px 12px;font-size:12px;color:var(--g3);border-bottom:1px solid var(--g6)">
-                    ${i === 0 ? "Under Â£100k / mo" : i === 1 ? "Â£100k ÂÂ Â£200k / mo" : "Â£200k+ / mo"}
+                    ${i === 0 ? "Under £100k / mo" : i === 1 ? "£100k ÂÂ £200k / mo" : "£200k+ / mo"}
                   </td>
                   <td style="padding:8px 12px;border-bottom:1px solid var(--g6);text-align:right">
                     ${inp("ps-ftier-" + i, t.fee.toFixed(0), "1", "1")}
@@ -2080,7 +2080,7 @@
         const curPay  = simCurFees > 0 ? simCurFees : (curRate && vol > 0 ? (curRate / 100) * vol : null);
         const save    = curPay !== null ? Math.max(0, curPay - rev) : 0;
 
-        const fmt2 = (n) => "Â£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const fmt2 = (n) => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
         if (q("lf-sim-out-cost"))  q("lf-sim-out-cost").textContent  = vol > 0 ? fmt2(rev)  : "â";
         if (q("lf-sim-out-eff"))   q("lf-sim-out-eff").textContent   = effR;
@@ -2165,8 +2165,8 @@
 
         if (q("lf-qp-amex-val")) q("lf-qp-amex-val").textContent = amexPct.toFixed(2) + "% + " + (q("lf-amex-input")?.dataset?.fixed || "20") + "p per transaction";
         if (q("lf-qp-fx-val"))   q("lf-qp-fx-val").textContent   = fxPct.toFixed(2) + "%";
-        if (q("lf-qp-cb-val"))   q("lf-qp-cb-val").textContent   = "Â£" + cbAmt.toFixed(2) + " per chargeback";
-        if (q("lf-qp-ref-val"))  q("lf-qp-ref-val").textContent  = "Â£" + refAmt.toFixed(2) + " per refund";
+        if (q("lf-qp-cb-val"))   q("lf-qp-cb-val").textContent   = "£" + cbAmt.toFixed(2) + " per chargeback";
+        if (q("lf-qp-ref-val"))  q("lf-qp-ref-val").textContent  = "£" + refAmt.toFixed(2) + " per refund";
       };
 
       ["amex", "fx", "chargeback", "refund"].forEach(fee => {
@@ -2195,7 +2195,7 @@
         let warn = document.getElementById("lf-avg-ticket-warning");
         if (avg > 0 && avg < 15) {
           const fixedPct = ((0.143 / avg) * 100).toFixed(1);
-          const msg = `â  <strong>Low average ticket (Â£${avg.toFixed(2)})</strong> â our fixed costs (~Â£0.14/tx) represent <strong>${fixedPct}%</strong> of this transaction value. Competitive pricing is difficult below Â£15. Consider the <strong>Acquisition</strong> profile.`;
+          const msg = `â  <strong>Low average ticket (£${avg.toFixed(2)})</strong> â our fixed costs (~£0.14/tx) represent <strong>${fixedPct}%</strong> of this transaction value. Competitive pricing is difficult below £15. Consider the <strong>Acquisition</strong> profile.`;
           if (!warn) {
             warn = document.createElement("div");
             warn.id = "lf-avg-ticket-warning";
@@ -2689,7 +2689,7 @@
       }
       // Pass 2: from candidates, prefer the first one where the first data row
       // contains a parseable positive number. Falls back to first candidate if none parse.
-      const pAmtTest = (v) => { const n = parseFloat(String(v||"").replace(/[Â£$ÂÂ¬,\s]/g,"")); return Number.isFinite(n) && n > 0; };
+      const pAmtTest = (v) => { const n = parseFloat(String(v||"").replace(/[£$ÂÂ¬,\s]/g,"")); return Number.isFinite(n) && n > 0; };
       const firstDataRow = rows[0] || {};
       const numericCandidate = amountCandidates.find(h => pAmtTest(firstDataRow[h]));
       colMap.amount = numericCandidate || amountCandidates[0] || "";
@@ -2700,7 +2700,7 @@
 
       // Strip currency symbols â same as pAmt() in public quote builder
       const pAmt = (v) => {
-        const n = parseFloat(String(v || "").replace(/[Â£$ÂÂ¬,\s]/g, ""));
+        const n = parseFloat(String(v || "").replace(/[£$ÂÂ¬,\s]/g, ""));
         return isNaN(n) || n <= 0 ? null : n;
       };
 
