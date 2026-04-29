@@ -1694,7 +1694,7 @@ function parseCSV(text, fileName) {
       const cardTypeRaw = colMap.cardType ? (r[colMap.cardType]||"").toLowerCase().trim() : "";
       const countryRaw  = colMap.country  ? (r[colMap.country] ||"").trim().toUpperCase() : "";
       const isAmex      = cardTypeRaw.includes("amex") || cardTypeRaw.includes("american express") || cardTypeRaw.includes("american_express");
-      const isGb        = !countryRaw || countryRaw==="GB" || countryRaw==="GBR" || countryRaw==="UK";
+      const isGb        = countryRaw==="GB" || countryRaw==="GBR" || countryRaw==="UK";
       const isEea       = !isGb && EEA_COUNTRIES.has(countryRaw);
       const isIntl      = !isGb && !isEea && countryRaw !== "";
       const isDebit     = cardTypeRaw.includes("debit") || cardTypeRaw.includes("maestro");
@@ -1706,7 +1706,7 @@ function parseCSV(text, fileName) {
         segAcc.international.vol+=a; segAcc.international.cnt+=1; segAcc.international.fees+=fv;
       } else if(isDebit){
         segAcc.uk_debit.vol+=a; segAcc.uk_debit.cnt+=1; segAcc.uk_debit.fees+=fv;
-      } else {
+      } else if(isGb) {
         segAcc.uk_credit.vol+=a; segAcc.uk_credit.cnt+=1; segAcc.uk_credit.fees+=fv;
       }
     }
