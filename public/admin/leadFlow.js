@@ -3427,7 +3427,7 @@
       const url = window.location.origin + '/quote.html?quote=' + qid;
       navigator.clipboard.writeText(url).then(() => {
         const btn = document.getElementById('lf-copy-link');
-        if (btn) { btn.textContent = 'â Copied!'; btn.style.background = 'var(--green)'; btn.style.color = '#fff'; }
+        if (btn) { btn.textContent = 'â Copied!'; btn.style.background = 'var(--green)'; btn.style.color = '#fff'; }
         setTimeout(() => { if (btn) { btn.textContent = 'ð Copy Link'; btn.style.background = ''; btn.style.color = ''; } }, 2000);
       }).catch(() => {
         // Fallback for older browsers
@@ -3438,7 +3438,7 @@
         document.execCommand('copy');
         document.body.removeChild(el);
         const btn = document.getElementById('lf-copy-link');
-        if (btn) { btn.textContent = 'â Copied!'; }
+        if (btn) { btn.textContent = 'â Copied!'; }
         setTimeout(() => { if (btn) { btn.textContent = 'ð Copy Link'; } }, 2000);
       });
     }
