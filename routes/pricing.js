@@ -62,7 +62,7 @@ const INTERCHANGE = {
   // ── International rates — three levels of granularity ────────
   // Use intlEEA / intlRoW / intlMixed when intlRegion is known.
   // Fall back to intl (conservative blended) when region is unknown.
-  intlEEA:   0.80,   // EEA-issued cards only (EU/EEA merchants, ~0.80%)
+ intlEEA: 0.23, // EEA-issued cards — same debit/credit IC as UK domestic (0.7×0.20 + 0.3×0.30 = 0.23%)
   intlRoW:   1.50,   // Rest-of-world issued cards (~1.50–2.50%, blended ~1.50%)
   intlMixed: 1.15,   // Mixed EEA + RoW (blended mid-point)
   intl:      1.50,   // Conservative fallback — used when region is unknown
@@ -199,7 +199,7 @@ function buildCostEngine(vol, cnt, debitFrac, intlFrac, eurGbpRate, paymentMetho
     // Resolve the international interchange rate.
     // When intlRegion is known, use the specific rate; otherwise fall back
     // to INTERCHANGE.intl (1.50% conservative blended).
-    const intlRate = intlRegion === "eea"   ? INTERCHANGE.intlEEA
+ const intlRate = intlRegion === "eea" ? ukBlendedInterchange // EEA: same debit/credit rates as UK domestic
                    : intlRegion === "row"   ? INTERCHANGE.intlRoW
                    : intlRegion === "mixed" ? INTERCHANGE.intlMixed
                    : INTERCHANGE.intl;  // null / unknown → conservative fallback
