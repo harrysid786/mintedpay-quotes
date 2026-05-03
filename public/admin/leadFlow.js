@@ -1321,7 +1321,7 @@
             const theirRate = s.theirEffRate!=null ? s.theirEffRate+'%' : 'n/a';
             const ourRate = s.ourRate!=null ? s.ourRate+'% + '+s.ourFixedFee+'p' : 'n/a';
             const floorRate = s.floorPct!=null ? s.floorPct+'%' : (s.floorAllIn!=null ? s.floorAllIn+'%' : 'n/a');
-            const saving = s.saving!=null ? (s.saving>=0 ? '�'+Math.abs(s.saving).toFixed(0)+'/mo saved' : '-�'+Math.abs(s.saving).toFixed(0)+'/mo') : '—';
+            const saving = s.saving!=null ? (s.saving>=0 ? '£'+Math.abs(s.saving).toFixed(0)+'/mo saved' : '-£'+Math.abs(s.saving).toFixed(0)+'/mo') : '—';
             const badge = s.competitive===true
               ? '<span style="background:#dcfce7;color:#166534;padding:1px 7px;border-radius:4px;font-size:11px;font-weight:700">CAN BEAT</span>'
               : s.competitive===false
@@ -1332,7 +1332,7 @@
           }).join('');
           const summary = sq.summary;
           const sumBadge = summary&&summary.totalSaving>0
-            ? `<div style="margin-top:8px;padding:7px 12px;background:#dcfce7;border-radius:6px;color:#166534;font-size:12px;font-weight:600">Net saving: �${summary.totalSaving.toFixed(0)}/mo across all segments</div>`
+            ? `<div style="margin-top:8px;padding:7px 12px;background:#dcfce7;border-radius:6px;color:#166534;font-size:12px;font-weight:600">Net saving: £${summary.totalSaving.toFixed(0)}/mo across all segments</div>`
             : `<div style="margin-top:8px;padding:7px 12px;background:#fff7ed;border-radius:6px;color:#c2410c;font-size:12px;font-weight:600">Cannot beat blended rate across all segments</div>`;
           return `<div class="lf-op-section" style="margin-top:4px"><div class="lf-op-section-title">Segment Competitiveness</div><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#f8fafc;font-size:11px;color:#64748b;text-transform:uppercase"><th style="padding:5px 6px;text-align:left;font-weight:600">Segment</th><th style="padding:5px 6px;text-align:right;font-weight:600">Their Rate</th><th style="padding:5px 6px;text-align:right;font-weight:600">Our Rate</th><th style="padding:5px 6px;text-align:right;font-weight:600;color:#64748b">Floor</th><th style="padding:5px 6px;text-align:right;font-weight:600">Saving</th><th style="padding:5px 6px;text-align:center;font-weight:600">Status</th></tr></thead><tbody>${rows}</tbody></table>${sumBadge}</div>`;
         } catch(e){ return ''; }
