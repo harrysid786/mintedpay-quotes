@@ -1536,6 +1536,8 @@ const HINTS = {
   amount:   ["amount","gross","total","value","sale","charge","net"],
   fee:      ["total transaction charge","total_transaction_charge","fee","fees","processing","commission","cost","charge_amount"],
   cardType: ["card type","card_type","card brand","card_brand","scheme","network","brand"],
+  cardScheme: ["card scheme","card_scheme"],
+  cardFunding: ["card funding","card_funding","funding"],
   rowType:  ["transaction type","entry type","record type","transaction_type","__exact__type"],
   outcome:  ["transaction outcome","outcome","transaction_status","payment_status","charge_status","__exact__status"],
   date:    ["transaction date","date","transaction_date","payment date","created","created_at"],
@@ -1598,7 +1600,15 @@ function parseCSV(text, fileName) {
     cnt++;vol+=a;
     if(colMap.date&&r[colMap.date]){try{const _d2=new Date(r[colMap.date].substring(0,10));if(!isNaN(_d2.getTime())){if(!_minDate||_d2<_minDate)_minDate=_d2;if(!_maxDate||_d2>_maxDate)_maxDate=_d2;}}catch(e){}}
     const fv=colMap.fee?(pAmt(r[colMap.fee])||0):0;if(fv)fees+=fv;
-    const k=colMap.cardType?classCard(r[colMap.cardType]):"mixed";
+    // Combine cardScheme + cardFunding + cardType for richest classification.
+    // Takepayments: Card scheme (Visa/MC/Amex) + Card type (Debit/Credit) — both needed.
+    // Stripe Redacted: card_brand (scheme) + card_funding (debit/credit/prepaid).
+    const cardClassRaw = (
+      (colMap.cardScheme  ? (r[colMap.cardScheme] ||"") : "") + " " +
+      (colMap.cardFunding ? (r[colMap.cardFunding]||"") : "") + " " +
+      (colMap.cardType    ? (r[colMap.cardType]   ||"") : "")
+    ).trim();
+    const k = cardClassRaw ? classCard(cardClassRaw) : "mixed";
     if(!cardData[k])cardData[k]={vol:0,cnt:0};cardData[k].vol+=a;cardData[k].cnt++;
     if(colMap.country){const c=(r[colMap.country]||"").trim().toUpperCase();if(c){cpop++;if(c!=="GB"&&c!=="GBR"&&c!=="UK")intlVol+=a}}
     // ── Presentment currency international detection (Shopify / FX CSVs) ──
@@ -1608,10 +1618,16 @@ function parseCSV(text, fileName) {
     }
     // ── Segment classification ────────────────────────────────────
     {
-      const cardTypeRaw = colMap.cardType ? (r[colMap.cardType]||"").toLowerCase().trim() : "";
+      const cardTypeRaw = (
+        (colMap.cardScheme  ? (r[colMap.cardScheme] ||"") : "") + " " +
+        (colMap.cardFunding ? (r[colMap.cardFunding]||"") : "") + " " +
+        (colMap.cardType    ? (r[colMap.cardType]   ||"") : "")
+      ).toLowerCase().trim();
       const countryRaw  = colMap.country  ? (r[colMap.country] ||"").trim().toUpperCase() : "";
       const isAmex      = cardTypeRaw.includes("amex") || cardTypeRaw.includes("american express") || cardTypeRaw.includes("american_express");
-      const isGb        = countryRaw==="GB" || countryRaw==="GBR" || countryRaw==="UK";
+      // Default to GB when no country info — Takepayments has no country column,
+      // Shopify has blank country rows. Without this, UK rows fall out of segment data.
+      const isGb        = countryRaw==="" || countryRaw==="GB" || countryRaw==="GBR" || countryRaw==="UK";
       const isEea       = !isGb && EEA_COUNTRIES.has(countryRaw);
       const isIntl      = !isGb && !isEea && countryRaw !== "";
       const isDebit     = cardTypeRaw.includes("debit") || cardTypeRaw.includes("maestro");
