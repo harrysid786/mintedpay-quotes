@@ -1442,7 +1442,12 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
   let monthlySaving = null;
   let yearlySaving  = null;
   if (currentRate !== null) {
-    const savingRate = currentRate - quoteRate;
+    // Bug 16 fix: include fixed fee impact in our all-in rate before comparing
+    const fixedFeePct = (cnt > 0 && vol > 0 && fixedFee > 0)
+      ? ((cnt * fixedFee / 100) / vol * 100)
+      : 0;
+    const ourAllInRate = quoteRate + fixedFeePct;
+    const savingRate = currentRate - ourAllInRate;
     if (savingRate > 0) {
       monthlySaving = Math.round(((savingRate / 100) * vol) * 100) / 100;
       yearlySaving  = Math.round((monthlySaving * 12) * 100) / 100;
@@ -1753,8 +1758,12 @@ function calculateSegmentQuotes(segments, eurGbpRate) {
   }
 
   // Summary totals across all segments
-  const totalTheirFees = results.reduce((s, r) => s + (r.theirFees || 0), 0);
-  const totalOurFees   = results.reduce((s, r) => s + (r.ourFees   || 0), 0);
+  // Bug 15 fix: sum across competitive segments only
+  // Original asymmetric sum included theirFees from non-competitive segments
+  // while ourFees was null, inflating saving by the unsoldable amount.
+  const competitiveResults = results.filter(r => r.competitive && r.ourFees !== null);
+  const totalTheirFees = competitiveResults.reduce((s, r) => s + (r.theirFees || 0), 0);
+  const totalOurFees   = competitiveResults.reduce((s, r) => s + (r.ourFees   || 0), 0);
   const totalSaving    = totalTheirFees > 0 ? totalTheirFees - totalOurFees : null;
   const totalProfit    = results.reduce((s, r) => s + (r.profit    || 0), 0);
 
