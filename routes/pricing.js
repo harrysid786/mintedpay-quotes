@@ -1442,7 +1442,12 @@ function calculateQuote(vol, cnt, debitFrac, curFees, intlFrac, csvDebitFracIsRe
   let monthlySaving = null;
   let yearlySaving  = null;
   if (currentRate !== null) {
-    const savingRate = currentRate - quoteRate;
+    // Bug 16 fix: include fixed fee impact in our all-in rate before comparing
+    const fixedFeePct = (cnt > 0 && vol > 0 && fixedFee > 0)
+      ? ((cnt * fixedFee / 100) / vol * 100)
+      : 0;
+    const ourAllInRate = quoteRate + fixedFeePct;
+    const savingRate = currentRate - ourAllInRate;
     if (savingRate > 0) {
       monthlySaving = Math.round(((savingRate / 100) * vol) * 100) / 100;
       yearlySaving  = Math.round((monthlySaving * 12) * 100) / 100;
