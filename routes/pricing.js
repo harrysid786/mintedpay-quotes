@@ -853,6 +853,7 @@ function computeSingleRegionForNoFees(vol, cnt, debitFrac, intlFrac) {
 function calculateDualRegionQuote(vol, cnt, cur, debitFrac, intlFrac, intlRegion, settingsOverride) {
   if (intlFrac === null || intlFrac === undefined || intlFrac <= 0 || intlFrac >= 1) return null;
   if (!vol || vol <= 0 || !cnt || cnt <= 0) return null;
+  if (Math.round(cnt * (1 - intlFrac)) < 1 || Math.round(cnt * intlFrac) < 1) return null;
 
   const ukFrac   = 1 - intlFrac;
   const ukVol    = vol * ukFrac;
