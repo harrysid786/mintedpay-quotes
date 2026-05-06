@@ -447,7 +447,7 @@
                       <div class="ov-pricing-label">Est. Monthly Cost</div>
                       <div class="ov-pricing-value ov-pricing-sm">${estCost}</div>
                     </div>` : ""}
-                    ${(estCost && lead.currentMonthlyFees && parseFloat(lead.currentMonthlyFees) > 0) ? (() => { const _sq = (lead.segmentQuotes && typeof lead.segmentQuotes === 'string') ? (() => { try { return JSON.parse(lead.segmentQuotes); } catch(e) { return null; } })() : (lead.segmentQuotes || null); const _segs = _sq && Array.isArray(_sq.segments) ? _sq.segments : null; const _gross = _segs && _segs.length > 0 ? _segs.reduce((a, s) => a + (Number.isFinite(s && s.saving) && s.saving > 0 ? s.saving : 0), 0) : null; const _c = (vol * rate / 100) + (txCnt * fee / 100); const _s = _gross !== null ? _gross : (parseFloat(lead.currentMonthlyFees) - _c); return _s > 0 ? `<div class="ov-pricing-cell" style="background:var(--green-lt)"><div class="ov-pricing-label" style="color:var(--green)">Est. Monthly Saving</div><div class="ov-pricing-value ov-pricing-sm" style="color:var(--green)">+£${_s.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>` : ''; })() : ""}
+                    ${(estCost && lead.currentMonthlyFees && parseFloat(lead.currentMonthlyFees) > 0) ? (() => { const _pSq = (this.pricingResult && this.pricingResult.segment_quotes) ? this.pricingResult.segment_quotes : null; const _lSq = (lead.segmentQuotes && typeof lead.segmentQuotes === 'string') ? (() => { try { return JSON.parse(lead.segmentQuotes); } catch(e) { return null; } })() : (lead.segmentQuotes || null); const _sq = _pSq || _lSq; const _segs = _sq && Array.isArray(_sq.segments) ? _sq.segments : null; const _gross = _segs && _segs.length > 0 ? _segs.reduce((a, s) => a + (Number.isFinite(s && s.saving) && s.saving > 0 ? s.saving : 0), 0) : null; const _c = (vol * rate / 100) + (txCnt * fee / 100); const _s = _gross !== null ? _gross : (parseFloat(lead.currentMonthlyFees) - _c); return _s > 0 ? `<div class="ov-pricing-cell" style="background:var(--green-lt)"><div class="ov-pricing-label" style="color:var(--green)">Est. Monthly Saving</div><div class="ov-pricing-value ov-pricing-sm" style="color:var(--green)">+£${_s.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>` : ''; })() : ""}
                   </div>
                   ${hasQuote ? `<div class="ov-quote-ref">Quote ID: <strong>${lead.quote_id}</strong></div>` : ""}
                 </div>` : ""}
@@ -1271,6 +1271,7 @@
             </div>
 
             ${overviewSaving !== null ? `
+            ${overviewSaving < 0 ? '<div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:6px">⚠ This deal is loss-making</div>' : ""}
             <div class="lf-op-save-banner" style="${overviewSaving < 0 ? 'background:var(--amber-lt);color:var(--amber)' : ''}">
               <span class="lf-op-save-lbl">${overviewSaving < 0 ? "Estimated Monthly Loss" : "Estimated Monthly Saving"}</span>
               <div class="lf-op-save-vals">
