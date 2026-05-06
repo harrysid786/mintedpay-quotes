@@ -1382,23 +1382,15 @@
               <div class="lf-op-sim-top">
                 <div class="lf-op-sim-ctrl">
                   <div class="lf-op-sim-ctrl-lbl">Processing Rate</div>
-                  <div class="lf-op-sim-spin-wrap lf-op-sim-spin-brand">
-                    <button class="lf-op-sim-btn" id="lf-sim-rate-up">²</button>
                     <input type="number" class="lf-op-sim-box" id="lf-sim-rate"
                            value="${simRate}" min="${minRate}" max="${maxRate}" step="0.01">
-                    <button class="lf-op-sim-btn" id="lf-sim-rate-dn">¼</button>
-                  </div>
                   <span class="lf-op-sim-pct">%</span>
                 </div>
                 <div class="lf-op-sim-sep">+</div>
                 <div class="lf-op-sim-ctrl">
                   <div class="lf-op-sim-ctrl-lbl">Fixed Fee</div>
-                  <div class="lf-op-sim-spin-wrap lf-op-sim-spin-green">
-                    <button class="lf-op-sim-btn" id="lf-sim-fixed-up">²</button>
                     <input type="number" class="lf-op-sim-box lf-op-sim-box-green" id="lf-sim-fixed"
                            value="${simFixed}" min="${minFixed}" max="${maxFixed}" step="1">
-                    <button class="lf-op-sim-btn" id="lf-sim-fixed-dn">¼</button>
-                  </div>
                   <span class="lf-op-sim-pct" style="color:var(--green)">p</span>
                 </div>
               </div>
@@ -1409,9 +1401,9 @@
                 <input type="range" class="lf-op-sim-range" id="lf-sim-rate-range"
                        min="${minRate}" max="${maxRate}" step="0.01" value="${simRate}">
                 <div class="lf-op-sim-ticks">
-                  <span style="color:var(--green)">¼ Floor</span>
+                  <span style="color:var(--green)">Floor</span>
                   <span style="color:var(--amber);text-align:center">Market</span>
-                  <span style="color:var(--red);text-align:right">Premium ²</span>
+                  <span style="color:var(--red);text-align:right">Premium</span>
                 </div>
               </div>
 
@@ -1439,7 +1431,7 @@
 
               <div class="lf-op-sim-actions">
                 <button class="lf-op-sim-apply" id="lf-apply-override"> Apply This Rate to Quote</button>
-                <button class="lf-op-sim-reset" id="lf-sim-reset">º Reset to System Rate</button>
+                <button class="lf-op-sim-reset" id="lf-sim-reset">Reset to System Rate</button>
               </div>
             </div>
           </div>
@@ -1756,7 +1748,7 @@
             </button>
             ${isModified ? `
             <button id="ps-reset" style="background:var(--white);color:var(--g3);border:1.5px solid var(--g5);padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer">
-              º Reset to Defaults
+              Reset to Defaults
             </button>` : ""}
             <span style="font-size:11px;color:var(--g3)" id="ps-status"></span>
           </div>
