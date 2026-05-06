@@ -1430,8 +1430,8 @@
               </div>
 
               <div class="lf-op-sim-actions">
-                <button class="lf-op-sim-apply" id="lf-apply-override"> Apply This Rate to Quote</button>
-                <button class="lf-op-sim-reset" id="lf-sim-reset">Reset to System Rate</button>
+                <button class="lf-op-sim-apply" id="lf-apply-override"> Apply This Rate to Quote</button>
+                <button class="lf-op-sim-reset" id="lf-sim-reset">Reset to System Rate</button>
               </div>
             </div>
           </div>
@@ -1748,7 +1748,7 @@
             </button>
             ${isModified ? `
             <button id="ps-reset" style="background:var(--white);color:var(--g3);border:1.5px solid var(--g5);padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer">
-              Reset to Defaults
+              Reset to Defaults
             </button>` : ""}
             <span style="font-size:11px;color:var(--g3)" id="ps-status"></span>
           </div>
