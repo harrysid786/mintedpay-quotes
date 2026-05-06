@@ -447,7 +447,7 @@
                       <div class="ov-pricing-label">Est. Monthly Cost</div>
                       <div class="ov-pricing-value ov-pricing-sm">${estCost}</div>
                     </div>` : ""}
-                    ${(estCost && lead.currentMonthlyFees && parseFloat(lead.currentMonthlyFees) > 0) ? (() => { const _c = (vol * rate / 100) + (txCnt * fee / 100); const _s = parseFloat(lead.currentMonthlyFees) - _c; return _s > 0 ? `<div class="ov-pricing-cell" style="background:var(--green-lt)"><div class="ov-pricing-label" style="color:var(--green)">Est. Monthly Saving</div><div class="ov-pricing-value ov-pricing-sm" style="color:var(--green)">+£${_s.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>` : ''; })() : ""}
+                    ${(estCost && lead.currentMonthlyFees && parseFloat(lead.currentMonthlyFees) > 0) ? (() => { const _sq = (lead.segmentQuotes && typeof lead.segmentQuotes === 'string') ? (() => { try { return JSON.parse(lead.segmentQuotes); } catch(e) { return null; } })() : (lead.segmentQuotes || null); const _segs = _sq && Array.isArray(_sq.segments) ? _sq.segments : null; const _gross = _segs && _segs.length > 0 ? _segs.reduce((a, s) => a + (Number.isFinite(s && s.saving) && s.saving > 0 ? s.saving : 0), 0) : null; const _c = (vol * rate / 100) + (txCnt * fee / 100); const _s = _gross !== null ? _gross : (parseFloat(lead.currentMonthlyFees) - _c); return _s > 0 ? `<div class="ov-pricing-cell" style="background:var(--green-lt)"><div class="ov-pricing-label" style="color:var(--green)">Est. Monthly Saving</div><div class="ov-pricing-value ov-pricing-sm" style="color:var(--green)">+£${_s.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>` : ''; })() : ""}
                   </div>
                   ${hasQuote ? `<div class="ov-quote-ref">Quote ID: <strong>${lead.quote_id}</strong></div>` : ""}
                 </div>` : ""}
@@ -1166,7 +1166,7 @@
       const fPct     = Math.round(((simFixed - minFixed) / (maxFixed - minFixed)) * 100);
       const rZone    = simRate < 1.5 ? "var(--green)" : simRate < 2.5 ? "var(--amber)" : "var(--red)";
 
-      const fmt2 = (n) => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const fmt2 = (n) => (n < 0 ? "-£" : "£") + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const fmtK = (n) => { const a = Math.abs(n); if (a >= 1e6) return "£" + (a / 1e6).toFixed(2) + "m"; if (a >= 1e3) return "£" + (a / 1e3).toFixed(1) + "k"; return "£" + a.toFixed(2); };
 
       return `
@@ -1271,8 +1271,8 @@
             </div>
 
             ${overviewSaving !== null ? `
-            <div class="lf-op-save-banner">
-              <span class="lf-op-save-lbl">Estimated Monthly Saving</span>
+            <div class="lf-op-save-banner" style="${overviewSaving < 0 ? 'background:var(--amber-lt);color:var(--amber)' : ''}">
+              <span class="lf-op-save-lbl">${overviewSaving < 0 ? "Estimated Monthly Loss" : "Estimated Monthly Saving"}</span>
               <div class="lf-op-save-vals">
                 <strong>${fmt2(overviewSaving)} / month</strong>
                 <strong>${fmt2(overviewSaving * 12)} / year</strong>
@@ -2088,7 +2088,7 @@
         const curPay  = simCurFees > 0 ? simCurFees : (curRate && vol > 0 ? (curRate / 100) * vol : null);
         const save    = curPay !== null ? Math.max(0, curPay - rev) : 0;
 
-        const fmt2 = (n) => "£" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const fmt2 = (n) => (n < 0 ? "-£" : "£") + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
         if (q("lf-sim-out-cost"))  q("lf-sim-out-cost").textContent  = vol > 0 ? fmt2(rev)  : "—";
         if (q("lf-sim-out-eff"))   q("lf-sim-out-eff").textContent   = effR;
