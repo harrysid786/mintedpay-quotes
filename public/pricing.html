@@ -1612,6 +1612,14 @@ function parseCSV(text, fileName) {
     ).trim();
     const k = cardClassRaw ? classCard(cardClassRaw) : "mixed";
     if(!cardData[k])cardData[k]={vol:0,cnt:0};cardData[k].vol+=a;cardData[k].cnt++;
+    // ─────────────────────────────────────────────────────────────
+    // EEA CLASSIFICATION RULE — DO NOT MODIFY
+    // UK + EEA cards are domestic for pricing (Adyen rule: shared
+    // interchange tier). Only non-EEA countries count toward intlVol.
+    // EEA_COUNTRIES set is the single source of truth — see definition
+    // earlier in this file. Do NOT change this classification logic.
+    // Regression: see runEeaClassificationTest() — must return ok:true.
+    // ─────────────────────────────────────────────────────────────
     if(colMap.country){const c=(r[colMap.country]||"").trim().toUpperCase();if(c){cpop++;if(c!=="GB"&&c!=="GBR"&&c!=="UK"&&!EEA_COUNTRIES.has(c))intlVol+=a}}
     // ── Presentment currency international detection (Shopify / FX CSVs) ──
     else if(colMap.presentmentCurrency){
@@ -1695,6 +1703,53 @@ function parseCSV(text, fileName) {
     if(acc.cnt > 0) segmentData.push({key, label:SEG_LABELS[key], vol:Number(acc.vol.toFixed(2)), cnt:acc.cnt, theirFees:Number(acc.fees.toFixed(2))});
   }
   return { vol: Number(vol.toFixed(2)), cnt, cur: Number(fees.toFixed(2)), debitFrac: Number(debitFrac.toFixed(4)), intlFrac, currentRate: Number(currentRate.toFixed(4)), cardData, processor: detectProcessor(fileName, rawH), segmentData, spanMonths, annualVol, dateRangeLabel };
+}
+
+// EEA classification regression test — guards against re-introduction of the EEA-as-intl bug.
+// Callable manually from devtools console: runEeaClassificationTest()
+// Returns { ok: true, intlFrac: 0.25, ... } on pass, or { ok: false, reason } on fail.
+function runEeaClassificationTest() {
+  if (typeof parseCSV !== "function") return { ok: false, reason: "parseCSV not defined" };
+  if (typeof EEA_COUNTRIES === "undefined") return { ok: false, reason: "EEA_COUNTRIES not defined" };
+  // Sanity: EEA set must include DE and FR
+  if (!EEA_COUNTRIES.has("DE") || !EEA_COUNTRIES.has("FR")) {
+    return { ok: false, reason: "EEA_COUNTRIES missing DE or FR" };
+  }
+  // Sanity: EEA set must NOT include US/GB
+  if (EEA_COUNTRIES.has("US") || EEA_COUNTRIES.has("GB")) {
+    return { ok: false, reason: "EEA_COUNTRIES wrongly includes US or GB" };
+  }
+  // Input: 1 GB + 1 DE + 1 FR + 1 US, all credit, equal £100 each
+  // Header uses "Card Country" (Stripe-style) so colMap.country resolves.
+  const csv = [
+    "amount,currency,fee,Card Country,card_brand,card_funding,type",
+    "100,gbp,2,GB,visa,credit,charge",
+    "100,eur,2,DE,visa,credit,charge",
+    "100,eur,2,FR,visa,credit,charge",
+    "100,usd,2,US,visa,credit,charge"
+  ].join("\n");
+  let result;
+  try { result = parseCSV(csv, "eea-test.csv"); } catch (e) { return { ok: false, reason: "parseCSV threw: " + e.message }; }
+  if (!result) return { ok: false, reason: "parseCSV returned null/undefined" };
+  // Expected: intlFrac = 0.25 (1 of 4 transactions is non-EEA international)
+  const tolerance = 0.001;
+  const intlFracOk = result.intlFrac !== null && Math.abs(result.intlFrac - 0.25) < tolerance;
+  // EEA segment must exist (display) but its volume must NOT be in intlVol
+  // We can verify by checking total non-GB volume (300) vs computed intlVol (intlFrac * vol = 0.25 * 400 = 100)
+  const expectedIntlVol = result.vol * 0.25;
+  const eeaSegment = (result.segmentData || []).find(s => s.key === "eea");
+  const intlSegment = (result.segmentData || []).find(s => s.key === "international");
+  return {
+    ok: intlFracOk && eeaSegment && eeaSegment.cnt === 2 && intlSegment && intlSegment.cnt === 1,
+    intlFrac: result.intlFrac,
+    expectedIntlFrac: 0.25,
+    intlFracOk,
+    expectedIntlVol,
+    eea_segment_cnt: eeaSegment ? eeaSegment.cnt : null,
+    intl_segment_cnt: intlSegment ? intlSegment.cnt : null,
+    vol: result.vol,
+    cnt: result.cnt,
+  };
 }
 
 function readExcel(file) {
