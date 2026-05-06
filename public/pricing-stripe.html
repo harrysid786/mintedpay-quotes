@@ -1520,6 +1520,8 @@ function revealRate() {
           estimatedMonthlySaving: p.monthly_saving ? parseFloat(p.monthly_saving.toFixed(2)) : null,
           debitFrac:              p.debit_frac || 0,
           intlPercentage:         parseFloat(document.getElementById('intlInput')?.value) || 0,
+          csvIntlFrac:            csvData?.intlFrac  || null,
+          csvDebitFrac:           csvData?.debitFrac || null,
           intlRegion:             document.getElementById('intlRegionInput')?.value || null,
           currentProvider:        document.getElementById('providerInput')?.value || null,
           industry:               document.getElementById('industryInput')?.value || null,
@@ -1693,7 +1695,7 @@ function parseCSV(text, fileName) {
     ).trim();
     const k = cardClassRaw ? classCard(cardClassRaw) : "mixed";
     if(!cardData[k])cardData[k]={vol:0,cnt:0};cardData[k].vol+=a;cardData[k].cnt++;
-    if(colMap.country){const c=(r[colMap.country]||"").trim().toUpperCase();if(c){cpop++;if(c!=="GB"&&c!=="GBR"&&c!=="UK")intlVol+=a}}
+    if(colMap.country){const c=(r[colMap.country]||"").trim().toUpperCase();if(c){cpop++;if(c!=="GB"&&c!=="GBR"&&c!=="UK"&&!EEA_COUNTRIES.has(c))intlVol+=a}}
     // ── Presentment currency international detection (Shopify / FX CSVs) ──
     else if(colMap.presentmentCurrency){
       const pc=(r[colMap.presentmentCurrency]||"").trim().toUpperCase();
