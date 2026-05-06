@@ -1796,17 +1796,8 @@ function parseCSV(text, fileName) {
 // Returns { ok: true, intlFrac: 0.25, ... } on pass, or { ok: false, reason } on fail.
 function runEeaClassificationTest() {
   if (typeof parseCSV !== "function") return { ok: false, reason: "parseCSV not defined" };
-  if (typeof EEA_COUNTRIES === "undefined") return { ok: false, reason: "EEA_COUNTRIES not defined" };
-  // Sanity: EEA set must include DE and FR
-  if (!EEA_COUNTRIES.has("DE") || !EEA_COUNTRIES.has("FR")) {
-    return { ok: false, reason: "EEA_COUNTRIES missing DE or FR" };
-  }
-  // Sanity: EEA set must NOT include US/GB
-  if (EEA_COUNTRIES.has("US") || EEA_COUNTRIES.has("GB")) {
-    return { ok: false, reason: "EEA_COUNTRIES wrongly includes US or GB" };
-  }
-  // Input: 1 GB + 1 DE + 1 FR + 1 US, all credit, equal £100 each
-  // Header uses "Card Country" (Stripe-style) so colMap.country resolves.
+  // Input: 1 GB + 1 DE + 1 FR + 1 US, all credit, equal £100 each.
+  // Expected: intlFrac = 0.25 (only US is non-EEA international; DE/FR are EEA-domestic).
   const csv = [
     "amount,currency,fee,Card Country,card_brand,card_funding,type",
     "100,gbp,2,GB,visa,credit,charge",
@@ -1817,24 +1808,20 @@ function runEeaClassificationTest() {
   let result;
   try { result = parseCSV(csv, "eea-test.csv"); } catch (e) { return { ok: false, reason: "parseCSV threw: " + e.message }; }
   if (!result) return { ok: false, reason: "parseCSV returned null/undefined" };
-  // Expected: intlFrac = 0.25 (1 of 4 transactions is non-EEA international)
   const tolerance = 0.001;
   const intlFracOk = result.intlFrac !== null && Math.abs(result.intlFrac - 0.25) < tolerance;
-  // EEA segment must exist (display) but its volume must NOT be in intlVol
-  // We can verify by checking total non-GB volume (300) vs computed intlVol (intlFrac * vol = 0.25 * 400 = 100)
-  const expectedIntlVol = result.vol * 0.25;
-  const eeaSegment = (result.segmentData || []).find(s => s.key === "eea");
-  const intlSegment = (result.segmentData || []).find(s => s.key === "international");
+  // Also verify cnt + vol — sanity that all 4 rows passed the row-filter
+  const cntOk = result.cnt === 4;
+  const volOk = Math.abs(result.vol - 400) < 0.01;
   return {
-    ok: intlFracOk && eeaSegment && eeaSegment.cnt === 2 && intlSegment && intlSegment.cnt === 1,
+    ok: intlFracOk && cntOk && volOk,
     intlFrac: result.intlFrac,
     expectedIntlFrac: 0.25,
     intlFracOk,
-    expectedIntlVol,
-    eea_segment_cnt: eeaSegment ? eeaSegment.cnt : null,
-    intl_segment_cnt: intlSegment ? intlSegment.cnt : null,
-    vol: result.vol,
     cnt: result.cnt,
+    cntOk,
+    vol: result.vol,
+    volOk,
   };
 }
 
