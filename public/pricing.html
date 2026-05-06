@@ -1626,7 +1626,7 @@ function parseCSV(text, fileName) {
     // ── Presentment currency international detection (Shopify / FX CSVs) ──
     else if(colMap.presentmentCurrency){
       const pc=(r[colMap.presentmentCurrency]||"").trim().toUpperCase();
-      if(pc){cpop++;if(pc!=="GBP")intlVol+=a}
+      if(pc){cpop++;if(pc!=="GBP"&&pc!=="EUR")intlVol+=a}
     }
     // ── Segment classification ────────────────────────────────────
     {
