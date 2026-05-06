@@ -1135,6 +1135,14 @@
       const effectiveRate = vol > 0 ? ((simRev / vol) * 100).toFixed(2) : null;
       const estMrg        = (simRate - 0.46).toFixed(2);
       const mSave         = curPaying !== null ? Math.max(0, curPaying - simRev) : 0;
+      // Per-segment net saving — sum of seg.saving (incl. negatives), null/undefined skipped.
+      // Used for Customer Overview "Estimated Monthly Saving" only. Falls back to mSave when
+      // segment data is unavailable (manual entry / no CSV). Simulator continues using mSave.
+      const _segs = (p && p.segment_quotes && Array.isArray(p.segment_quotes.segments)) ? p.segment_quotes.segments : null;
+      const segmentNetSaving = (_segs && _segs.length > 0)
+        ? _segs.reduce((acc, s) => acc + (Number.isFinite(s && s.saving) ? s.saving : 0), 0)
+        : null;
+      const overviewSaving = segmentNetSaving !== null ? segmentNetSaving : mSave;
 
       // Risk badges
       const rBadge = r.riskLevel === "low" ? "lf-badge-green" : r.riskLevel === "medium" ? "lf-badge-amber" : "lf-badge-red";
@@ -1262,12 +1270,12 @@
               </div>
             </div>
 
-            ${mSave > 0 ? `
+            ${overviewSaving > 0 ? `
             <div class="lf-op-save-banner">
               <span class="lf-op-save-lbl">Estimated Monthly Saving</span>
               <div class="lf-op-save-vals">
-                <strong>${fmt2(mSave)} / month</strong>
-                <strong>${fmt2(mSave * 12)} / year</strong>
+                <strong>${fmt2(overviewSaving)} / month</strong>
+                <strong>${fmt2(overviewSaving * 12)} / year</strong>
               </div>
             </div>` : ""}
           </div>
