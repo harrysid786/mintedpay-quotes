@@ -1597,6 +1597,8 @@ function parseCSV(text, fileName) {
     if(colMap.paymentMethod){const pm=(r[colMap.paymentMethod]||"").toLowerCase().trim();if(pm&&!pm.includes("card")&&!pm.includes("credit")&&!pm.includes("visa")&&!pm.includes("master")&&!pm.includes("amex")&&!pm.includes("discover")&&!pm.includes("contactless")&&!pm.includes("chip")&&!pm.includes("swipe")&&!pm.includes("keyed")&&!pm.includes("transaction")&&!pm.includes("three_d_secure")&&pm!=="debit"&&!pm.includes("debit card"))return;}
         // Explicitly skip non-card digital wallets and bank payment methods
         if(colMap.paymentMethod){const pm2=(r[colMap.paymentMethod]||"").toLowerCase().trim();if(pm2.includes("sepa")||pm2.includes("paypal")||pm2.includes("bank_transfer")||pm2.includes("bacs"))return;}
+        // PATCH 1: Strict card filter — blank Payment Source Type means non-card row, skip
+        if(colMap.paymentMethod){const pm3=(r[colMap.paymentMethod]||"").toLowerCase().trim();if(pm3==="")return;}
     const a=pAmt(r[colMap.amount]);if(!a)return;
     if(a<minAmt)minAmt=a;
     cnt++;vol+=a;
@@ -1700,7 +1702,8 @@ function parseCSV(text, fileName) {
   const segmentData = [];
   const SEG_LABELS = {uk_debit:'UK Debit — Visa/MC',uk_credit:'UK Credit — Visa/MC',eea:'European/EEA cards',international:'International (non-EEA)',amex:'Amex'};
   for(const [key,acc] of Object.entries(segAcc)){
-    if(acc.cnt > 0) segmentData.push({key, label:SEG_LABELS[key], vol:Number(acc.vol.toFixed(2)), cnt:acc.cnt, theirFees:Number(acc.fees.toFixed(2))});
+    // PATCH 3: Hide low-confidence segments (<= 3 transactions) — statistical noise threshold
+    if(acc.cnt > 3) segmentData.push({key, label:SEG_LABELS[key], vol:Number(acc.vol.toFixed(2)), cnt:acc.cnt, theirFees:Number(acc.fees.toFixed(2))});
   }
   return { vol: Number(vol.toFixed(2)), cnt, cur: Number(fees.toFixed(2)), debitFrac: Number(debitFrac.toFixed(4)), intlFrac, currentRate: Number(currentRate.toFixed(4)), cardData, processor: detectProcessor(fileName, rawH), segmentData, spanMonths, annualVol, dateRangeLabel };
 }
