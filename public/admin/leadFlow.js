@@ -1270,7 +1270,7 @@
               </div>
             </div>
 
-            ${overviewSaving > 0 ? `
+            ${overviewSaving !== null ? `
             <div class="lf-op-save-banner">
               <span class="lf-op-save-lbl">Estimated Monthly Saving</span>
               <div class="lf-op-save-vals">
