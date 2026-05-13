@@ -1427,6 +1427,8 @@ async function submitLead() {
     csvProcessor:     csvData?.processor || null,
     csvDebitFrac:     csvData?.debitFrac  || null,
     csvIntlFrac:      csvData?.intlFrac   || null,
+
+    csvAudit:        csvData?.audit ? JSON.stringify(csvData.audit) : null,
     csvSegmentData:   (csvData?.segmentData && csvData.segmentData.length > 0) ? JSON.stringify(csvData.segmentData) : null,
         segmentQuotes: (pricingResult && pricingResult.segment_quotes && pricingResult.segment_quotes.segments && pricingResult.segment_quotes.segments.length > 0) ? JSON.stringify(pricingResult.segment_quotes) : null,
     painPoints:       `Submitted via public pricing tool. Merchant type: ${selectedType}.${provider ? " Current provider: " + provider + "." : ""}${saving ? " Indicative saving: £" + saving.toFixed(0) + "/mo." : ""}${_industryLabel ? " Industry: " + _industryLabel + " (" + (_industryStatus || "allowed") + ")." : ""}${(parseFloat(document.getElementById("curRateInput")?.value)||0) > 0 ? " Current rate entered: " + document.getElementById("curRateInput").value + "% + " + (document.getElementById("curFixedInput")?.value||"0") + "p/tx." : ""}`,
@@ -1521,6 +1523,8 @@ function revealRate() {
           debitFrac:              p.debit_frac || 0,
           intlPercentage:         parseFloat(document.getElementById('intlInput')?.value) || 0,
           csvIntlFrac:            csvData?.intlFrac  || null,
+
+          csvAudit:        csvData?.audit ? JSON.stringify(csvData.audit) : null,
           csvDebitFrac:           csvData?.debitFrac || null,
           intlRegion:             document.getElementById('intlRegionInput')?.value || null,
           currentProvider:        document.getElementById('providerInput')?.value || null,
@@ -1664,6 +1668,9 @@ function parseCSV(text, fileName) {
   let vol=0,cnt=0,fees=0,intlVol=0,cpop=0,minAmt=Infinity;
   const cardData={};
   // ── Segment accumulators ──────────────────────────────────────────
+  // PATCH: ISO whitelists for strict country/currency validation
+  const ISO_COUNTRIES = new Set(['GB','GBR','UK','IE','FR','DE','ES','IT','NL','BE','LU','AT','PT','FI','GR','CY','MT','EE','LV','LT','SK','SI','DK','SE','PL','CZ','HU','RO','BG','HR','IS','LI','NO','US','USA','CA','AU','NZ','CH','JP','CN','HK','SG','AE','IN','BR','MX','ZA','IL','TR','KR','TH','MY','ID','PH','VN','SA','QA','KW','BH','OM','EG','NG','KE','MA','AR','CL','CO','PE','TW','RU','UA']);
+  const ISO_CURRENCIES = new Set(['GBP','EUR','USD','CAD','AUD','NZD','CHF','JPY','CNY','HKD','SGD','AED','INR','BRL','MXN','ZAR','ILS','TRY','KRW','THB','MYR','IDR','PHP','VND','SAR','QAR','KWD','BHD','OMR','EGP','NGN','KES','MAD','ARS','CLP','COP','PEN','TWD','RUB','UAH','SEK','NOK','DKK','PLN','CZK','HUF','RON','BGN','HRK','ISK']);
   const EEA_COUNTRIES = new Set(['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO']);
   const segAcc = {
     uk_debit:      {vol:0,cnt:0,fees:0},
@@ -1673,18 +1680,28 @@ function parseCSV(text, fileName) {
     amex:          {vol:0,cnt:0,fees:0},
   };
   let _minDate = null; let _maxDate = null; // date range tracking
+  // PATCH: parseCSV audit object
+  const audit = {
+    detectedColumns: { ...colMap },
+    rowsTotal: 0,
+    rowsAccepted: 0,
+    rowsRejected: { statusFilter: 0, notCard: 0, invalidAmount: 0 },
+    segmentsClassified: {},
+    intlClassificationSource: null
+  };
   rows.forEach(r=>{
-    if(colMap.rowType){const t=(r[colMap.rowType]||"").toUpperCase().trim();if(t&&!["CHARGE","PAYMENT","SALE","TRANSACTION","DEBIT","SETTLED","CAPTURE",""].includes(t))return}
-    if(colMap.outcome){const o=(r[colMap.outcome]||"").toUpperCase().trim();if(o&&!["AUTHORISED","AUTHORIZED","APPROVED","SUCCESS","SETTLED","CAPTURED","COMPLETE","COMPLETED","SUCCEEDED","PAID",""].includes(o))return}
+    audit.rowsTotal++;
+    if(colMap.rowType){const t=(r[colMap.rowType]||"").toUpperCase().trim();if(t&&!["CHARGE","PAYMENT","SALE","TRANSACTION","DEBIT","SETTLED","CAPTURE",""].includes(t)){audit.rowsRejected.statusFilter++;return}}
+    if(colMap.outcome){const o=(r[colMap.outcome]||"").toUpperCase().trim();if(o&&!["AUTHORISED","AUTHORIZED","APPROVED","SUCCESS","SETTLED","CAPTURED","COMPLETE","COMPLETED","SUCCEEDED","PAID",""].includes(o)){audit.rowsRejected.statusFilter++;return}}
     // Skip non-card payment methods (Klarna, iDEAL, PayPal, bank transfer etc)
-    if(colMap.paymentMethod){const pm=(r[colMap.paymentMethod]||"").toLowerCase().trim();if(pm&&!pm.includes("card")&&!pm.includes("credit")&&!pm.includes("visa")&&!pm.includes("master")&&!pm.includes("amex")&&!pm.includes("discover")&&!pm.includes("contactless")&&!pm.includes("chip")&&!pm.includes("swipe")&&!pm.includes("keyed")&&!pm.includes("transaction")&&!pm.includes("three_d_secure")&&pm!=="debit"&&!pm.includes("debit card"))return;}
+    if(colMap.paymentMethod){const pm=(r[colMap.paymentMethod]||"").toLowerCase().trim();if(pm&&!pm.includes("card")&&!pm.includes("credit")&&!pm.includes("visa")&&!pm.includes("master")&&!pm.includes("amex")&&!pm.includes("discover")&&!pm.includes("contactless")&&!pm.includes("chip")&&!pm.includes("swipe")&&!pm.includes("keyed")&&!pm.includes("transaction")&&!pm.includes("three_d_secure")&&pm!=="debit"&&!pm.includes("debit card")){audit.rowsRejected.notCard++;return;}}
         // Explicitly skip non-card digital wallets and bank payment methods
-        if(colMap.paymentMethod){const pm2=(r[colMap.paymentMethod]||"").toLowerCase().trim();if(pm2.includes("sepa")||pm2.includes("paypal")||pm2.includes("bank_transfer")||pm2.includes("bacs"))return;}
+        if(colMap.paymentMethod){const pm2=(r[colMap.paymentMethod]||"").toLowerCase().trim();if(pm2.includes("sepa")||pm2.includes("paypal")||pm2.includes("bank_transfer")||pm2.includes("bacs")){audit.rowsRejected.notCard++;return;}}
         // PATCH 1: Strict card filter — blank Payment Source Type means non-card row, skip
-        if(colMap.paymentMethod){const pm3=(r[colMap.paymentMethod]||"").toLowerCase().trim();if(pm3==="")return;}
-    const a=pAmt(r[colMap.amount]);if(!a)return;
+        if(colMap.paymentMethod){const pm3=(r[colMap.paymentMethod]||"").toLowerCase().trim();if(pm3===""){audit.rowsRejected.notCard++;return;}}
+    const a=pAmt(r[colMap.amount]);if(!a){audit.rowsRejected.invalidAmount++;return;}
     if(a<minAmt)minAmt=a;
-    cnt++;vol+=a;
+    cnt++;vol+=a;audit.rowsAccepted++;
     if(colMap.date&&r[colMap.date]){try{const _d2=new Date(r[colMap.date].substring(0,10));if(!isNaN(_d2.getTime())){if(!_minDate||_d2<_minDate)_minDate=_d2;if(!_maxDate||_d2>_maxDate)_maxDate=_d2;}}catch(e){}}
     const fv=colMap.fee?(pAmt(r[colMap.fee])||0):0;if(fv)fees+=fv;
     // Combine cardScheme + cardFunding + cardType for richest classification.
@@ -1705,11 +1722,11 @@ function parseCSV(text, fileName) {
     // earlier in this file. Do NOT change this classification logic.
     // Regression: see runEeaClassificationTest() — must return ok:true.
     // ─────────────────────────────────────────────────────────────
-    if(colMap.country){const c=(r[colMap.country]||"").trim().toUpperCase();if(c){cpop++;if(c!=="GB"&&c!=="GBR"&&c!=="UK"&&!EEA_COUNTRIES.has(c))intlVol+=a}}
+    if(colMap.country){const c=(r[colMap.country]||"").trim().toUpperCase();if(c){cpop++;if(ISO_COUNTRIES.has(c)){if(c!=="GB"&&c!=="GBR"&&c!=="UK"&&!EEA_COUNTRIES.has(c))intlVol+=a;audit.intlClassificationSource="country_column";}}}
     // ── Presentment currency international detection (Shopify / FX CSVs) ──
     else if(colMap.presentmentCurrency){
       const pc=(r[colMap.presentmentCurrency]||"").trim().toUpperCase();
-      if(pc){cpop++;if(pc!=="GBP"&&pc!=="EUR")intlVol+=a}
+      if(pc){cpop++;if(ISO_CURRENCIES.has(pc)){if(pc!=="GBP"&&pc!=="EUR")intlVol+=a;if(audit.intlClassificationSource===null)audit.intlClassificationSource="presentment_currency_fallback";}}
     }
     // ── Segment classification ────────────────────────────────────
     {
@@ -1783,12 +1800,14 @@ function parseCSV(text, fileName) {
   const intlFrac=(colMap.country||colMap.presentmentCurrency)&&coverage>=0.8?Math.round(intlVol/vol*10000)/10000:null;
   // Build segment_data array for server (only include segments with data)
   const segmentData = [];
+  // PATCH: populate segmentsClassified from segAcc (cnt by key)
+  for(const [k, acc] of Object.entries(segAcc)){ audit.segmentsClassified[k] = acc.cnt; }
   const SEG_LABELS = {uk_debit:'UK Debit — Visa/MC',uk_credit:'UK Credit — Visa/MC',eea:'European/EEA cards',international:'International (non-EEA)',amex:'Amex'};
   for(const [key,acc] of Object.entries(segAcc)){
     // PATCH 3: Hide low-confidence segments (<= 3 transactions) — statistical noise threshold
     if(acc.cnt > 3) segmentData.push({key, label:SEG_LABELS[key], vol:Number(acc.vol.toFixed(2)), cnt:acc.cnt, theirFees:Number(acc.fees.toFixed(2))});
   }
-  return { vol: Number(vol.toFixed(2)), cnt, cur: Number(fees.toFixed(2)), debitFrac: Number(debitFrac.toFixed(4)), intlFrac, currentRate: Number(currentRate.toFixed(4)), cardData, processor: detectProcessor(fileName, rawH), segmentData, spanMonths, annualVol, dateRangeLabel };
+  return { vol: Number(vol.toFixed(2)), cnt, cur: Number(fees.toFixed(2)), debitFrac: Number(debitFrac.toFixed(4)), intlFrac, currentRate: Number(currentRate.toFixed(4)), cardData, processor: detectProcessor(fileName, rawH), segmentData, spanMonths, annualVol, dateRangeLabel, audit };
 }
 
 // EEA classification regression test — guards against re-introduction of the EEA-as-intl bug.
