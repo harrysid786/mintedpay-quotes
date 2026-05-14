@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v3 migration WIP - do not link from production yet (A2 corrective - geometry+contrast fixes) -->
+<!-- v3 migration WIP - do not link from production yet (A3 - shell layout restyle) -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -51,7 +51,7 @@ body.brand-ummah .tab.on{background:#00273A}
 body.brand-ummah .type-card:hover{border-color:#00273A;background:#e6eff2}
 body.brand-ummah .type-card.selected{border-color:#00273A;background:#e6eff2;box-shadow:0 0 0 3px rgba(0,39,58,.12)}
 body.brand-ummah .dz:hover,.brand-ummah .dz.over{border-color:#00273A;background:#e6eff2}
-body.brand-ummah .progress-fill{background:#00273A}
+body.brand-ummah .progress-fill{background:var(--brand);height:100%;border-radius:999px;transition:width .3s ease}
 body.brand-ummah .confirm-row-v{color:#00273A}
 body.brand-ummah .confirm-step-num{background:#00273A}
 body.brand-ummah .csv-summary{background:#e6eff2;border-color:#a0bec8}
@@ -63,24 +63,24 @@ html{scroll-behavior:smooth}
 body{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--wash);color:var(--ink);-webkit-font-smoothing:antialiased}
 
 /* ── TOP BAR ── */
-.topbar{background:var(--white);border-bottom:1px solid var(--line);height:60px;display:flex;align-items:center;padding:0 clamp(16px,4vw,40px);position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.wordmark{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.5px}
+.topbar{background:var(--wash);border-bottom:1px solid var(--line);height:60px;display:flex;align-items:center;padding:0 clamp(16px,4vw,40px);position:sticky;top:0;z-index:100;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+.wordmark{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--ink)}
 .wordmark em{color:var(--brand);font-style:normal}
 
 /* ── HERO ── */
-.hero{text-align:center;padding:40px 24px 24px}
-.hero h1{font-family:'Syne',sans-serif;font-size:clamp(26px,5vw,40px);font-weight:800;letter-spacing:-1px;line-height:1.15;margin-bottom:10px}
+.hero{text-align:center;padding:64px 24px 32px}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(28px,5vw,42px);font-weight:800;letter-spacing:-.8px;line-height:1.1;margin-bottom:12px;color:var(--ink)}
 .hero h1 em{color:var(--brand);font-style:normal}
-.hero p{font-size:15px;color:var(--slate);max-width:480px;margin:0 auto;line-height:1.6}
+.hero p{font-size:15px;color:var(--slate);max-width:520px;margin:0 auto;line-height:1.55}
 
 /* ── PROGRESS BAR ── */
-.progress-wrap{max-width:580px;margin:0 auto 16px;padding:0 16px}
-.progress-track{background:var(--line);border-radius:4px;height:4px;overflow:hidden}
+.progress-wrap{max-width:580px;margin:0 auto 24px;padding:0 16px}
+.progress-track{background:var(--line);border-radius:999px;height:6px;overflow:hidden}
 .progress-fill{background:var(--brand);height:100%;border-radius:4px;transition:width .4s ease}
-.progress-label{font-size:11px;color:var(--mute);margin-top:6px;text-align:right}
+.progress-label{font-size:12px;color:var(--mute);margin-top:8px;text-align:right;letter-spacing:.2px}
 
 /* ── CARD ── */
-.card{background:var(--white);border:1px solid var(--line);border-radius:14px;max-width:580px;margin:0 auto 60px;padding:36px 32px;box-shadow:0 4px 24px rgba(0,0,0,.04)}
+.card{background:var(--white);border:1px solid var(--line);border-radius:16px;max-width:580px;margin:0 auto 60px;padding:36px 32px;box-shadow:0 8px 32px rgba(0,0,0,.05)}
 .step{display:none}.step.active{display:block;animation:fadeUp .3s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .step-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--brand);margin-bottom:6px}
@@ -250,7 +250,7 @@ body{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe 
 
 /* ── MISC ── */
 .error-box{background:var(--red-lt);border:1px solid var(--red-bd);border-radius:var(--r);padding:14px 16px;margin-bottom:18px;font-size:13px;color:var(--red);display:none}
-.footer{text-align:center;padding:24px;font-size:12px;color:var(--mute)}
+.footer{text-align:center;padding:32px 24px;font-size:12px;color:var(--mute);border-top:1px solid var(--line)}
 .footer a{color:var(--brand);text-decoration:none}
 .provider-msg{font-size:12px;color:var(--brand);font-weight:500;margin-top:5px;display:none}
 
