@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v3 migration WIP - do not link from production yet (commit A0 baseline clone) -->
+<!-- v3 migration WIP - do not link from production yet (A1 - token aliases additive) -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -15,6 +15,26 @@
   --red:#dc2626;--red-lt:#fef2f2;--red-bd:#fca5a5;
   --amber:#b45309;--amber-lt:#fef3c7;--amber-bd:#fcd34d;
   --r:10px;
+  /* v3 A1: v2 token aliases - map v2 semantic names to existing legacy values. No visual change. */
+  --mp-surface-wash:     var(--wash);
+  --mp-surface-white:    var(--white);
+  --mp-border-subtle:    var(--line);
+  --mp-text-primary:     var(--ink);
+  --mp-text-secondary:   var(--slate);
+  --mp-text-muted:       var(--mute);
+  --mp-radius:           var(--r);
+  --mp-accent:           var(--brand);
+  --mp-accent-soft:      var(--brand-lt);
+  --mp-accent-glow:      var(--brand-glow);
+  --mp-success:          var(--green);
+  --mp-success-soft:     var(--green-lt);
+  --mp-success-border:   var(--green-bd);
+  --mp-danger:           var(--red);
+  --mp-danger-soft:      var(--red-lt);
+  --mp-danger-border:    var(--red-bd);
+  --mp-warning:          var(--amber);
+  --mp-warning-soft:     var(--amber-lt);
+  --mp-warning-border:   var(--amber-bd);
 }
 body.brand-ummah{--brand:#00273A;--brand-lt:#e6eff2;--brand-glow:rgba(0,39,58,.12)}
 body.brand-ummah .btn-primary{background:#00273A}
