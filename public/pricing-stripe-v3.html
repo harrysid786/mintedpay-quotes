@@ -1,19 +1,23 @@
 <!DOCTYPE html>
-<!-- v3 migration WIP - do not link from production yet (A1 - token aliases additive) -->
+<!-- v3 migration WIP - do not link from production yet (A2 - typography + token palette) -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="pageTitle">Get Your Rate — MintedPay (Stripe)</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --ink:#0a0a0a;--slate:#475569;--mute:#94a3b8;--line:#e2e8f0;--wash:#f8fafc;--white:#fff;
-  --brand:#4b2afd;--brand-lt:#f0edff;--brand-glow:rgba(75,42,253,.12);
-  --green:#059669;--green-lt:#ecfdf5;--green-bd:#a7f3d0;
-  --red:#dc2626;--red-lt:#fef2f2;--red-bd:#fca5a5;
-  --amber:#b45309;--amber-lt:#fef3c7;--amber-bd:#fcd34d;
+  /* A2: v2 palette migration. Var names preserved; values updated. */
+  --ink:#1F1F1F;--slate:#455962;--mute:#B7C7CD;--line:#E3EDF1;--wash:#F8F5F0;--white:#FFFFFF;
+  --brand:#E86C2B;--brand-lt:#FDEEE3;--brand-glow:rgba(232,108,43,.12);
+  --green:#16A34A;--green-lt:#DCFCE7;--green-bd:#86EFAC;
+  --red:#DC2626;--red-lt:#FEE2E2;--red-bd:#FCA5A5;
+  --amber:#B84E1F;--amber-lt:#FEFCE8;--amber-bd:#FCD34D;
   --r:10px;
   /* v3 A1: v2 token aliases - map v2 semantic names to existing legacy values. No visual change. */
   --mp-surface-wash:     var(--wash);
@@ -56,7 +60,7 @@ body.brand-ummah .eligibility-check input[type=checkbox]{accent-color:#00273A}
 body.brand-ummah #ummahLogo{display:inline-flex!important;align-items:center}
 body.brand-ummah #brandWordmark{display:none!important}
 html{scroll-behavior:smooth}
-body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-webkit-font-smoothing:antialiased}
+body{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--wash);color:var(--ink);-webkit-font-smoothing:antialiased}
 
 /* ── TOP BAR ── */
 .topbar{background:var(--white);border-bottom:1px solid var(--line);height:60px;display:flex;align-items:center;padding:0 clamp(16px,4vw,40px);position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.04)}
@@ -101,7 +105,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--wash);color:var(--ink);-w
 .field-select:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-glow)}
 
 /* ── BUTTONS ── */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 28px;border-radius:var(--r);font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;border:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 28px;border-radius:var(--r);font-size:15px;font-weight:700;font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;cursor:pointer;transition:all .15s;border:none}
 .btn-primary{background:var(--brand);color:var(--white)}
 .btn-primary:hover:not(:disabled){background:#3b1ee0;transform:translateY(-1px);box-shadow:0 6px 20px rgba(75,42,253,.25)}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
