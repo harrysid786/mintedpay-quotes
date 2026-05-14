@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v3 migration WIP - do not link from production yet (A3 corrective - progress-fill rules) -->
+<!-- v3 migration WIP - do not link from production yet (A4a - step1 typography + spacing) -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -83,9 +83,9 @@ body{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe 
 .card{background:var(--white);border:1px solid var(--line);border-radius:16px;max-width:580px;margin:0 auto 60px;padding:36px 32px;box-shadow:0 8px 32px rgba(0,0,0,.05)}
 .step{display:none}.step.active{display:block;animation:fadeUp .3s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.step-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--brand);margin-bottom:6px}
-.step-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:-.3px}
-.step-sub{font-size:14px;color:var(--slate);margin-bottom:22px;line-height:1.5}
+.step-label{font-size:12px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink);margin-bottom:12px}
+.step-title{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:32px;font-weight:500;line-height:1.15;margin-bottom:8px;color:var(--ink)}
+.step-sub{font-size:16px;color:var(--slate);margin-bottom:32px;line-height:1.5}
 
 /* ── FIELDS ── */
 .field{margin-bottom:16px}
@@ -207,7 +207,7 @@ body{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe 
 /* ── STRIPE CONNECT ── */
 .stripe-connect-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;background:#635bff;color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;margin-bottom:12px}
 .stripe-connect-btn:hover{background:#4f49cc;transform:translateY(-1px);box-shadow:0 6px 20px rgba(99,91,255,.3)}
-.stripe-divider{display:flex;align-items:center;gap:12px;margin-bottom:14px;color:var(--mute);font-size:12px}
+.stripe-divider{display:flex;align-items:center;gap:12px;margin-top:32px;margin-bottom:24px;color:var(--mute);font-size:13px;font-weight:500}
 .stripe-divider::before,.stripe-divider::after{content:'';flex:1;height:1px;background:var(--line)}
 .stripe-error-box{background:var(--red-lt);border:1px solid var(--red-bd);border-radius:var(--r);padding:12px 14px;font-size:13px;color:var(--red);margin-bottom:14px;display:none}
 .stripe-success-pill{display:inline-flex;align-items:center;gap:6px;background:var(--green-lt);border:1px solid var(--green-bd);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--green);margin-bottom:14px}
