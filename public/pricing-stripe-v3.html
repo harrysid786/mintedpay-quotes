@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v3 migration WIP - do not link from production yet (A2 - typography + token palette) -->
+<!-- v3 migration WIP - do not link from production yet (A2 corrective - geometry+contrast fixes) -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -13,7 +13,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   /* A2: v2 palette migration. Var names preserved; values updated. */
-  --ink:#1F1F1F;--slate:#455962;--mute:#B7C7CD;--line:#E3EDF1;--wash:#F8F5F0;--white:#FFFFFF;
+  --ink:#1F1F1F;--slate:#455962;--mute:#7E8E95;--line:#D0D8DD;--wash:#F8F5F0;--white:#FFFFFF;
   --brand:#E86C2B;--brand-lt:#FDEEE3;--brand-glow:rgba(232,108,43,.12);
   --green:#16A34A;--green-lt:#DCFCE7;--green-bd:#86EFAC;
   --red:#DC2626;--red-lt:#FEE2E2;--red-bd:#FCA5A5;
@@ -130,7 +130,7 @@ body{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe 
 .dz:hover,.dz.over{border-color:var(--brand);background:var(--brand-lt)}
 .dz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .dz-icon{font-size:28px;display:block;margin-bottom:8px}
-.dz-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:3px}
+.dz-title{font-size:14px;font-weight:600;line-height:1.5;color:var(--ink);margin-bottom:3px}
 .dz-sub{font-size:12px;color:var(--mute)}
 .trust-row{display:flex;justify-content:center;gap:16px;padding:4px 0 12px;font-size:11px;color:var(--green);flex-wrap:wrap}
 .file-ok{display:flex;align-items:center;gap:10px;background:var(--green-lt);border:1px solid var(--green-bd);border-radius:var(--r);padding:10px 14px;margin-bottom:14px}
