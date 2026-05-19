@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v3 migration WIP - do not link from production yet (A4d-2 - bare .field input font cascade fix) -->
+<!-- v3 migration WIP - do not link from production yet (A4e - CSV summary visual treatment) -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -54,8 +54,8 @@ body.brand-ummah .dz:hover,.brand-ummah .dz.over{border-color:#00273A;background
 body.brand-ummah .progress-fill{background:#00273A}
 body.brand-ummah .confirm-row-v{color:#00273A}
 body.brand-ummah .confirm-step-num{background:#00273A}
-body.brand-ummah .csv-summary{background:#e6eff2;border-color:#a0bec8}
-body.brand-ummah .csv-summary-title{color:#00273A}
+body.brand-ummah .csv-summary{background:var(--white);border-color:#D8E8EE}
+
 body.brand-ummah .eligibility-check input[type=checkbox]{accent-color:#00273A}
 body.brand-ummah #ummahLogo{display:inline-flex!important;align-items:center}
 body.brand-ummah #brandWordmark{display:none!important}
@@ -137,14 +137,14 @@ body{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe 
 .file-ok-name{font-size:13px;font-weight:600;color:var(--green)}
 .file-ok-rows{font-size:12px;color:var(--slate)}
 .hidden{display:none!important}
-.csv-summary{background:var(--brand-lt);border:1px solid #c4b5fd;border-radius:var(--r);padding:14px 16px;margin-bottom:16px}
-.csv-summary-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--brand);margin-bottom:8px}
-.csv-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
-.csv-row-k{color:var(--slate)}.csv-row-v{font-weight:700;color:var(--ink)}
+.csv-summary{background:var(--white);border:1px solid #D8E8EE;border-radius:12px;padding:20px;margin-bottom:16px}
+.csv-summary-title{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;font-weight:600;color:var(--ink);margin-bottom:16px}
+.csv-row{display:flex;justify-content:space-between;padding:6px 0;font-size:14px;font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+.csv-row-k{color:var(--slate);font-size:14px;font-weight:400}.csv-row-v{font-weight:500;color:var(--ink)}
 .csv-rate-highlight{font-weight:700;color:var(--red)!important;font-size:15px!important}
-.card-mix-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin:8px 0 6px;background:var(--line)}
+.card-mix-bar{display:flex;height:8px;border-radius:999px;overflow:hidden;margin:8px 0 6px;background:var(--line)}
 .card-mix-bar div{height:100%}
-.card-mix-legend{display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--slate)}
+.card-mix-legend{display:flex;flex-wrap:wrap;gap:8px;font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:12px;color:var(--slate)}
 .card-mix-legend span{display:inline-flex;align-items:center;gap:4px}
 .card-mix-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
 .csv-error{background:var(--red-lt);border:1px solid var(--red-bd);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--red);display:none}
@@ -231,7 +231,7 @@ body{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe 
 .blur-figures .card-mix-bar,
 .blur-figures .card-mix-legend,
 .blur-figures .card-mix-dot { filter:none; } /* card mix stays visible */
-.csv-unlock-banner { background:var(--brand-lt); border:1px solid #c4b5fd; border-radius:var(--r); padding:12px 16px; margin-top:12px; text-align:center; font-size:13px; color:var(--brand); font-weight:500; }
+.csv-unlock-banner { background:var(--brand-lt); border:1px solid #c4b5fd; border-radius:12px; padding:12px 16px; margin-top:12px; text-align:center; font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif; font-size:14px; color:var(--brand); font-weight:500; }
 .rate-blur-wrap { position:relative; }
 .rate-blur-content { filter:blur(6px); pointer-events:none; user-select:none; transition:filter .5s ease; }
 .rate-blur-content.revealed { filter:none; pointer-events:auto; user-select:auto; }
