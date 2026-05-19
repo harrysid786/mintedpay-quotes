@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v3 migration WIP - do not link from production yet (A4d - manual-entry form visual) -->
+<!-- v3 migration WIP - do not link from production yet (A4d-1 - manual-entry pfx-wrap input font cascade fix) -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -100,7 +100,7 @@ body{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe 
 .pfx-wrap{display:flex;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;transition:border .15s}
 .pfx-wrap:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-glow)}
 .pfx{background:var(--wash);border-right:1px solid var(--line);padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:var(--slate);font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
-.pfx-wrap input{border:none;flex:1;padding:12px 14px;font-size:15px;font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);outline:none;background:transparent}
+.pfx-wrap input{border:none;flex:1;padding:12px 14px;font-size:15px;font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);outline:none;background:transparent}#step1 .pfx-wrap input{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
 .field-select{width:100%;padding:11px 14px;border:1.5px solid var(--line);border-radius:var(--r);font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--white);outline:none;cursor:pointer;transition:border .15s;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}#step1 .field-select{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;border-radius:12px}
 .field-select:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-glow)}
 
