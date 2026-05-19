@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v3 migration WIP - do not link from production yet (A4b - Stripe surface visual treatment) -->
+<!-- v3 migration WIP - do not link from production yet (A4c - upload surface + tabs visual) -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -109,7 +109,7 @@ body{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe 
 .btn-primary{background:var(--brand);color:var(--white)}
 .btn-primary:hover:not(:disabled){background:#3b1ee0;transform:translateY(-1px);box-shadow:0 6px 20px rgba(75,42,253,.25)}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
-.btn-secondary{background:var(--white);color:var(--ink);border:1.5px solid var(--line)}
+.btn-secondary{background:var(--white);color:var(--ink);border:1.5px solid var(--line)}#csvFallback .btn-secondary{background:transparent;color:var(--brand);border:1.5px solid var(--brand);border-radius:999px;padding:8px 20px;font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;font-weight:600}
 .btn-secondary:hover{border-color:var(--ink)}
 .btn-row{display:flex;gap:10px;margin-top:24px;align-items:center}
 
@@ -123,17 +123,17 @@ body{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe 
 .type-sub{font-size:11px;color:var(--mute);margin-top:3px;line-height:1.4}
 
 /* ── UPLOAD / CSV ── */
-.tabs{display:flex;border:1.5px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:20px}
-.tab{flex:1;padding:11px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;background:var(--white);color:var(--slate);border:none;font-family:'DM Sans',sans-serif;transition:all .15s}
+.tabs{display:flex;border:1.5px solid var(--line);border-radius:999px;overflow:hidden;margin-bottom:20px}
+.tab{flex:1;padding:11px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;background:var(--white);color:var(--slate);border:none;font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;transition:all .15s}
 .tab.on{background:var(--brand);color:var(--white)}
-.dz{border:2px dashed var(--line);border-radius:var(--r);background:var(--wash);padding:28px 16px;text-align:center;cursor:pointer;transition:all .2s;position:relative;margin-bottom:8px}
+.dz{border:2px dashed #D8E8EE;border-radius:12px;background:var(--wash);padding:28px 16px;text-align:center;cursor:pointer;transition:all .2s;position:relative;margin-bottom:8px}
 .dz:hover,.dz.over{border-color:var(--brand);background:var(--brand-lt)}
 .dz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .dz-icon{font-size:28px;display:block;margin-bottom:8px}
-.dz-title{font-size:14px;font-weight:600;line-height:1.5;color:var(--ink);margin-bottom:3px}
-.dz-sub{font-size:12px;color:var(--mute)}
+.dz-title{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;font-weight:600;line-height:1.5;color:var(--ink);margin-bottom:3px}
+.dz-sub{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--slate)}
 .trust-row{display:flex;justify-content:center;gap:16px;padding:4px 0 12px;font-size:11px;color:var(--green);flex-wrap:wrap}
-.file-ok{display:flex;align-items:center;gap:10px;background:var(--green-lt);border:1px solid var(--green-bd);border-radius:var(--r);padding:10px 14px;margin-bottom:14px}
+.file-ok{display:flex;align-items:center;gap:10px;background:var(--green-lt);border:1px solid var(--green-bd);border-radius:12px;padding:12px 16px;font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;font-weight:500;margin-bottom:14px}
 .file-ok-name{font-size:13px;font-weight:600;color:var(--green)}
 .file-ok-rows{font-size:12px;color:var(--slate)}
 .hidden{display:none!important}
