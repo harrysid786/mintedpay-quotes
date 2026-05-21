@@ -254,6 +254,12 @@ body{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe 
   .field input[type=text],.field input[type=email],.field input[type=tel],.field input[type=number],.field-select,.pfx-wrap input{font-size:16px}
 }
 
+/* --- S1-B: tab inner-span defaults (brand-neutral; preserves MintedPay plain-text tab) --- */
+.tab .tab-ico{display:inline;margin-right:.35em}
+.tab .tab-txt{display:inline}
+.tab .tab-ttl{display:inline}
+.tab .tab-desc{display:none}
+/* --- end S1-B defaults --- */
 /* ===== UMMAH SANDBOX-PARITY LAYER (body.brand-ummah scoped) ===== */
 body.brand-ummah .card{border:none;border-radius:0;box-shadow:none;padding:40px 20px 32px;max-width:618px}
 body.brand-ummah .step-label{font-size:14px;font-weight:400;letter-spacing:normal;text-transform:none;margin-bottom:8px}
@@ -304,6 +310,14 @@ body.brand-ummah #step4 #processingSnapshot > div:nth-child(2) > div > div:last-
 body.brand-ummah #step4 .saving-hero-left{display:flex;flex-direction:column;gap:4px;flex:1 0 0}
 body.brand-ummah #step4 .saving-hero-compare{display:flex;flex-direction:column;gap:12px;flex:1 0 0}
 /* --- end S3-A-3 --- */
+/* --- S1-B: Step 1 method-card parity (sandbox pricing-v2-step1.html) --- */
+body.brand-ummah #step1 .tab{display:flex;align-items:center;gap:16px;text-align:left;padding:16px 20px}
+body.brand-ummah #step1 .tab .tab-ico{display:flex;align-items:center;justify-content:center;width:40px;height:40px;flex:0 0 40px;margin-right:0;background:#F1F4F6;border-radius:8px;font-size:16px}
+body.brand-ummah #step1 .tab .tab-txt{display:flex;flex-direction:column;gap:2px}
+body.brand-ummah #step1 .tab .tab-ttl{display:block;font-size:16px;font-weight:600;color:var(--ink)}
+body.brand-ummah #step1 .tab .tab-desc{display:block;font-size:14px;font-weight:400;color:#718289;line-height:1.4}
+body.brand-ummah #step1 .stripe-divider{font-size:16px;color:var(--ink)}
+/* --- end S1-B method-card parity --- */
 /* ===== END UMMAH SANDBOX-PARITY LAYER ===== */
 </style>
 </head>
@@ -428,10 +442,10 @@ body.brand-ummah #step4 .saving-hero-compare{display:flex;flex-direction:column;
         <span style="font-size:12px;color:var(--slate);line-height:1.5">You can <strong style="color:var(--ink);font-weight:600">disconnect at any time</strong> from your Stripe dashboard under Connected apps.</span>
       </div>
     </div>
-    </div><div class="stripe-divider">or upload / enter manually</div>
+    </div><div class="stripe-divider">Or choose another method</div>
     <div class="tabs">
-      <button class="tab on" id="tabUpload" onclick="switchTab('upload')">📄 Upload Statement</button>
-      <button class="tab" id="tabManual" onclick="switchTab('manual')">✏️ Manual Entry</button>
+      <button class="tab on" id="tabUpload" onclick="switchTab('upload')"><span class="tab-ico">📄</span><span class="tab-txt"><span class="tab-ttl">Upload Statement</span><span class="tab-desc">Upload your processing statement (CSV)</span></span></button>
+      <button class="tab" id="tabManual" onclick="switchTab('manual')"><span class="tab-ico">✏️</span><span class="tab-txt"><span class="tab-ttl">Manual Entry</span><span class="tab-desc">Provide your processing details directly</span></span></button>
     </div>
 
     <!-- Upload tab -->
