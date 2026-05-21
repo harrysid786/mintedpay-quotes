@@ -260,6 +260,9 @@ body{font-family:'Bricolage Grotesque','DM Sans',system-ui,-apple-system,'Segoe 
 .tab .tab-ttl{display:inline}
 .tab .tab-desc{display:none}
 /* --- end S1-B defaults --- */
+/* --- S2-B: section-label default (brand-neutral; hidden so MintedPay unchanged) --- */
+.s2-section-label{display:none}
+/* --- end S2-B defaults --- */
 /* ===== UMMAH SANDBOX-PARITY LAYER (body.brand-ummah scoped) ===== */
 body.brand-ummah .card{border:none;border-radius:0;box-shadow:none;padding:40px 20px 32px;max-width:618px}
 body.brand-ummah .step-label{font-size:14px;font-weight:400;letter-spacing:normal;text-transform:none;margin-bottom:8px}
@@ -318,6 +321,12 @@ body.brand-ummah #step1 .tab .tab-ttl{display:block;font-size:16px;font-weight:6
 body.brand-ummah #step1 .tab .tab-desc{display:block;font-size:14px;font-weight:400;color:#718289;line-height:1.4}
 body.brand-ummah #step1 .stripe-divider{font-size:16px;color:var(--ink)}
 /* --- end S1-B method-card parity --- */
+/* --- S2-B: Step 2 parity (sandbox pricing-v2-step2.html + -selected.html) --- */
+body.brand-ummah #step2 .s2-section-label{display:block;font-size:16px;font-weight:400;color:var(--ink);margin-bottom:12px}
+body.brand-ummah #step2 .eligibility-check{background:transparent;border:0;border-radius:0;padding:0}
+body.brand-ummah #step2 .eligibility-check span{line-height:1.4}
+body.brand-ummah #step2 .btn-row{margin-top:24px;gap:12px}
+/* --- end S2-B parity --- */
 /* ===== END UMMAH SANDBOX-PARITY LAYER ===== */
 </style>
 </head>
@@ -345,6 +354,7 @@ body.brand-ummah #step1 .stripe-divider{font-size:16px;color:var(--ink)}
     <div class="step-title">How do you take payments?</div>
     <div class="step-sub">This helps us calculate the right rate for your business model.</div>
 
+    <div class="s2-section-label">Business type</div>
     <div class="type-grid">
       <div class="type-card" data-type="online" onclick="selectType('online')">
         <div class="type-icon">🛒</div>
