@@ -529,7 +529,7 @@ body.brand-ummah #step2 .btn-secondary{border-radius:999px;padding:8px 20px;font
   <!-- ═══ STEP 4 (was 5): MintedPay rate ═══ -->
   <div id="step4" class="step">
     <div class="step-label">Step 3 of 3</div>
-    <div class="step-title">Your MintedPay rate</div>
+    <div class="step-title">Your <span id="revTitleBrand" class="brandName">MintedPay</span> rate</div>
     <div class="step-sub">Here's what we can offer you — based on your actual processing data.</div>
 
     <div id="step4Loading" class="loading">
@@ -550,7 +550,7 @@ body.brand-ummah #step2 .btn-secondary{border-radius:999px;padding:8px 20px;font
             <input type="tel" id="bizPhone" placeholder="Phone (optional)" autocomplete="tel">
           </div>
           <div id="revealError" style="display:none;font-size:12px;color:var(--red);text-align:left;margin-bottom:8px"></div>
-          <p style="font-size:12px;color:var(--slate);margin:0 0 12px;text-align:center;">By continuing, you agree that MintedPay may contact you about this enquiry. We never share your data with third parties.</p><button class="btn btn-primary" onclick="revealRate()" style="width:100%">Get my rate →</button>
+          <p style="font-size:12px;color:var(--slate);margin:0 0 12px;text-align:center;">By continuing, you agree that <span id="revConsentBrand" class="brandName">MintedPay</span> may contact you about this enquiry. We never share your data with third parties.</p><button class="btn btn-primary" onclick="revealRate()" style="width:100%">Get my rate →</button>
         </div>
       </div>
       <!-- Processing summary — blurred until reveal -->
@@ -590,7 +590,7 @@ body.brand-ummah #step2 .btn-secondary{border-radius:999px;padding:8px 20px;font
         <div class="saving-hero-compare">
           <div class="shc-block"><div class="shc-lbl">You pay now</div><div class="shc-was" id="heroCurFees">—</div></div>
           <div class="shc-arrow">→</div>
-          <div class="shc-block"><div class="shc-lbl">With MintedPay</div><div class="shc-now" id="heroMpFees">—</div></div>
+          <div class="shc-block"><div class="shc-lbl">With <span id="revShcBrand" class="brandName">MintedPay</span></div><div class="shc-now" id="heroMpFees">—</div></div>
         </div>
       </div>
       <div class="rate-blur-wrap"><div class="rate-blur-content" id="rateBlurContent">
@@ -629,7 +629,7 @@ body.brand-ummah #step2 .btn-secondary{border-radius:999px;padding:8px 20px;font
       <!-- Rate only (no fees to compare against) -->
       <div id="rateOnly" style="display:none">
         <div class="rate-no-fees">
-          <div class="breakdown-label" style="text-align:center;margin-bottom:8px">Your indicative MintedPay rate</div>
+          <div class="breakdown-label" style="text-align:center;margin-bottom:8px">Your indicative <span id="revBdBrand" class="brandName">MintedPay</span> rate</div>
           <div class="rate-big" id="mpRateBigOnly">—</div>
           <div class="rate-small" id="mpRateSubOnly">+ 10p per transaction</div>
         </div>
@@ -810,6 +810,10 @@ function applyBrand() {
   const rl = document.getElementById("rateBlockLabel"); if(rl) rl.textContent = b.name;
   const ft = document.getElementById("footerText"); if(ft) ft.innerHTML = b.legal;
   const cb = document.getElementById("consentBrandName"); if(cb) cb.textContent = b.name;
+  const rtb = document.getElementById("revTitleBrand"); if(rtb) rtb.textContent = b.name;
+  const rcb = document.getElementById("revConsentBrand"); if(rcb) rcb.textContent = b.name;
+  const rsb = document.getElementById("revShcBrand"); if(rsb) rsb.textContent = b.name;
+  const rbb = document.getElementById("revBdBrand"); if(rbb) rbb.textContent = b.name;
 }
 // ═══════════════════════════════════════════════════════════
 // STATE
