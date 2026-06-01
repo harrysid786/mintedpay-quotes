@@ -1602,7 +1602,7 @@ function parseCSV(text, fileName) {
     const a=pAmt(r[colMap.amount]);if(!a){audit.rowsRejected.invalidAmount++;return;}
     if(a<minAmt)minAmt=a;
     cnt++;vol+=a;audit.rowsAccepted++;
-    if(colMap.date&&r[colMap.date]){try{const _d2=new Date(r[colMap.date].substring(0,10));if(!isNaN(_d2.getTime())){if(!_minDate||_d2<_minDate)_minDate=_d2;if(!_maxDate||_d2>_maxDate)_maxDate=_d2;}}catch(e){}}
+    if(colMap.date&&r[colMap.date]){try{const _d2=(function(){var _r=String(r[colMap.date]).trim(),_n=Number(_r);return (/^\d{4,6}(\.\d+)?$/.test(_r)&&_n>=20000&&_n<=80000)?new Date(Date.UTC(1899,11,30)+Math.floor(_n)*86400000):new Date(_r.substring(0,10));})();if(!isNaN(_d2.getTime())){if(!_minDate||_d2<_minDate)_minDate=_d2;if(!_maxDate||_d2>_maxDate)_maxDate=_d2;}}catch(e){}}
     const fv=colMap.fee?(pAmt(r[colMap.fee])||0):0;if(fv)fees+=fv;
     // Combine cardScheme + cardFunding + cardType for richest classification.
     // Takepayments: Card scheme (Visa/MC/Amex) + Card type (Debit/Credit) — both needed.
