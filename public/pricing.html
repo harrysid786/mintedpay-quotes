@@ -1099,6 +1099,12 @@ async function buildStep4() {
       var _heroSaving  = _segSumm && _segSumm.totalSaving  != null ? _segSumm.totalSaving  : saving;
       var _heroMpCost  = _segSumm && _segSumm.totalOurFees != null ? _segSumm.totalOurFees : (vol * displayRate / 100 + cnt * fixed / 100);
       var _heroCurCost = _segSumm && _segSumm.totalTheirFees != null ? _segSumm.totalTheirFees : cur;
+      // Fix A: show processing-summary Current Fees + Effective Rate on the Visa/MC (competitive) basis used in the saving comparison, so figures reconcile
+      if (_segSumm && _segSumm.totalTheirFees != null) {
+        var _vmFees = _segSumm.totalTheirFees;
+        var _cfEl = document.getElementById("csvFees"); if (_cfEl) _cfEl.textContent = fmt2(_vmFees);
+        var _crEl = document.getElementById("csvRate"); if (_crEl && vol > 0) _crEl.textContent = (_vmFees / vol * 100).toFixed(2) + "%";
+      }
       var _sh = document.getElementById("savingHero");
       if (_sh && _heroSaving > 0) {
         document.getElementById("heroSaveAmt").textContent = fmt2(_heroSaving) + "/mo";
