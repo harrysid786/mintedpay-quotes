@@ -1568,7 +1568,7 @@ function parseCSV(text, fileName) {
   }
   const AP=["transaction amount","gross","amount","total","value","sale","net"];
   const cands=[];for(const h of AP){for(const rh of rawH)if(rh.toLowerCase().includes(h)&&!cands.includes(rh))cands.push(rh)}
-  const first=rows[0]||{};colMap.amount=cands.find(h=>pAmt(first[h]))||cands[0]||"";
+  const first=rows[0]||{};const _fxAmt=/presentment|original|foreign|billing/i;const _settled=cands.filter(h=>!_fxAmt.test(h));const _pool=_settled.length?_settled:cands;colMap.amount=_pool.find(h=>pAmt(first[h]))||_pool[0]||"";
   if(!colMap.amount)throw new Error("Could not detect an amount column");
 
   let vol=0,cnt=0,fees=0,intlVol=0,cpop=0,minAmt=Infinity;
@@ -1645,9 +1645,16 @@ function parseCSV(text, fileName) {
       const isAmex      = cardTypeRaw.includes("amex") || cardTypeRaw.includes("american express") || cardTypeRaw.includes("american_express");
       // Default to GB when no country info — Takepayments has no country column,
       // Shopify has blank country rows. Without this, UK rows fall out of segment data.
-      const isGb        = countryRaw==="" || countryRaw==="GB" || countryRaw==="GBR" || countryRaw==="UK";
-      const isEea       = !isGb && EEA_COUNTRIES.has(countryRaw);
-      const isIntl      = !isGb && !isEea && countryRaw !== "";
+      let isGb, isEea, isIntl;
+      if (colMap.country) {
+        isGb   = countryRaw==="" || countryRaw==="GB" || countryRaw==="GBR" || countryRaw==="UK";
+        isEea  = !isGb && EEA_COUNTRIES.has(countryRaw);
+        isIntl = !isGb && !isEea && countryRaw !== "";
+      } else if (colMap.presentmentCurrency) {
+        const pcRaw=(r[colMap.presentmentCurrency]||"").trim().toUpperCase();
+        if (pcRaw && ISO_CURRENCIES.has(pcRaw)) { isGb=(pcRaw==="GBP"); isEea=(pcRaw==="EUR"); isIntl=!isGb&&!isEea; }
+        else { isGb=true; isEea=false; isIntl=false; }
+      } else { isGb=true; isEea=false; isIntl=false; }
       const isDebit     = cardTypeRaw.includes("debit") || cardTypeRaw.includes("maestro");
       if(isAmex){
         segAcc.amex.vol+=a; segAcc.amex.cnt+=1; segAcc.amex.fees+=fv;
