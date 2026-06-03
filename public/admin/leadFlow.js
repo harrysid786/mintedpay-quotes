@@ -5,8 +5,9 @@ function mpSegPricing(sq, brandName){
   var segs = sq.segments.filter(function(s){ return s && s.ourRate!=null && s.ourFees!=null; });
   if(!segs.length) return '';
   var cur=0, umm=0, sav=0;
-  for(var i=0;i<segs.length;i++){ cur+=Number(segs[i].theirFees)||0; umm+=Number(segs[i].ourFees)||0; sav+=Number(segs[i].saving)||0; }
+  for(var i=0;i<segs.length;i++){ cur+=Number(segs[i].theirFees)||0; umm+=Number(segs[i].ourFees)||0; }
   var gbp=function(n){ return '\u00A3'+(Number(n)||0).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+  sav = cur - umm;
   var pos = sav>=0;
   var trio='<div style="display:flex;gap:12px;flex-wrap:wrap;margin:0 0 14px;">'
     +'<div style="flex:1;min-width:140px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:14px;text-align:center;"><div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:6px;">Current monthly cost</div><div style="font-family:Syne,sans-serif;font-size:24px;font-weight:800;">'+gbp(cur)+'</div></div>'
@@ -25,7 +26,7 @@ function mpSegPricing(sq, brandName){
     +'<tr><td style="padding:7px 10px;border:1px solid #e5e7eb;">Settlement</td><td style="padding:7px 10px;border:1px solid #e5e7eb;text-align:right;">After cleared funds</td></tr>'
     +'</tbody></table>';
   var erows='';
-  for(var k=0;k<segs.length;k++){ var e=segs[k]; erows+='<tr><td style="padding:6px 8px;border:1px solid #e5e7eb;">'+(e.label||e.key)+'</td><td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">'+gbp(e.theirFees)+'</td><td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">'+gbp(e.ourFees)+'</td><td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">'+gbp(e.saving)+'</td></tr>'; }
+  for(var k=0;k<segs.length;k++){ var e=segs[k]; erows+='<tr><td style="padding:6px 8px;border:1px solid #e5e7eb;">'+(e.label||e.key)+'</td><td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">'+gbp(e.theirFees)+'</td><td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">'+gbp(e.ourFees)+'</td><td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">'+gbp((Number(e.theirFees)||0)-(Number(e.ourFees)||0))+'</td></tr>'; }
   var details='<details style="margin-top:14px;"><summary style="cursor:pointer;font-size:13px;font-weight:600;color:#2563eb;">See how we calculated this</summary><table style="border-collapse:collapse;width:100%;font-size:12px;margin-top:8px;"><thead><tr><th style="padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;text-align:left;">Card type</th><th style="padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;text-align:right;">Current</th><th style="padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;text-align:right;">'+brandName+'</th><th style="padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;text-align:right;">Saving</th></tr></thead><tbody>'+erows+'</tbody><tfoot><tr style="font-weight:700;"><td style="padding:6px 8px;border:1px solid #e5e7eb;">Total</td><td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">'+gbp(cur)+'</td><td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">'+gbp(umm)+'</td><td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">'+gbp(sav)+'</td></tr></tfoot></table></details>';
   return '<div style="font-family:Inter,system-ui,sans-serif;color:#111827;">'+trio+rateCard+terms+details+'</div>';
 }
