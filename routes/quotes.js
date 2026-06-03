@@ -118,15 +118,16 @@ router.post("/", (req, res) => {
     const curIntRate = keepNum(q.current_intl_rate,      existing?.current_intl_rate,      null);
     const pricingMode    = keepStr(q.pricing_mode,       existing?.pricing_mode,           null);
     const splitIsPrimary = keepBool(q.split_is_primary,  existing?.split_is_primary,       0);
+  const segQuotes      = keepJson(q.segment_quotes,        existing?.segment_quotes,         null);
 
     db.prepare(`
       INSERT OR REPLACE INTO quotes
         (quote_id, merchant_name, merchant_email, rate, fixed_fee, brand, created_at, expiry_date,
          vol, cnt, avgTx, cur, debitFrac, addons,
          intlFrac, sell_uk_rate, sell_international_rate, blended_rate,
-         current_uk_rate, current_intl_rate, pricing_mode, split_is_primary)
+         current_uk_rate, current_intl_rate, pricing_mode, split_is_primary, segment_quotes)
       VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       q.quote_id,
       q.merchant_name  || existing?.merchant_name  || "",
@@ -138,7 +139,7 @@ router.post("/", (req, res) => {
       expiry_date,
       vol, cnt, avgTx, cur, debitFrac, addons,
       intlFrac, sellUk, sellIntl, blended,
-      curUkRate, curIntRate, pricingMode, splitIsPrimary
+      curUkRate, curIntRate, pricingMode, splitIsPrimary, segQuotes
     );
 
     // Build shareable link pointing to quote.html (merchant page)
@@ -293,6 +294,7 @@ router.get("/:quote_id", (req, res) => {
       cur:            row.cur       || 0,
       debitFrac:      storedDebitFrac,
       addons:         addons,
+      segment_quotes: (() => { try { return row.segment_quotes ? JSON.parse(row.segment_quotes) : null; } catch (e) { return null; } })(),
       // ── Regional pricing fields (stored or re-derived for old quotes) ──────
       intlFrac:                storedIntlFrac,
       sell_uk_rate:            sellUkRate,

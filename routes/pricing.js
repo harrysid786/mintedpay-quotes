@@ -1889,8 +1889,8 @@ router.post("/", (req, res) => {
          sell_uk_rate, sell_international_rate, blended_rate,
          current_uk_rate, current_intl_rate, pricing_mode, split_is_primary,
          has_real_international_data, is_domestic_only_confirmed, intl_mix_status,
-         intl_region)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         intl_region, segment_quotes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       quote_id,
       merchant_name || "",
@@ -1922,7 +1922,8 @@ router.post("/", (req, res) => {
       result.has_real_international_data  ? 1 : 0,
       result.is_domestic_only_confirmed   ? 1 : 0,
       result.intl_mix_status              ?? null,
-      result.intl_region                  ?? null
+      result.intl_region                  ?? null,
+      segmentQuotes ? JSON.stringify(segmentQuotes) : null
     );
 
     // Zoho push moved to /api/leads/:id/push-zoho — no longer auto-fires on calculate

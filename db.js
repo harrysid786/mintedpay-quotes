@@ -18,7 +18,8 @@ db.exec(`
     cnt            REAL DEFAULT 0,
     avgTx          REAL DEFAULT 0,
     cur            REAL DEFAULT 0,
-    debitFrac      REAL DEFAULT 0.70
+    debitFrac      REAL DEFAULT 0.70,
+    segment_quotes TEXT
   );
 
   CREATE TABLE IF NOT EXISTS quote_acceptance (
@@ -67,6 +68,7 @@ if (!cols.includes("has_real_international_data")) db.exec("ALTER TABLE quotes A
 if (!cols.includes("is_domestic_only_confirmed"))  db.exec("ALTER TABLE quotes ADD COLUMN is_domestic_only_confirmed  INTEGER DEFAULT 0");
 if (!cols.includes("intl_mix_status"))              db.exec("ALTER TABLE quotes ADD COLUMN intl_mix_status              TEXT");
 if (!cols.includes("intl_region"))                  db.exec("ALTER TABLE quotes ADD COLUMN intl_region                  TEXT");
+if (!cols.includes("segment_quotes"))             db.exec("ALTER TABLE quotes ADD COLUMN segment_quotes            TEXT");
 
 // ── Migration: leads table columns (safe additive) ───────────
 const leadCols = db.pragma("table_info(leads)").map(c => c.name);
