@@ -1,3 +1,35 @@
+/* MP Phase 2: segment pricing (reads segment_quotes, engine values) */
+function mpSegPricing(sq, brandName){
+  if(!sq || !sq.segments || !sq.segments.length) return '';
+  brandName = brandName || 'Ummah Payments';
+  var segs = sq.segments.filter(function(s){ return s && s.ourRate!=null && s.ourFees!=null; });
+  if(!segs.length) return '';
+  var cur=0, umm=0, sav=0;
+  for(var i=0;i<segs.length;i++){ cur+=Number(segs[i].theirFees)||0; umm+=Number(segs[i].ourFees)||0; sav+=Number(segs[i].saving)||0; }
+  var gbp=function(n){ return '\u00A3'+(Number(n)||0).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+  var pos = sav>=0;
+  var trio='<div style="display:flex;gap:12px;flex-wrap:wrap;margin:0 0 14px;">'
+    +'<div style="flex:1;min-width:140px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:14px;text-align:center;"><div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:6px;">Current monthly cost</div><div style="font-family:Syne,sans-serif;font-size:24px;font-weight:800;">'+gbp(cur)+'</div></div>'
+    +'<div style="flex:1;min-width:140px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:14px;text-align:center;"><div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:6px;">Estimated '+brandName+' cost</div><div style="font-family:Syne,sans-serif;font-size:24px;font-weight:800;">'+gbp(umm)+'</div></div>'
+    +'<div style="flex:1;min-width:140px;background:'+(pos?'#f0fdf4':'#fef2f2')+';border:1px solid '+(pos?'#86efac':'#fecaca')+';border-radius:12px;padding:14px;text-align:center;"><div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:'+(pos?'#059669':'#dc2626')+';margin-bottom:6px;">Estimated monthly '+(pos?'saving':'difference')+'</div><div style="font-family:Syne,sans-serif;font-size:24px;font-weight:800;color:'+(pos?'#059669':'#dc2626')+';">'+gbp(Math.abs(sav))+'</div></div>'
+    +'</div><div style="font-size:11px;color:#9ca3af;margin:0 0 16px;">Based on the data you provided.</div>';
+  var rrows='';
+  for(var j=0;j<segs.length;j++){ var s=segs[j]; rrows+='<tr><td style="padding:8px 10px;border:1px solid #e5e7eb;">'+(s.label||s.key)+'</td><td style="padding:8px 10px;border:1px solid #e5e7eb;text-align:right;font-variant-numeric:tabular-nums;">'+(Number(s.ourRate)||0).toFixed(2)+'% + '+(Number(s.ourFixedFee)||0)+'p</td></tr>'; }
+  var rateCard='<div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#6b7280;margin:0 0 8px;">Your '+brandName+' rates</div><table style="border-collapse:collapse;width:100%;font-size:13px;"><thead><tr><th style="padding:8px 10px;border:1px solid #e5e7eb;background:#f9fafb;text-align:left;font-size:11px;text-transform:uppercase;color:#6b7280;">Card type</th><th style="padding:8px 10px;border:1px solid #e5e7eb;background:#f9fafb;text-align:right;font-size:11px;text-transform:uppercase;color:#6b7280;">Rate</th></tr></thead><tbody>'+rrows+'</tbody></table>';
+  var terms='<div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#6b7280;margin:16px 0 8px;">Commercial terms</div><table style="border-collapse:collapse;width:100%;font-size:13px;"><tbody>'
+    +'<tr><td style="padding:7px 10px;border:1px solid #e5e7eb;">Monthly Minimum</td><td style="padding:7px 10px;border:1px solid #e5e7eb;text-align:right;">None</td></tr>'
+    +'<tr><td style="padding:7px 10px;border:1px solid #e5e7eb;">Monthly Platform Fee</td><td style="padding:7px 10px;border:1px solid #e5e7eb;text-align:right;">None</td></tr>'
+    +'<tr><td style="padding:7px 10px;border:1px solid #e5e7eb;">PCI Compliance Fee</td><td style="padding:7px 10px;border:1px solid #e5e7eb;text-align:right;">None</td></tr>'
+    +'<tr><td style="padding:7px 10px;border:1px solid #e5e7eb;">Gateway Fee</td><td style="padding:7px 10px;border:1px solid #e5e7eb;text-align:right;">None</td></tr>'
+    +'<tr><td style="padding:7px 10px;border:1px solid #e5e7eb;">Chargebacks</td><td style="padding:7px 10px;border:1px solid #e5e7eb;text-align:right;">Merchant responsible</td></tr>'
+    +'<tr><td style="padding:7px 10px;border:1px solid #e5e7eb;">Settlement</td><td style="padding:7px 10px;border:1px solid #e5e7eb;text-align:right;">After cleared funds</td></tr>'
+    +'</tbody></table>';
+  var erows='';
+  for(var k=0;k<segs.length;k++){ var e=segs[k]; erows+='<tr><td style="padding:6px 8px;border:1px solid #e5e7eb;">'+(e.label||e.key)+'</td><td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">'+gbp(e.theirFees)+'</td><td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">'+gbp(e.ourFees)+'</td><td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">'+gbp(e.saving)+'</td></tr>'; }
+  var details='<details style="margin-top:14px;"><summary style="cursor:pointer;font-size:13px;font-weight:600;color:#2563eb;">See how we calculated this</summary><table style="border-collapse:collapse;width:100%;font-size:12px;margin-top:8px;"><thead><tr><th style="padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;text-align:left;">Card type</th><th style="padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;text-align:right;">Current</th><th style="padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;text-align:right;">'+brandName+'</th><th style="padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;text-align:right;">Saving</th></tr></thead><tbody>'+erows+'</tbody><tfoot><tr style="font-weight:700;"><td style="padding:6px 8px;border:1px solid #e5e7eb;">Total</td><td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">'+gbp(cur)+'</td><td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">'+gbp(umm)+'</td><td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">'+gbp(sav)+'</td></tr></tfoot></table></details>';
+  return '<div style="font-family:Inter,system-ui,sans-serif;color:#111827;">'+trio+rateCard+terms+details+'</div>';
+}
+
 /**
  * MintedPay — Lead Flow Wizard
  * Fullscreen step-by-step sales lead creation with Lead Overview.
@@ -224,6 +256,19 @@
     _render() {
       if (this.showingOverview) {
         this.overlay.innerHTML = this._buildOverview();
+        try {
+          var _pr = this.pricingResult;
+          var _sq = _pr && _pr.segment_quotes;
+          if (_sq && typeof _sq === 'string') { try { _sq = JSON.parse(_sq); } catch(e){ _sq = null; } }
+          if (_sq && _sq.segments && _sq.segments.length && typeof mpSegPricing==='function') {
+            var _card = this.overlay.querySelector('#mpAdminPricingCard');
+            if (_card) {
+              var _bn = (this.brand && this.brand.name) || (this.lead && this.lead.brand && this.lead.brand.name) || 'Ummah Payments';
+              var _hdr = _card.querySelector('.ov-card-hdr');
+              _card.innerHTML = (_hdr ? _hdr.outerHTML : '') + mpSegPricing(_sq, _bn);
+            }
+          }
+        } catch(e) {}
       } else {
         this.overlay.innerHTML = this._buildLayout();
       }
@@ -408,7 +453,7 @@
 
                 <!-- A. Pricing Summary Card (shown once, only if pricing exists) -->
                 ${hasPricing ? `
-                <div class="ov-card">
+                <div class="ov-card" id="mpAdminPricingCard">
                   <div class="ov-card-hdr">
                     <span class="ov-card-icon"></span>
                     Pricing Summary

@@ -89,7 +89,27 @@ function generateAgreementPDF(quote, acceptance) {
     doc.fontSize(9).fillColor("#ffffff").font("Helvetica-Bold").text("Fee Type", ML + 8, ty + 6).text("Amount", W - MR - 60, ty + 6);
     ty += 20;
 
-    [["Card Processing Rate", `${quote.rate}%`], ["Per Transaction Fee", `${quote.fixed_fee}p`], ["Monthly Minimum", "None"], ["Monthly Platform Fee", "None"], ["PCI Compliance Fee", "None"], ["Gateway Fee", "None"]].forEach(([label, value], i) => {
+    (function(){
+      var rows = [];
+      var sq = quote.segment_quotes;
+      if (sq && typeof sq === 'string') { try { sq = JSON.parse(sq); } catch(e) { sq = null; } }
+      if (sq && sq.segments && sq.segments.length) {
+        sq.segments.forEach(function(seg){
+          if (seg && seg.ourRate != null) {
+            rows.push([(seg.label || seg.key || 'Cards'), `${Number(seg.ourRate).toFixed(2)}% + ${Number(seg.ourFixedFee)||0}p`]);
+          }
+        });
+      }
+      if (!rows.length) {
+        rows.push(["Card Processing Rate", `${quote.rate}%`]);
+        rows.push(["Per Transaction Fee", `${quote.fixed_fee}p`]);
+      }
+      rows.push(["Monthly Minimum", "None"]);
+      rows.push(["Monthly Platform Fee", "None"]);
+      rows.push(["PCI Compliance Fee", "None"]);
+      rows.push(["Gateway Fee", "None"]);
+      return rows;
+    })().forEach(([label, value], i) => {
       if (i % 2 === 0) doc.save().rect(ML, ty, W - ML - MR, 20).fill("#f9fafb").restore();
       doc.fontSize(9).fillColor(BLACK).font("Helvetica").text(label, ML + 8, ty + 6);
       doc.font("Helvetica-Bold").text(value, W - MR - 60, ty + 6);
