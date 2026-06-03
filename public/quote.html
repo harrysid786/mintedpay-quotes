@@ -603,7 +603,7 @@ function renderQuote(data){
       </div>
 
       <!-- PRICING TABLE -->
-      <div style="margin-bottom:20px">
+      <div id="mpLegacyPricingTable" style="margin-bottom:20px">
         <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:10px">Full Pricing Breakdown</div>
         <div style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
           <table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -675,7 +675,7 @@ function renderQuote(data){
   try { if (data && data.segment_quotes && typeof mpSegPricing==='function'){
     var _h = mpSegPricing(data.segment_quotes, (data.brand && data.brand.name) || 'Ummah Payments');
     var _slot = document.getElementById('mpSegSlot'); var _leg = document.getElementById('mpLegacyRate');
-    if (_slot && _h){ _slot.innerHTML = _h; if(_leg) _leg.style.display='none'; }
+    if (_slot && _h){ _slot.innerHTML = _h; if(_leg) _leg.style.display='none'; var _pt=document.getElementById('mpLegacyPricingTable'); if(_pt) _pt.style.display='none'; }
   } } catch(e){}
 
 }

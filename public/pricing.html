@@ -590,7 +590,7 @@ function mpSegPricing(sq, brandName){
       <div id="segmentTable" style="display:none;margin-top:12px"></div>
 
       <!-- Rate breakdown table -->
-      <div class="rate-breakdown-list">
+      <div class="rate-breakdown-list" id="mpWhatsIncluded">
         <div class="rate-breakdown-row header">
           <span>What's included</span><span>Rate</span>
         </div>
@@ -1136,7 +1136,7 @@ async function buildStep4() {
           var _mp=document.querySelector('.rate-block.mp'); if(_mp) _mp.style.display='none';
           var _ar=document.querySelector('.rate-arrow'); if(_ar) _ar.style.display='none';
           var _only=document.getElementById('rateOnly'); if(_only) _only.style.display='none';
-          var _segT=document.getElementById('segmentTable'); if(_segT){ var _br=_segT.closest('.rate-breakdown-list')||_segT; _br.style.display='none'; }
+          var _segT=document.getElementById('segmentTable'); if(_segT){ var _br=_segT.closest('.rate-breakdown-list')||_segT; _br.style.display='none'; var _wi=document.getElementById('mpWhatsIncluded'); if(_wi) _wi.style.display='none'; }
         }
       }
     } catch(e) {}
