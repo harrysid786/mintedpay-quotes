@@ -253,6 +253,48 @@ function mpSegPricing(sq, brandName){
       this.onClose();
     }
 
+    // — Load persisted quote segments (issued-quote pricing source of truth) —
+    _loadQuoteSegments(qid) {
+      var self = this;
+      if (!qid) return;
+      // Cache hit: render straight from cache (covers reopen of same quote).
+      if (self._quoteSegCacheId === qid) { self._applyQuoteSegments(qid, self._quoteSegCache); return; }
+      // Fetch once per quote_id.
+      if (self._quoteSegFetching === qid) return;
+      self._quoteSegFetching = qid;
+      fetch('/api/quotes/' + encodeURIComponent(qid), { cache: 'no-store' })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(q){
+          var sq = q && q.segment_quotes ? q.segment_quotes : null;
+          if (sq && typeof sq === 'string') { try { sq = JSON.parse(sq); } catch(e){ sq = null; } }
+          if (!(sq && sq.segments && sq.segments.length)) sq = null;
+          self._quoteSegCache = sq; self._quoteSegCacheId = qid; self._quoteSegFetching = null;
+          self._applyQuoteSegments(qid, sq);
+        })
+        .catch(function(){ self._quoteSegCache = null; self._quoteSegCacheId = qid; self._quoteSegFetching = null; self._applyQuoteSegments(qid, null); });
+    }
+
+    // — Apply fetched quote segments to the admin customer-facing card —
+    _applyQuoteSegments(qid, sq) {
+      // Only act if the overview for this same quote is still showing.
+      if (!this.showingOverview) return;
+      if (!this.lead || this.lead.quote_id !== qid) return;
+      // If a live pricingResult arrived meanwhile, it owns the card — don't override.
+      if (this.pricingResult && this.pricingResult.segment_quotes) return;
+      var card = this.overlay.querySelector('#mpAdminPricingCard');
+      if (!card) return;
+      var hdr = card.querySelector('.ov-card-hdr');
+      if (sq && sq.segments && sq.segments.length && typeof mpSegPricing === 'function') {
+        var bn = (this.brand && this.brand.name) || (this.lead && this.lead.brand && this.lead.brand.name) || 'Ummah Payments';
+        card.innerHTML = (hdr ? hdr.outerHTML : '') + mpSegPricing(sq, bn);
+      } else {
+        // True fallback: quote record has no segment_quotes — restore the blended card body.
+        var full = document.createElement('div'); full.innerHTML = this._buildOverview();
+        var fresh = full.querySelector('#mpAdminPricingCard');
+        if (fresh) card.innerHTML = fresh.innerHTML;
+      }
+    }
+
     // — Render entire flow ————————————————————————————————
     _render() {
       if (this.showingOverview) {
@@ -267,6 +309,21 @@ function mpSegPricing(sq, brandName){
               var _bn = (this.brand && this.brand.name) || (this.lead && this.lead.brand && this.lead.brand.name) || 'Ummah Payments';
               var _hdr = _card.querySelector('.ov-card-hdr');
               _card.innerHTML = (_hdr ? _hdr.outerHTML : '') + mpSegPricing(_sq, _bn);
+            }
+          }
+        } catch(e) {}
+        // MP: issued-quote pricing source of truth — when no live pricingResult segments,
+        // source the customer-facing card from the persisted quote record via quote_id.
+        try {
+          var _liveSq = (this.pricingResult && this.pricingResult.segment_quotes) || null;
+          var _qid = this.lead && this.lead.quote_id;
+          if (!_liveSq && _qid && typeof mpSegPricing === 'function') {
+            var _qcard = this.overlay.querySelector('#mpAdminPricingCard');
+            if (_qcard) {
+              var _qhdr = _qcard.querySelector('.ov-card-hdr');
+              _qcard.innerHTML = (_qhdr ? _qhdr.outerHTML : '') +
+                '<div style="padding:20px 16px;text-align:center;color:var(--slate,#64748b);font-size:13px;">Loading quote pricing…</div>';
+              this._loadQuoteSegments(_qid);
             }
           }
         } catch(e) {}
