@@ -245,6 +245,21 @@ function mpSegPricing(sq, brandName){
       this._render();
     }
 
+    async openQuickQuote(existingLead) {
+      window._lfInstance = this;
+      this.isRejected      = false;
+      this._rejectReason   = "";
+      this.pricingResult   = null;
+      this.riskResult      = null;
+      this.showingOverview = false;
+      this.lead       = { ...existingLead };
+      this.leadId     = existingLead.id;
+      this.currentStep = 2;
+      this.overlay.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+      this._render();
+    }
+
     // — Public: close —————————————————————————————————————
     close() {
       clearTimeout(this.saveTimeout);

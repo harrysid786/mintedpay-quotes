@@ -934,6 +934,7 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
       </select>
       <button id="btn-refresh" class="btn-refresh">↺ Refresh</button>
       <button id="btn-new-lead" class="btn-new-lead">+ New Lead</button>
+      <button id="btn-quick-quote" class="btn-new-lead" style="background:var(--g7,#444);margin-left:6px;">⚡ Quick Quote</button>
     </div>
 
     <div class="leads-table-wrap">
@@ -974,5 +975,23 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
 <script src="riskEngine.js"></script>
 <script src="leadFlow.js"></script>
 <script src="admin.js"></script>
+
+  <!-- Quick Quote modal -->
+  <div id="qq-modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;">
+    <div style="background:var(--white,#fff);border-radius:var(--r,8px);padding:24px;width:360px;max-width:90vw;box-shadow:0 8px 32px rgba(0,0,0,.2);">
+      <h3 style="margin:0 0 16px;font-size:16px;">⚡ Quick Quote</h3>
+      <label style="display:block;font-size:12px;margin-bottom:4px;">Business Name</label>
+      <input id="qq-business" type="text" style="width:100%;padding:8px;margin-bottom:12px;box-sizing:border-box;" />
+      <label style="display:block;font-size:12px;margin-bottom:4px;">Contact Name</label>
+      <input id="qq-contact" type="text" style="width:100%;padding:8px;margin-bottom:12px;box-sizing:border-box;" />
+      <label style="display:block;font-size:12px;margin-bottom:4px;">Email *</label>
+      <input id="qq-email" type="email" style="width:100%;padding:8px;margin-bottom:8px;box-sizing:border-box;" />
+      <div id="qq-error" style="color:#c00;font-size:12px;min-height:16px;margin-bottom:8px;"></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;">
+        <button id="qq-cancel" class="btn-refresh">Cancel</button>
+        <button id="qq-start" class="btn-new-lead">Start →</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

@@ -122,7 +122,7 @@
           <td class="td-biz">
             <div class="td-biz-name">
               ${lead.businessName || "<em class='muted'>Untitled</em>"}
-              ${brandBadge(lead.brand)}
+              ${brandBadge(lead.brand)}${lead.leadSource === "quick_quote" ? '<span class="qq-badge" style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;background:#444;color:#fff;font-size:10px;font-weight:700;">⚡ Quick Quote</span>' : ""}${lead.leadSource === "quick_quote" && (lead.qualificationStatus === "pending" || !lead.qualificationStatus) ? '<span class="qq-qual" style="display:inline-block;margin-left:4px;padding:1px 6px;border-radius:4px;background:#fde68a;color:#92400e;font-size:10px;font-weight:700;">⏳ Qual: Pending</span>' : ""}
             </div>
             <div class="td-biz-sub">${lead.industry ? lead.industry.split('|')[0].replace(/^\w/, c => c.toUpperCase()) : ""}</div>
           </td>
@@ -138,6 +138,7 @@
           <td class="td-date">${fmtDate(lead.createdAt)}</td>
           <td>${daysBadge(lead.createdAt)}</td>
           <td class="td-act">
+            ${lead.leadSource === "quick_quote" && (lead.qualificationStatus === "pending" || !lead.qualificationStatus) ? `<button class="db-open-btn" style="background:#92400e;color:#fff;" onclick="window.adminCompleteQualification('${lead.id}')">Complete Qualification</button>` : ""}
             <button class="db-open-btn" onclick="window.adminOpenLead('${lead.id}')">Open →</button>
             <button class="db-delete-btn" onclick="window.adminDeleteLead('${lead.id}')" title="Delete lead">🗑</button>
           </td>
@@ -203,6 +204,52 @@
   window.adminNewLead = function () {
     if (!flow) return;
     flow.open();
+  };
+
+  // ── Quick Quote: minimal lead → open pricing (Step 2) ──
+  window.adminQuickQuote = async function () {
+    const business = document.getElementById("qq-business").value.trim();
+    const contact  = document.getElementById("qq-contact").value.trim();
+    const email    = document.getElementById("qq-email").value.trim();
+    const errEl    = document.getElementById("qq-error");
+    if (!email) { errEl.textContent = "Email is required"; return; }
+    try {
+      const resp = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessName: business,
+          contactName:  contact,
+          name:         contact,
+          email:        email,
+          leadSource:   "quick_quote",
+          qualificationStatus: "pending",
+          status:       "draft",
+          brand:        "minted"
+        }),
+      });
+      const data = await resp.json();
+      const leadId = data.id || (data.lead && data.lead.id);
+      if (!leadId) { errEl.textContent = "Could not create lead"; return; }
+      const lead = data.lead ? { ...data.lead, id: leadId } : { id: leadId, businessName: business, contactName: contact, name: contact, email: email, leadSource: "quick_quote", qualificationStatus: "pending", brand: "minted" };
+      document.getElementById("qq-modal").classList.add("hidden");
+      if (!flow) return;
+      flow.openQuickQuote(lead);
+    } catch (e) {
+      errEl.textContent = "Error creating lead. Please try again.";
+    }
+  };
+
+  // ── Complete Qualification: take a quick-quote lead through the normal flow ──
+  window.adminCompleteQualification = async function (id) {
+    try {
+      const resp = await fetch("/api/leads/" + id);
+      const lead = await resp.json();
+      if (!flow) return;
+      flow.open(lead.lead || lead);
+    } catch (e) {
+      alert("Could not load lead. Please try again.");
+    }
   };
 
   // ── Public: open lead flow for existing lead ──────────────
@@ -340,6 +387,15 @@
 
     // Button bindings
     document.getElementById("btn-new-lead")?.addEventListener("click", () => window.adminNewLead());
+    document.getElementById("btn-quick-quote")?.addEventListener("click", () => {
+      document.getElementById("qq-error").textContent = "";
+      document.getElementById("qq-business").value = "";
+      document.getElementById("qq-contact").value = "";
+      document.getElementById("qq-email").value = "";
+      document.getElementById("qq-modal").classList.remove("hidden");
+    });
+    document.getElementById("qq-cancel")?.addEventListener("click", () => document.getElementById("qq-modal").classList.add("hidden"));
+    document.getElementById("qq-start")?.addEventListener("click", () => window.adminQuickQuote());
     document.getElementById("btn-refresh")?.addEventListener("click",  () => loadLeads());
   });
 })();
