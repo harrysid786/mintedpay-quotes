@@ -34,6 +34,9 @@ app.use("/api/calculate_quote",  pricingRoute);
 // ── NEW: Leads / Back Office API ──────────────────────────────
 app.use("/api/leads", leadsRoute);
 
+// ── Stage 1: Pre-qualification intake API ─────────────────────
+app.use("/api/intake", require("./routes/intake"));
+
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 
 // ── Admin panel redirect (/admin → /admin/index.html) ─────────

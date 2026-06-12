@@ -1394,8 +1394,8 @@ async function submitLead() {
   };
 
   try {
-    const res = await fetch(API_BASE + "/api/leads", {
-      method:  "POST",
+    const res = await fetch(API_BASE + "/api/leads" + (__intakeLeadId ? "/" + __intakeLeadId : ""), {
+      method:  __intakeLeadId ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify(leadPayload),
     });
@@ -1462,8 +1462,8 @@ function revealRate() {
       const channels = selType === 'inperson' ? 'retail' : selType === 'both' ? 'both' : 'online';
       const brand   = document.getElementById('ummahLogo')?.style.display === 'block' ? 'ummah' : 'minted';
       const p       = (typeof pricingResult !== 'undefined' && pricingResult) ? pricingResult : {};
-      await fetch(API_BASE + '/api/leads', {
-        method: 'POST',
+      await fetch(API_BASE + '/api/leads' + (__intakeLeadId ? '/' + __intakeLeadId : ''), {
+        method: __intakeLeadId ? 'PUT' : 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           name:                   document.getElementById('revealName').value.trim(),
@@ -1955,6 +1955,43 @@ function showProviderMsg(val) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// STAGE 1 HANDOFF — prefill from ?intake=<token>; later lead writes
+// UPDATE this same lead instead of creating a duplicate.
+// ═══════════════════════════════════════════════════════════
+var __intakeLeadId = null;
+async function initIntakePrefill() {
+  try {
+    const token = new URLSearchParams(location.search).get("intake");
+    if (!token) return;
+    const res = await fetch(API_BASE + "/api/intake/" + encodeURIComponent(token));
+    if (!res.ok) return;
+    const d = await res.json();
+    __intakeLeadId = d.leadId || null;
+
+    const setVal = (id, v) => { const el = document.getElementById(id); if (el && v != null && v !== "") el.value = v; };
+    setVal("bizName",        d.businessName);
+    setVal("revealName",     d.contactName);
+    setVal("revealEmail",    d.email);
+    setVal("bizPhone",       d.phone);
+    setVal("intlRegionInput", d.customerBase);
+
+    if (d.industry) {
+      const ind = document.getElementById("industryInput");
+      if (ind) { ind.value = d.industry; if (typeof onIndustryChange === "function") { try { onIndustryChange(d.industry); } catch (_) {} } }
+    }
+    if (d.merchantType && typeof selectType === "function") { try { selectType(d.merchantType); } catch (_) {} }
+
+    const vol = parseFloat(d.monthlyVolume);
+    const avg = parseFloat(d.avgTransactionValue);
+    if (Number.isFinite(vol) && vol > 0) {
+      setVal("volInput", vol);
+      if (Number.isFinite(avg) && avg > 0) setVal("cntInput", Math.max(1, Math.round(vol / avg)));
+      if (typeof checkAvgTicket === "function") { try { checkAvgTicket(); } catch (_) {} }
+    }
+  } catch (_) { /* prefill is best-effort; never block the funnel */ }
+}
+
+// ═══════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════
 document.addEventListener("DOMContentLoaded", () => {
@@ -1996,6 +2033,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   goStep(1);
+  initIntakePrefill();
 });
 </script>
 </body>

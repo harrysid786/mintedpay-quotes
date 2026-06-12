@@ -49,6 +49,20 @@
     return `<span class="db-brand-badge">${brand.charAt(0).toUpperCase() + brand.slice(1)}</span>`;
   }
 
+  // Stage 1 pre-qualification signal (Qualified / Review / Not a fit)
+  function intakeBadge(lead) {
+    if (!lead || (lead.source !== "qualify" && !lead.intakeRecommendation)) return "";
+    const map = {
+      qualified: { lbl: "✓ Qualified", bg: "#dcfce7", fg: "#166534" },
+      review:    { lbl: "⚠ Review",    bg: "#fef3c7", fg: "#92400e" },
+      not_a_fit: { lbl: "✕ Not a fit", bg: "#fee2e2", fg: "#991b1b" },
+    };
+    const c = map[lead.intakeRecommendation] || { lbl: "Intake", bg: "#e5e7eb", fg: "#374151" };
+    const reasons = Array.isArray(lead.intakeReasons) ? lead.intakeReasons.join(" · ") : "";
+    const title = reasons ? ` title="${reasons.replace(/"/g, "&quot;")}"` : "";
+    return `<span class="intake-badge"${title} style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;background:${c.bg};color:${c.fg};font-size:10px;font-weight:700;">${c.lbl}</span>`;
+  }
+
   // ── Agents list ───────────────────────────────────────────
   const AGENTS = ['Unassigned', 'Haroon', 'Agent 2', 'Agent 3'];
 
@@ -122,7 +136,7 @@
           <td class="td-biz">
             <div class="td-biz-name">
               ${lead.businessName || "<em class='muted'>Untitled</em>"}
-              ${brandBadge(lead.brand)}${lead.leadSource === "quick_quote" ? '<span class="qq-badge" style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;background:#444;color:#fff;font-size:10px;font-weight:700;">⚡ Quick Quote</span>' : ""}${lead.leadSource === "quick_quote" && (lead.qualificationStatus === "pending" || !lead.qualificationStatus) ? '<span class="qq-qual" style="display:inline-block;margin-left:4px;padding:1px 6px;border-radius:4px;background:#fde68a;color:#92400e;font-size:10px;font-weight:700;">⏳ Qual: Pending</span>' : ""}
+              ${brandBadge(lead.brand)}${intakeBadge(lead)}${lead.leadSource === "quick_quote" ? '<span class="qq-badge" style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;background:#444;color:#fff;font-size:10px;font-weight:700;">⚡ Quick Quote</span>' : ""}${lead.leadSource === "quick_quote" && (lead.qualificationStatus === "pending" || !lead.qualificationStatus) ? '<span class="qq-qual" style="display:inline-block;margin-left:4px;padding:1px 6px;border-radius:4px;background:#fde68a;color:#92400e;font-size:10px;font-weight:700;">⏳ Qual: Pending</span>' : ""}
             </div>
             <div class="td-biz-sub">${lead.industry ? lead.industry.split('|')[0].replace(/^\w/, c => c.toUpperCase()) : ""}</div>
           </td>

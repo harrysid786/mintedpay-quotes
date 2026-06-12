@@ -85,5 +85,8 @@ if (!leadCols.includes("industry_status"))  db.exec("ALTER TABLE leads ADD COLUM
 if (!leadCols.includes("amex_rate"))        db.exec("ALTER TABLE leads ADD COLUMN amex_rate        REAL DEFAULT NULL");
 if (!leadCols.includes("amex_fixed"))       db.exec("ALTER TABLE leads ADD COLUMN amex_fixed       INTEGER DEFAULT NULL");
 if (!leadCols.includes("amex_vol"))         db.exec("ALTER TABLE leads ADD COLUMN amex_vol         REAL DEFAULT NULL");
+if (!leadCols.includes("intake_token"))     db.exec("ALTER TABLE leads ADD COLUMN intake_token     TEXT DEFAULT NULL");
+// Lookup index for the Stage 1 handoff token (opaque; used by GET /api/intake/:token)
+db.exec("CREATE INDEX IF NOT EXISTS idx_leads_intake_token ON leads(intake_token)");
 
 module.exports = db;
