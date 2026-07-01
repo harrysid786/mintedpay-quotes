@@ -1,24 +1,37 @@
 /**
  * MintedPay / Ummah — Stage 1 Pre-Qualification API
  *
- * Standalone questionnaire (qualify.html) → creates a single lead, computes an
- * admin-only Qualified / Review / Not-a-fit recommendation SERVER-SIDE (single
- * source of truth), and mints an opaque handoff token. The merchant is then
- * forwarded to Stage 2 (the existing public quote tool) which prefills from the
- * token and UPDATES this same lead (no duplicate).
+ * Standalone questionnaire (qualify.html) → creates a single lead, classifies
+ * sector server-side, computes a three-outcome decision, and mints an opaque
+ * handoff token. Standard merchants proceed to Stage 2 (pricing calculator);
+ * other outcomes are shown in-place on the form.
  *
  * Routes:
- *   POST /api/intake          — create lead, return { token, redirect }
+ *   POST /api/intake          — create lead, return { decision, token, redirect? }
  *   GET  /api/intake/:token   — PREFILL FIELDS ONLY (never the score, never other leads)
- *
- * The merchant never sees the recommendation. The prefill endpoint deliberately
- * returns only the funnel-relevant fields.
  */
 
 const express = require("express");
 const crypto  = require("crypto");
 const router  = express.Router();
 const db      = require("../db");
+
+// ── Sector classification (provisional seed lists) ─────────────
+const PROHIBITED_SECTORS = new Set([
+  "adult", "gambling", "weapons", "drugs", "counterfeit",
+]);
+
+const RESTRICTED_SECTORS = new Set([
+  "travel", "financial", "forex", "crypto", "healthcare", "insurance",
+  "alcohol", "luxury", "supplements", "property", "marketplace", "events",
+]);
+
+function classifySector(sector) {
+  const key = (sector || "").toString().trim().toLowerCase();
+  if (PROHIBITED_SECTORS.has(key)) return "prohibited";
+  if (RESTRICTED_SECTORS.has(key)) return "restricted";
+  return "standard";
+}
 
 // ── Helpers ───────────────────────────────────────────────────
 function genLeadId() {
@@ -28,70 +41,72 @@ function genLeadId() {
 }
 
 function genToken() {
-  // Opaque, unguessable. Never the sequential lead id.
   return crypto.randomBytes(24).toString("base64url");
 }
 
-function num(v) {
-  const n = parseFloat(v);
-  return Number.isFinite(n) ? n : null;
+function bool(v) {
+  return v === true || v === "true";
 }
 
 /**
- * Server-side qualification ruleset (single source of truth).
- * The merchant figures are self-reported and unverified, so "not_a_fit" is
- * reserved for a failed eligibility declaration (possible prohibited sector);
- * weak economics and risk signals route to "review", not a hard decline.
+ * V1 decision logic (evaluated in order).
  *
- * @param {Object} input
- * @param {('allowed'|'restricted')} input.industryGroup
- * @param {boolean} input.eligibilityConfirmed
- * @param {number|null} input.avgTicket
- * @param {('uk'|'eea'|'uk_eea'|'mixed'|'row'|'')} input.customerBase
- * @param {('online'|'inperson'|'both'|'other'|'')} input.merchantType
- * @param {boolean} input.heldFunds
- * @param {boolean} input.frozenAccount
- * @param {('lt05'|'05to1'|'gt1'|'unsure'|'')} input.chargeback
- * @returns {{recommendation:'qualified'|'review'|'not_a_fit', reasons:string[]}}
+ * @param {{ sector: string, eligibilityConfirmed: boolean }} input
+ * @returns {{ decision: 'standard'|'specialist_review'|'not_a_fit', recommendation: 'qualified'|'review'|'not_a_fit', reasons: string[] }}
  */
-function computeRecommendation(input) {
-  // Hard not-a-fit: did not confirm eligibility (possible prohibited sector).
+function computeDecision(input) {
   if (!input.eligibilityConfirmed) {
     return {
+      decision: "not_a_fit",
       recommendation: "not_a_fit",
-      reasons: ["Did not confirm business eligibility (possible prohibited sector)"],
+      reasons: ["Did not confirm business eligibility"],
     };
   }
 
-  const reviewReasons = [];
-  if (input.industryGroup === "restricted") reviewReasons.push("Restricted industry — needs manual review");
-  if (input.heldFunds)        reviewReasons.push("Funds previously held or withheld by a processor");
-  if (input.frozenAccount)    reviewReasons.push("Merchant account previously frozen, terminated, or closed");
-  if (input.chargeback === "gt1") reviewReasons.push("Stated chargeback rate above 1%");
-  if (input.customerBase === "row") reviewReasons.push("Primarily international (rest of world) customer base");
+  const classification = classifySector(input.sector);
 
-  if (typeof input.avgTicket === "number" && input.avgTicket > 0) {
-    if (input.avgTicket < 10 && (input.merchantType === "inperson" || input.merchantType === "both")) {
-      reviewReasons.push("Low average ticket (<£10) on in-person — weak economics");
-    } else if (input.avgTicket >= 10 && input.avgTicket < 25) {
-      reviewReasons.push("Average ticket £10–£25 — margin-sensitive");
-    }
+  if (classification === "prohibited") {
+    return {
+      decision: "not_a_fit",
+      recommendation: "not_a_fit",
+      reasons: ["Sector not supported by our acquiring partners"],
+    };
   }
 
-  if (reviewReasons.length) {
-    return { recommendation: "review", reasons: reviewReasons };
+  if (classification === "restricted") {
+    return {
+      decision: "specialist_review",
+      recommendation: "review",
+      reasons: ["Sector requires specialist review before quoting"],
+    };
   }
 
-  const reasons = ["Standard industry"];
-  if (typeof input.avgTicket === "number" && input.avgTicket >= 25) reasons.push("Healthy average ticket (≥£25)");
-  if (["uk", "eea", "uk_eea"].includes(input.customerBase)) reasons.push("UK/EEA-weighted customer base");
-  reasons.push("No processor red flags declared");
-  return { recommendation: "qualified", reasons };
+  return {
+    decision: "standard",
+    recommendation: "qualified",
+    reasons: ["Standard sector — eligible for instant quote"],
+  };
 }
 
-// Map recommendation → existing risk_level column so current admin badges work.
-function riskFromRecommendation(rec) {
-  return rec === "qualified" ? "low" : rec === "review" ? "medium" : "high";
+function riskFromDecision(decision) {
+  if (decision === "standard") return "low";
+  if (decision === "specialist_review") return "medium";
+  return "high";
+}
+
+/** Calculator expects "key|allowed" / "key|restricted"; legacy leads may already store that. */
+function industryForPrefill(d) {
+  if (d.industry) return d.industry;
+  const sector = (d.sector || "").toString().trim();
+  if (!sector) return "";
+  const cls = classifySector(sector);
+  if (cls === "prohibited") return "";
+  const suffix = cls === "restricted" ? "restricted" : "allowed";
+  return `${sector}|${suffix}`;
+}
+
+function brandFromHost(hostname) {
+  return (hostname || "").toLowerCase().includes("ummah") ? "ummah" : "minted";
 }
 
 // ── POST /api/intake — create the Stage 1 lead ────────────────
@@ -99,59 +114,31 @@ router.post("/", (req, res) => {
   try {
     const b = req.body || {};
 
-    // industry arrives as the Stage 2 value format "key|allowed" / "key|restricted"
-    const industryRaw   = (b.industry || "").toString();
-    const industryGroup = industryRaw.split("|")[1] === "restricted" ? "restricted" : "allowed";
+    const sector = (b.sector || "").toString().trim();
+    const eligibilityConfirmed = bool(b.eligibilityConfirmed);
+    const currentlyProcessing  = bool(b.currentlyProcessing);
 
-    const monthlyVolume = num(b.monthlyVolume);
-    const avgTicket     = num(b.avgTransactionValue);
-
-    const recInput = {
-      industryGroup,
-      eligibilityConfirmed: b.eligibilityConfirmed === true || b.eligibilityConfirmed === "true",
-      avgTicket,
-      customerBase: (b.customerBase || "").toString(),
-      merchantType: (b.merchantType || "").toString(),
-      heldFunds:     b.heldFunds === true || b.heldFunds === "true",
-      frozenAccount: b.frozenAccount === true || b.frozenAccount === "true",
-      chargeback:   (b.chargeback || "").toString(),
-    };
-    const { recommendation, reasons } = computeRecommendation(recInput);
+    const { decision, recommendation, reasons } = computeDecision({ sector, eligibilityConfirmed });
 
     const id    = genLeadId();
     const token = genToken();
     const now   = new Date().toISOString();
-    const brand = (b.brand || "minted").toString();
+    const brand = brandFromHost(req.hostname);
 
-    // Lead data mirrors the /api/leads payload shape so admin + Zoho push work
-    // identically; intake-specific fields are clearly namespaced.
     const data = {
       id,
-      source:              "qualify",            // Stage 1 origin marker
-      businessName:        (b.businessName || "").toString().trim(),
-      contactName:         (b.contactName  || "").toString().trim(),
-      email:               (b.email   || "").toString().trim(),
-      phone:               (b.phone   || "").toString().trim(),
-      website:             (b.website || "").toString().trim(),
-      industry:            industryRaw,
-      industry_status:     industryGroup,
-      merchantType:        recInput.merchantType,
-      customerBase:        recInput.customerBase,
-      intl_region:         recInput.customerBase,
-      currentProcessor:    (b.currentProcessor || "").toString(),
-      monthlyVolume:       monthlyVolume,
-      avgTransactionValue: avgTicket,
-      // red flags (admin-only)
-      redFlags: {
-        heldFunds:     recInput.heldFunds,
-        frozenAccount: recInput.frozenAccount,
-        chargeback:    recInput.chargeback,
-      },
-      eligibilityConfirmed: recInput.eligibilityConfirmed,
-      // recommendation (admin-only — never returned to the merchant)
+      source:               "qualify",
+      businessName:         (b.businessName || "").toString().trim(),
+      contactName:          (b.contactName  || "").toString().trim(),
+      email:                (b.email   || "").toString().trim(),
+      website:              (b.website || "").toString().trim(),
+      sector,
+      currentlyProcessing,
+      eligibilityConfirmed,
+      decision,
       intakeRecommendation: recommendation,
       intakeReasons:        reasons,
-      riskLevel:            riskFromRecommendation(recommendation),
+      riskLevel:            riskFromDecision(decision),
     };
 
     const initialActivity = [{
@@ -168,7 +155,7 @@ router.post("/", (req, res) => {
       JSON.stringify(data),
       "intake",
       data.riskLevel,
-      "",
+      decision,
       now,
       now,
       0,
@@ -179,13 +166,13 @@ router.post("/", (req, res) => {
       token
     );
 
-    // Stage 2 target. pricing.html is the canonical public entry; brand-aware
-    // hosting serves the correct brand. Merchant gets the token only.
     res.json({
       success: true,
       id,
       token,
-      redirect: `/pricing.html?intake=${token}`,
+      decision,
+      reasons,
+      redirect: decision === "standard" ? `/pricing.html?intake=${token}` : null,
     });
   } catch (err) {
     console.error("Error creating intake lead:", err);
@@ -194,8 +181,6 @@ router.post("/", (req, res) => {
 });
 
 // ── GET /api/intake/:token — PREFILL FIELDS ONLY ──────────────
-// Returns only the funnel-relevant fields needed to prefill Stage 2.
-// Never returns the recommendation, reasons, red flags, or any other lead.
 router.get("/:token", (req, res) => {
   try {
     const token = req.params.token || "";
@@ -214,9 +199,9 @@ router.get("/:token", (req, res) => {
       email:               d.email   || "",
       phone:               d.phone   || "",
       website:             d.website || "",
-      industry:            d.industry || "",          // "key|allowed" / "key|restricted"
-      customerBase:        d.customerBase || "",       // uk | eea | uk_eea | mixed | row
-      merchantType:        d.merchantType || "",       // online | inperson | both | other
+      industry:            industryForPrefill(d),
+      customerBase:        d.customerBase || "",
+      merchantType:        d.merchantType || "",
       monthlyVolume:       d.monthlyVolume ?? null,
       avgTransactionValue: d.avgTransactionValue ?? null,
     });
@@ -227,4 +212,5 @@ router.get("/:token", (req, res) => {
 });
 
 module.exports = router;
-module.exports.computeRecommendation = computeRecommendation;
+module.exports.classifySector = classifySector;
+module.exports.computeDecision = computeDecision;

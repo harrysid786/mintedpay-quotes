@@ -1,0 +1,6 @@
+node_modules/
+.nvmrc
+.env
+quotes.db
+package-lock.json
+dev-local.ps1

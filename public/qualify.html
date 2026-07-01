@@ -27,20 +27,12 @@
   .field:last-child{margin-bottom:0}
   label{display:block;font-size:14px;font-weight:600;color:var(--slate);margin-bottom:6px}
   label .opt{font-weight:400;color:var(--mute)}
-  input[type=text],input[type=email],input[type=tel],input[type=url],input[type=number],select{
+  input[type=text],input[type=email],input[type=url],select{
     width:100%;font-size:15px;color:var(--ink);background:#fff;border:1.5px solid var(--line);
     border-radius:var(--r);padding:11px 13px;font-family:inherit;transition:border-color .15s,box-shadow .15s}
   input:focus,select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-glow)}
   input.invalid,select.invalid{border-color:var(--bad)}
-  .pfx-wrap{position:relative}
-  .pfx-wrap .pfx{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--mute);font-size:15px;pointer-events:none}
-  .pfx-wrap input{padding-left:26px}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .types{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .type-card{border:1.5px solid var(--line);border-radius:var(--r);padding:13px 14px;cursor:pointer;
-    text-align:center;font-size:14px;font-weight:600;color:var(--slate);transition:all .15s;background:#fff}
-  .type-card:hover{border-color:var(--brand)}
-  .type-card.selected{border-color:var(--brand);background:var(--brand-lt);color:var(--brand)}
   .yn{display:flex;gap:10px}
   .yn .opt{flex:1;border:1.5px solid var(--line);border-radius:var(--r);padding:10px;text-align:center;
     cursor:pointer;font-size:14px;font-weight:600;color:var(--slate);background:#fff;transition:all .15s}
@@ -60,7 +52,6 @@
   .submit:hover{opacity:.92}
   .submit:disabled{opacity:.5;cursor:not-allowed}
   .foot{text-align:center;color:var(--mute);font-size:12.5px;margin-top:18px}
-  /* success overlay */
   .overlay{position:fixed;inset:0;background:rgba(247,248,252,.96);display:none;align-items:center;
     justify-content:center;flex-direction:column;text-align:center;padding:24px;z-index:50}
   .overlay.show{display:flex}
@@ -69,41 +60,44 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   .overlay h3{font-size:20px;margin-bottom:6px}
   .overlay p{color:var(--mute);font-size:14px}
-  @media(max-width:520px){.row2,.types{grid-template-columns:1fr}}
+  /* in-place outcome state */
+  .outcome{background:#fff;border:1px solid var(--line);border-radius:16px;padding:32px 28px;text-align:center}
+  .outcome-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    margin:0 auto 18px;font-size:22px;font-weight:700}
+  .outcome-icon.review{background:var(--brand-lt);color:var(--brand)}
+  .outcome-icon.decline{background:var(--wash);color:var(--slate);border:1.5px solid var(--line)}
+  .outcome h2{font-size:22px;letter-spacing:-.02em;margin-bottom:10px;color:var(--ink)}
+  .outcome p{color:var(--slate);font-size:15px;line-height:1.6;max-width:420px;margin:0 auto}
+  @media(max-width:520px){.row2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="brandbar"><div class="dot"></div><div class="name" id="brandName">MintedPay</div></div>
-  <h1>Let’s see if we’re a good fit</h1>
-  <p class="sub">A few quick questions so we can prepare an accurate quote for your business. Takes about a minute — no statements needed yet.</p>
+  <h1 id="pageTitle">Let's see if we're a good fit</h1>
+  <p class="sub" id="pageSub">A few quick questions so we can point you in the right direction. Takes about a minute.</p>
 
-  <div class="formError" id="formError"></div>
+  <div id="formArea">
+    <div class="formError" id="formError"></div>
 
-  <!-- Business -->
-  <div class="card">
-    <h2>Your business</h2>
-    <div class="field">
-      <label for="businessName">Business name</label>
-      <input type="text" id="businessName" autocomplete="organization">
-      <div class="err" id="err_businessName">Please enter your business name.</div>
-    </div>
-    <div class="row2">
+    <div class="card">
+      <h2>Your business</h2>
       <div class="field">
-        <label for="contactName">Your name</label>
-        <input type="text" id="contactName" autocomplete="name">
-        <div class="err" id="err_contactName">Please enter your name.</div>
+        <label for="businessName">Organisation name</label>
+        <input type="text" id="businessName" autocomplete="organization">
+        <div class="err" id="err_businessName">Please enter your organisation name.</div>
       </div>
-      <div class="field">
-        <label for="email">Email</label>
-        <input type="email" id="email" autocomplete="email">
-        <div class="err" id="err_email">Please enter a valid email.</div>
-      </div>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label for="phone">Phone <span class="opt">(optional)</span></label>
-        <input type="tel" id="phone" autocomplete="tel">
+      <div class="row2">
+        <div class="field">
+          <label for="contactName">Contact name</label>
+          <input type="text" id="contactName" autocomplete="name">
+          <div class="err" id="err_contactName">Please enter your name.</div>
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" autocomplete="email">
+          <div class="err" id="err_email">Please enter a valid email.</div>
+        </div>
       </div>
       <div class="field">
         <label for="website">Website <span class="opt">(optional)</span></label>
@@ -111,139 +105,71 @@
         <div class="err" id="err_website">Please enter a valid URL.</div>
       </div>
     </div>
-  </div>
 
-  <!-- Operation -->
-  <div class="card">
-    <h2>How you take payments</h2>
-    <div class="field">
-      <label>How do you sell?</label>
-      <div class="types" id="merchantTypes">
-        <div class="type-card" data-type="online">Online store</div>
-        <div class="type-card" data-type="inperson">In-person / retail</div>
-        <div class="type-card" data-type="both">Both online &amp; in-store</div>
-        <div class="type-card" data-type="other">Something else</div>
-      </div>
-      <div class="err" id="err_merchantType">Please choose how you sell.</div>
-    </div>
-    <div class="field">
-      <label for="industry">Industry</label>
-      <select id="industry">
-        <option value="">— Select your industry —</option>
-        <optgroup label="Standard">
-          <option value="retail|allowed">Retail / e-commerce</option>
-          <option value="food|allowed">Food &amp; hospitality (restaurant, café, takeaway)</option>
-          <option value="software|allowed">Software / SaaS / digital products</option>
-          <option value="charity|allowed">Charity / non-profit</option>
-          <option value="education|allowed">Education &amp; training</option>
-          <option value="professional|allowed">Professional services (law, accounting, consulting)</option>
-          <option value="wellness|allowed">Health &amp; wellness (gym, beauty, physio)</option>
-          <option value="events|allowed">Events &amp; entertainment</option>
-          <option value="home|allowed">Home services &amp; trades</option>
-          <option value="other_allowed|allowed">Other standard business</option>
-        </optgroup>
-        <optgroup label="Specialised (may need a quick review)">
-          <option value="travel|restricted">Travel (flights, hotels, tour operators)</option>
-          <option value="financial|restricted">Financial services (FX, money transfer, investment)</option>
-          <option value="crypto|restricted">Crypto / digital assets / NFTs</option>
-          <option value="healthcare|restricted">Healthcare / medical / dental / pharmaceutical</option>
-          <option value="insurance|restricted">Insurance</option>
-          <option value="alcohol|restricted">Alcohol / tobacco / vaping</option>
-          <option value="gambling|restricted">Gambling / gaming / betting</option>
-          <option value="luxury|restricted">Luxury goods / jewellery / high-value items</option>
-          <option value="supplements|restricted">Supplements / CBD / nutraceuticals</option>
-          <option value="property|restricted">Real estate / property</option>
-        </optgroup>
-      </select>
-      <div class="err" id="err_industry">Please select your industry.</div>
-    </div>
-    <div class="field">
-      <label for="customerBase">Where are your customers based?</label>
-      <select id="customerBase">
-        <option value="">— Select customer base —</option>
-        <option value="uk">Primarily United Kingdom</option>
-        <option value="eea">Primarily Europe / EEA</option>
-        <option value="uk_eea">Mix of UK and Europe</option>
-        <option value="mixed">Mix of UK and Worldwide</option>
-        <option value="row">Primarily international (rest of world)</option>
-      </select>
-      <div class="err" id="err_customerBase">Please select your customer base.</div>
-    </div>
-    <div class="row2">
+    <div class="card">
+      <h2>Your sector</h2>
       <div class="field">
-        <label for="monthlyVolume">Approx. monthly card volume</label>
-        <div class="pfx-wrap"><div class="pfx">£</div><input type="number" id="monthlyVolume" min="0" step="1" placeholder="e.g. 50000"></div>
-        <div class="err" id="err_monthlyVolume">Please enter an approximate figure.</div>
+        <label for="sector">Business sector</label>
+        <select id="sector">
+          <option value="">— Select your sector —</option>
+          <optgroup label="Standard">
+            <option value="retail">Retail / e-commerce</option>
+            <option value="food">Food &amp; hospitality (restaurant, café, takeaway)</option>
+            <option value="software">Software / SaaS / digital products</option>
+            <option value="charity">Charity / non-profit</option>
+            <option value="education">Education &amp; training</option>
+            <option value="professional">Professional services (law, accounting, consulting)</option>
+            <option value="wellness">Health &amp; wellness (gym, beauty, physio)</option>
+            <option value="home">Home services &amp; trades</option>
+            <option value="other_allowed">Other standard business</option>
+          </optgroup>
+          <optgroup label="Specialist review required">
+            <option value="travel">Travel (flights, hotels, tour operators)</option>
+            <option value="financial">Financial services (FX, money transfer, investment)</option>
+            <option value="forex">Forex / currency exchange</option>
+            <option value="crypto">Crypto / digital assets / NFTs</option>
+            <option value="healthcare">Healthcare / medical / dental / pharmaceutical</option>
+            <option value="insurance">Insurance</option>
+            <option value="alcohol">Alcohol / tobacco / vaping</option>
+            <option value="luxury">Luxury goods / jewellery / high-value items</option>
+            <option value="supplements">Supplements / CBD / nutraceuticals</option>
+            <option value="property">Real estate / property</option>
+            <option value="marketplace">Marketplace / platform</option>
+            <option value="events">Events &amp; entertainment</option>
+          </optgroup>
+          <optgroup label="Not supported">
+            <option value="adult">Adult content</option>
+            <option value="gambling">Gambling / gaming / betting</option>
+            <option value="weapons">Weapons / firearms</option>
+            <option value="drugs">Controlled substances</option>
+            <option value="counterfeit">Counterfeit goods</option>
+          </optgroup>
+        </select>
+        <div class="err" id="err_sector">Please select your sector.</div>
       </div>
       <div class="field">
-        <label for="avgTransactionValue">Average transaction value</label>
-        <div class="pfx-wrap"><div class="pfx">£</div><input type="number" id="avgTransactionValue" min="0" step="0.01" placeholder="e.g. 45"></div>
-        <div class="err" id="err_avgTransactionValue">Please enter an approximate figure.</div>
+        <label>Are you currently taking card payments?</label>
+        <div class="yn" data-flag="currentlyProcessing">
+          <div class="opt" data-val="true">Yes</div>
+          <div class="opt" data-val="false">No</div>
+        </div>
+        <div class="err" id="err_currentlyProcessing">Please choose one.</div>
       </div>
     </div>
-    <div class="field">
-      <label for="currentProcessor">Who do you process with now? <span class="opt">(optional)</span></label>
-      <select id="currentProcessor">
-        <option value="">— Select current provider —</option>
-        <option value="stripe">Stripe</option>
-        <option value="shopify">Shopify Payments</option>
-        <option value="square">Square</option>
-        <option value="worldpay">WorldPay</option>
-        <option value="barclaycard">Barclaycard</option>
-        <option value="adyen">Adyen</option>
-        <option value="sumup">SumUp</option>
-        <option value="zettle">Zettle / iZettle</option>
-        <option value="takepayments">Takepayments</option>
-        <option value="paypal">PayPal / Braintree</option>
-        <option value="other">Other</option>
-        <option value="none">None yet / just starting</option>
-      </select>
-    </div>
-  </div>
 
-  <!-- Risk signals -->
-  <div class="card">
-    <h2>A few quick questions</h2>
-    <div class="field">
-      <label>Has a payment processor ever held or withheld your funds?</label>
-      <div class="yn" data-flag="heldFunds">
-        <div class="opt" data-val="true">Yes</div><div class="opt" data-val="false">No</div>
+    <div class="card">
+      <div class="eligibility">
+        <label>
+          <input type="checkbox" id="eligibilityCheck">
+          <span>I confirm that my business does not operate in any prohibited sectors, including adult content, firearms, controlled substances, counterfeit goods, or services that facilitate illegal activity.</span>
+        </label>
       </div>
-      <div class="err" id="err_heldFunds">Please choose one.</div>
+      <div class="err" id="err_eligibility" style="margin-top:8px">Please confirm your business eligibility to continue.</div>
     </div>
-    <div class="field">
-      <label>Has a merchant account ever been frozen, terminated, or closed?</label>
-      <div class="yn" data-flag="frozenAccount">
-        <div class="opt" data-val="true">Yes</div><div class="opt" data-val="false">No</div>
-      </div>
-      <div class="err" id="err_frozenAccount">Please choose one.</div>
-    </div>
-    <div class="field">
-      <label for="chargeback">Roughly what’s your chargeback rate?</label>
-      <select id="chargeback">
-        <option value="">— Select —</option>
-        <option value="lt05">Under 0.5%</option>
-        <option value="05to1">0.5% – 1%</option>
-        <option value="gt1">Over 1%</option>
-        <option value="unsure">Not sure</option>
-      </select>
-      <div class="err" id="err_chargeback">Please choose one.</div>
-    </div>
-  </div>
 
-  <!-- Eligibility -->
-  <div class="card">
-    <div class="eligibility">
-      <label>
-        <input type="checkbox" id="eligibilityCheck">
-        <span>I confirm that my business does not operate in any prohibited sectors, including adult content, firearms, controlled substances, counterfeit goods, or services that facilitate illegal activity.</span>
-      </label>
-    </div>
-    <div class="err" id="err_eligibility" style="margin-top:8px">Please confirm your business eligibility to continue.</div>
+    <button class="submit" id="submitBtn">Check eligibility →</button>
+    <p class="foot">Your details are used only to assess eligibility and prepare your quote.</p>
   </div>
-
-  <button class="submit" id="submitBtn">Continue to my quote →</button>
-  <p class="foot">Your details are used only to prepare your quote. No card statements required at this step.</p>
 </div>
 
 <div class="overlay" id="overlay">
@@ -255,29 +181,15 @@
 <script>
 (function(){
   "use strict";
-  // ---- brand theming (minted default; ?brand=ummah) ----
-  var params = new URLSearchParams(location.search);
-  var brand = (params.get("brand") || "minted").toLowerCase();
-  if (brand !== "minted" && brand !== "ummah") brand = "minted";
-  if (brand === "ummah"){
+
+  if (location.hostname.toLowerCase().includes("ummah")) {
     document.body.classList.add("brand-ummah");
     document.getElementById("brandName").textContent = "Ummah Payments";
     document.title = "Get started — Ummah Payments";
   }
 
-  var state = { merchantType:"", heldFunds:null, frozenAccount:null };
+  var state = { currentlyProcessing: null };
 
-  // ---- merchant type cards ----
-  document.querySelectorAll("#merchantTypes .type-card").forEach(function(card){
-    card.addEventListener("click", function(){
-      document.querySelectorAll("#merchantTypes .type-card").forEach(function(c){ c.classList.remove("selected"); });
-      card.classList.add("selected");
-      state.merchantType = card.getAttribute("data-type");
-      hideErr("merchantType");
-    });
-  });
-
-  // ---- yes/no flag toggles ----
   document.querySelectorAll(".yn").forEach(function(group){
     var flag = group.getAttribute("data-flag");
     group.querySelectorAll(".opt").forEach(function(opt){
@@ -291,19 +203,26 @@
   });
 
   function val(id){ return (document.getElementById(id).value || "").trim(); }
-  function showErr(id){ var e=document.getElementById("err_"+id); if(e) e.classList.add("show");
-    var f=document.getElementById(id); if(f) f.classList.add("invalid"); }
-  function hideErr(id){ var e=document.getElementById("err_"+id); if(e) e.classList.remove("show");
-    var f=document.getElementById(id); if(f) f.classList.remove("invalid"); }
+  function showErr(id){
+    var e = document.getElementById("err_" + id);
+    if (e) e.classList.add("show");
+    var f = document.getElementById(id);
+    if (f) f.classList.add("invalid");
+  }
+  function hideErr(id){
+    var e = document.getElementById("err_" + id);
+    if (e) e.classList.remove("show");
+    var f = document.getElementById(id);
+    if (f) f.classList.remove("invalid");
+  }
   function validEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
   function validUrl(s){ try{ new URL(s.indexOf("http")===0 ? s : "https://"+s); return true; }catch(_){ return false; } }
 
-  ["businessName","contactName","email","website","industry","customerBase","monthlyVolume","avgTransactionValue","chargeback"]
-    .forEach(function(id){
-      var el=document.getElementById(id);
-      el.addEventListener("input", function(){ hideErr(id); });
-      el.addEventListener("change", function(){ hideErr(id); });
-    });
+  ["businessName","contactName","email","website","sector"].forEach(function(id){
+    var el = document.getElementById(id);
+    el.addEventListener("input", function(){ hideErr(id); });
+    el.addEventListener("change", function(){ hideErr(id); });
+  });
   document.getElementById("eligibilityCheck").addEventListener("change", function(){ hideErr("eligibility"); });
 
   function validate(){
@@ -313,67 +232,91 @@
     if (!val("contactName")){ showErr("contactName"); ok=false; }
     if (!validEmail(val("email"))){ showErr("email"); ok=false; }
     if (val("website") && !validUrl(val("website"))){ showErr("website"); ok=false; }
-    if (!state.merchantType){ showErr("merchantType"); ok=false; }
-    if (!val("industry")){ showErr("industry"); ok=false; }
-    if (!val("customerBase")){ showErr("customerBase"); ok=false; }
-    if (!val("monthlyVolume")){ showErr("monthlyVolume"); ok=false; }
-    if (!val("avgTransactionValue")){ showErr("avgTransactionValue"); ok=false; }
-    if (state.heldFunds === null){ showErr("heldFunds"); ok=false; }
-    if (state.frozenAccount === null){ showErr("frozenAccount"); ok=false; }
-    if (!val("chargeback")){ showErr("chargeback"); ok=false; }
+    if (!val("sector")){ showErr("sector"); ok=false; }
+    if (state.currentlyProcessing === null){ showErr("currentlyProcessing"); ok=false; }
     if (!document.getElementById("eligibilityCheck").checked){ showErr("eligibility"); ok=false; }
     if (!ok){
-      var fe=document.getElementById("formError");
-      fe.textContent="Please complete the highlighted fields.";
-      fe.classList.add("show");
+      document.getElementById("formError").textContent = "Please complete the highlighted fields.";
+      document.getElementById("formError").classList.add("show");
     }
     return ok;
   }
 
-  var btn = document.getElementById("submitBtn");
-  btn.addEventListener("click", function(){
+  function showOutcome(type, contactName){
+    var first = (contactName || "").split(" ")[0] || "";
+    var greeting = first ? "Thanks, " + first + "." : "Thank you.";
+    var html;
+
+    if (type === "review") {
+      html = '<div class="outcome">' +
+        '<div class="outcome-icon review">✓</div>' +
+        '<h2>' + greeting + ' We\'ll be in touch.</h2>' +
+        '<p>Your sector requires a specialist review. A member of our team will review your requirements and contact you to discuss the most suitable solution for your business.</p>' +
+        '</div>';
+    } else {
+      html = '<div class="outcome">' +
+        '<div class="outcome-icon decline">—</div>' +
+        '<h2>' + greeting + '</h2>' +
+        '<p>Thank you for your interest. Unfortunately we\'re unable to support your business through our platform at this time. If your circumstances change, you\'re welcome to reach out again.</p>' +
+        '</div>';
+    }
+
+    document.getElementById("pageTitle").style.display = "none";
+    document.getElementById("pageSub").style.display = "none";
+    document.getElementById("formArea").innerHTML = html;
+    window.scrollTo(0, 0);
+  }
+
+  document.getElementById("submitBtn").addEventListener("click", function(){
     if (!validate()) return;
+    var btn = document.getElementById("submitBtn");
     btn.disabled = true;
+
     var payload = {
-      businessName:        val("businessName"),
-      contactName:         val("contactName"),
-      email:               val("email"),
-      phone:               val("phone"),
-      website:             val("website"),
-      industry:            val("industry"),
-      merchantType:        state.merchantType,
-      customerBase:        val("customerBase"),
-      currentProcessor:    val("currentProcessor"),
-      monthlyVolume:       parseFloat(val("monthlyVolume")) || null,
-      avgTransactionValue: parseFloat(val("avgTransactionValue")) || null,
-      eligibilityConfirmed: document.getElementById("eligibilityCheck").checked,
-      heldFunds:           state.heldFunds,
-      frozenAccount:       state.frozenAccount,
-      chargeback:          val("chargeback"),
-      brand:               brand
+      businessName:         val("businessName"),
+      contactName:          val("contactName"),
+      email:                val("email"),
+      website:              val("website"),
+      sector:               val("sector"),
+      currentlyProcessing:  state.currentlyProcessing,
+      eligibilityConfirmed: document.getElementById("eligibilityCheck").checked
     };
+
     fetch("/api/intake", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     })
     .then(function(r){ return r.json(); })
     .then(function(data){
-      if (data && data.success && data.redirect){
+      if (!data || !data.success) throw new Error((data && data.error) || "Something went wrong");
+
+      if (data.decision === "standard" && data.redirect) {
         var first = payload.contactName.split(" ")[0] || "";
         document.getElementById("overlayTitle").textContent =
           (first ? "Thanks " + first + " — " : "Thanks — ") + "building your quote…";
         document.getElementById("overlay").classList.add("show");
         setTimeout(function(){ window.location.href = data.redirect; }, 1100);
-      } else {
-        throw new Error((data && data.error) || "Something went wrong");
+        return;
       }
+
+      if (data.decision === "specialist_review") {
+        showOutcome("review", payload.contactName);
+        return;
+      }
+
+      if (data.decision === "not_a_fit") {
+        showOutcome("decline", payload.contactName);
+        return;
+      }
+
+      throw new Error("Unexpected response");
     })
     .catch(function(){
       btn.disabled = false;
-      var fe=document.getElementById("formError");
-      fe.textContent="Sorry, something went wrong submitting your details. Please try again.";
-      fe.classList.add("show");
+      document.getElementById("formError").textContent =
+        "Sorry, something went wrong submitting your details. Please try again.";
+      document.getElementById("formError").classList.add("show");
     });
   });
 })();
